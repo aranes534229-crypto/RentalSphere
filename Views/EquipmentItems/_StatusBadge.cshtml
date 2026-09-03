@@ -1,0 +1,15 @@
+@model string
+@{
+    // Centralizes the status -> Bootstrap badge class mapping so the
+    // Index and Details views don't repeat the same switch.
+    var cls = Model switch
+    {
+        "Available"     => "bg-success",
+        "Reserved"      => "bg-warning text-dark",
+        "CheckedOut"    => "bg-warning text-dark",
+        "InMaintenance" => "bg-danger",
+        "Retired"       => "bg-secondary",
+        _               => "bg-secondary"
+    };
+}
+<span class="badge @cls">@Model</span>

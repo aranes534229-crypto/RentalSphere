@@ -1,0 +1,44 @@
+@model RentalSphere.Modules.Reports.DTOs.ReportsBundleDto
+
+<h4 class="mt-3">Late returns</h4>
+@if (!Model.LateReturns.Any())
+{
+    <div class="alert alert-success">No late returns in this window.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Txn</th>
+                    <th>Customer</th>
+                    <th>Equipment</th>
+                    <th>Due</th>
+                    <th>Returned</th>
+                    <th class="text-end">Days late</th>
+                    <th class="text-end">Late fee</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var l in Model.LateReturns)
+                {
+                    <tr>
+                        <td>
+                            <a asp-controller="RentalTransactions" asp-action="Details"
+                               asp-route-id="@l.RentalTransactionID">
+                                #@l.RentalTransactionID
+                            </a>
+                        </td>
+                        <td>@l.CustomerName</td>
+                        <td>@l.EquipmentSummary</td>
+                        <td>@l.ExpectedReturnDate.ToString("yyyy-MM-dd")</td>
+                        <td>@l.ActualReturnDate?.ToString("yyyy-MM-dd")</td>
+                        <td class="text-end fw-bold">@l.DaysLate</td>
+                        <td class="text-end">₱@l.LateFee.ToString("N2")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

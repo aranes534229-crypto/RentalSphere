@@ -1,0 +1,120 @@
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<RentalSphere.Identity.ApplicationUser> SignInManager
+@inject UserManager<RentalSphere.Identity.ApplicationUser> UserManager
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+@if (!SignInManager.IsSignedIn(User))
+{
+    <div class="p-5 mb-4 bg-light rounded-3">
+        <div class="container-fluid py-4">
+            <h1 class="display-5 fw-bold">Welcome to RentalSphere</h1>
+            <p class="col-md-8 fs-5">ERP & CRM for event and party equipment rental businesses.</p>
+            <a asp-controller="Account" asp-action="Login" class="btn btn-primary btn-lg">Sign in</a>
+            <a asp-controller="Account" asp-action="Register" class="btn btn-outline-secondary btn-lg">Register</a>
+        </div>
+    </div>
+}
+else
+{
+    var u = await UserManager.GetUserAsync(User);
+    var role = User.IsInRole(RoleNames.Admin) ? "Admin"
+             : User.IsInRole(RoleNames.Staff) ? "Staff"
+             : User.IsInRole(RoleNames.Customer) ? "Customer" : "User";
+
+    <div class="p-4 mb-4 bg-light rounded-3">
+        <h1 class="h3 mb-1">Hello, @(u?.FirstName ?? "there")!</h1>
+        <p class="text-muted mb-0">You are signed in as <span class="badge bg-secondary">@role</span>.</p>
+    </div>
+
+    @if ((User.IsInRole(RoleNames.Admin) || User.IsInRole(RoleNames.Staff)) && ViewBag.Kpi is RentalSphere.Modules.Dashboard.DashboardKpiViewModel kpi)
+    {
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card h-100 border-success">
+                    <div class="card-body">
+                        <div class="text-muted small text-uppercase"><i class="bi bi-cash-coin"></i> Today's revenue</div>
+                        <div class="display-6 fw-bold">&#8369;@kpi.TodaysRevenue.ToString("N2")</div>
+                        <a asp-controller="Invoices" asp-action="Index" class="small text-decoration-none">View invoices &rarr;</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100 border-primary">
+                    <div class="card-body">
+                        <div class="text-muted small text-uppercase"><i class="bi bi-arrow-left-right"></i> Active rentals</div>
+                        <div class="display-6 fw-bold">@kpi.ActiveRentals</div>
+                        <a asp-controller="RentalTransactions" asp-action="Index" class="small text-decoration-none">View transactions &rarr;</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100 border-warning">
+                    <div class="card-body">
+                        <div class="text-muted small text-uppercase"><i class="bi bi-receipt"></i> Open invoices</div>
+                        <div class="display-6 fw-bold">@kpi.OpenInvoices</div>
+                        <a asp-controller="Invoices" asp-action="Index" class="small text-decoration-none">Manage billing &rarr;</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100 border-danger">
+                    <div class="card-body">
+                        <div class="text-muted small text-uppercase"><i class="bi bi-bell"></i> Overdue follow-ups</div>
+                        <div class="display-6 fw-bold">@kpi.OverdueFollowUps</div>
+                        <a asp-controller="CustomerCrm" asp-action="FollowUps" class="small text-decoration-none">Open queue &rarr;</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="row g-3">
+        @if (User.IsInRole(RoleNames.Admin) || User.IsInRole(RoleNames.Staff))
+        {
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-box-seam"></i> Equipment</h5>
+                        <p class="card-text text-muted">Manage the equipment catalog and individual items.</p>
+                        <a asp-controller="Equipment" asp-action="Index" class="btn btn-sm btn-primary">Open</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-tags"></i> Categories</h5>
+                        <p class="card-text text-muted">Group equipment by category.</p>
+                        <a asp-controller="Categories" asp-action="Index" class="btn btn-sm btn-primary">Open</a>
+                    </div>
+                </div>
+            </div>
+        }
+        @if (User.IsInRole(RoleNames.Admin))
+        {
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-people-fill"></i> Accounts &amp; Roles</h5>
+                        <p class="card-text text-muted">Manage users, roles, and deactivation.</p>
+                        <a asp-controller="AccountsAdmin" asp-action="Index" class="btn btn-sm btn-danger">Open</a>
+                    </div>
+                </div>
+            </div>
+        }
+        @if (User.IsInRole(RoleNames.Customer))
+        {
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-box-seam"></i> Equipment catalog</h5>
+                        <p class="card-text text-muted">Browse the catalog of equipment types available to rent.</p>
+                        <a asp-controller="Equipment" asp-action="Index" class="btn btn-sm btn-success">Browse</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

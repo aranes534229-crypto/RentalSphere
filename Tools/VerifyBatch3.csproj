@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>RentalSphere.Tools.VerifyBatch3</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RentalSphere.csproj" />
+    <Compile Remove="VerifyStockSync.cs" />
+    <Compile Remove="VerifyBatch2.cs" />
+    <Compile Remove="VerifyBatch4.cs" />
+    <Compile Remove="VerifyBatch5.cs" />
+    <Compile Remove="VerifyBatch6.cs" />
+  </ItemGroup>
+
+</Project>

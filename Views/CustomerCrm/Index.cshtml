@@ -1,0 +1,101 @@
+@using System.Security.Claims
+@model RentalSphere.Modules.CustomerCrm.ViewModels.CustomerCrmViewModel
+@{
+    ViewData["Title"] = $"CRM — {Model.CustomerName}";
+    var canEdit = User.IsInRole("Admin") || User.IsInRole("Staff");
+    var activeTab = Context.Request.Query["tab"].ToString();
+    if (string.IsNullOrEmpty(activeTab)) activeTab = "notes";
+
+    // Per-viewer unread/pending counts for this specific customer.
+    var viewerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var unreadNotesForMe = Model.Notes.Count(n => n.IsUnreadForCurrentUser);
+    var pendingFusForMe = Model.FollowUps.Count(f =>
+        f.Status == "Pending"
+        && f.AssignedToUserId == viewerId);
+    var totalNewForMe = unreadNotesForMe + pendingFusForMe;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-0">CRM</h1>
+        <p class="text-muted mb-0">
+            <a asp-controller="Customers" asp-action="Details" asp-route-id="@Model.CustomerID">@Model.CustomerName</a>
+            · @Model.CustomerEmail
+        </p>
+    </div>
+</div>
+
+@if (TempData["Success"] is string s)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @s
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["Error"] is string e)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @e
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@* Per-customer summary: unread notes + unacked follow-ups, scoped to the current viewer. *@
+@if (totalNewForMe > 0)
+{
+    <div class="alert alert-info py-2 mb-3 d-flex justify-content-between align-items-center">
+        <span class="small mb-0">
+            <i class="bi bi-bell"></i>
+            <strong>@totalNewForMe</strong> new for you on this customer:
+            @if (unreadNotesForMe > 0)
+            {
+                <span class="badge bg-primary ms-1">@unreadNotesForMe unread note@(unreadNotesForMe == 1 ? "" : "s")</span>
+            }
+            @if (pendingFusForMe > 0)
+            {
+                <span class="badge bg-warning text-dark ms-1">@pendingFusForMe pending follow-up@(pendingFusForMe == 1 ? "" : "s")</span>
+            }
+        </span>
+        <span class="small text-muted">Use the bulk button on each tab to clear at once.</span>
+    </div>
+}
+
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item">
+        <a class="nav-link @(activeTab == "notes" ? "active" : "")"
+           asp-action="Index" asp-route-customerId="@Model.CustomerID" asp-route-tab="notes">
+            <i class="bi bi-journal-text"></i> Notes
+            @if (unreadNotesForMe > 0)
+            {
+                <span class="badge bg-primary ms-1" title="Unread for you">@unreadNotesForMe new</span>
+            }
+            else
+            {
+                <span class="badge bg-secondary ms-1">@Model.Notes.Count</span>
+            }
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @(activeTab == "followups" ? "active" : "")"
+           asp-action="Index" asp-route-customerId="@Model.CustomerID" asp-route-tab="followups">
+            <i class="bi bi-calendar-check"></i> Follow-ups
+            @if (pendingFusForMe > 0)
+            {
+                <span class="badge bg-warning text-dark ms-1" title="Pending for you">@pendingFusForMe pending</span>
+            }
+            else
+            {
+                <span class="badge bg-secondary ms-1">@Model.FollowUps.Count</span>
+            }
+        </a>
+    </li>
+</ul>
+
+@if (activeTab == "followups")
+{
+    @await Html.PartialAsync("_FollowUpsTab", Model)
+}
+else
+{
+    @await Html.PartialAsync("_NotesTab", Model)
+}

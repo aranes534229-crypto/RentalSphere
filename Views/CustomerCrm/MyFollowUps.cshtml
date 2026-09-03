@@ -1,0 +1,32 @@
+@model List<RentalSphere.Modules.CustomerCrm.DTOs.CustomerFollowUpDto>
+@{
+    ViewData["Title"] = "My Follow-ups";
+}
+
+<h1 class="h3 mb-3">My Follow-ups</h1>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">No follow-ups on your account yet.</div>
+}
+else
+{
+    <div class="list-group">
+        @foreach (var f in Model)
+        {
+            <div class="list-group-item">
+                <div class="d-flex justify-content-between">
+                    <strong>@f.Reason</strong>
+                    <small class="text-muted">@f.FollowUpDate.ToString("yyyy-MM-dd")</small>
+                </div>
+                <span class="badge bg-@(f.Status == "Done" ? "success" : f.Status == "Cancelled" ? "secondary" : "primary")">
+                    @f.Status
+                </span>
+                @if (!string.IsNullOrEmpty(f.ResolutionNotes))
+                {
+                    <p class="mb-0 mt-2 text-muted">@f.ResolutionNotes</p>
+                }
+            </div>
+        }
+    </div>
+}

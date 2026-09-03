@@ -1,0 +1,109 @@
+@model RentalSphere.Modules.DamagePenalty.ViewModels.DamagePenaltyIndexViewModel
+@{
+    ViewData["Title"] = "Damage & Penalty";
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Damage &amp; Penalty</h1>
+    <a asp-action="Create" class="btn btn-primary">+ Record</a>
+</div>
+
+@if (TempData["Success"] is string ok) { <div class="alert alert-success">@ok</div> }
+@if (TempData["Error"] is string err) { <div class="alert alert-danger">@err</div> }
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-4">
+        <select name="statusFilter" class="form-select" asp-items="@(new Microsoft.AspNetCore.Mvc.Rendering.SelectList(Model.Statuses, "Value", "Text", Model.StatusFilter))"></select>
+    </div>
+    <div class="col-md-3">
+        <input type="number" name="rentalTransactionId" value="@Model.RentalTransactionFilter" class="form-control" placeholder="Rental Tx #" />
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100">Filter</button>
+    </div>
+    <div class="col-md-2">
+        <a asp-action="Index" class="btn btn-outline-secondary w-100">Reset</a>
+    </div>
+    <input type="hidden" name="pageSize" value="@Model.PageSize" />
+</form>
+
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>
+                        <a class="link-dark text-decoration-none" href="@Model.SortUrl("id")">#@(Model.Sort == "id" ? " ▲" : Model.Sort == "id_desc" ? " ▼" : "")</a>
+                    </th>
+                    <th>
+                        <a class="link-dark text-decoration-none" href="@Model.SortUrl("tx")">Tx #@(Model.Sort == "tx" ? " ▲" : Model.Sort == "tx_desc" ? " ▼" : "")</a>
+                    </th>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th>Equipment</th>
+                    <th class="text-end">
+                        <a class="link-dark text-decoration-none" href="@Model.SortUrl("amount")">Amount@(Model.Sort == "amount" ? " ▲" : Model.Sort == "amount_desc" ? " ▼" : "")</a>
+                    </th>
+                    <th class="text-end">Waived</th>
+                    <th>Status</th>
+                    <th>
+                        <a class="link-dark text-decoration-none" href="@Model.SortUrl("date")">Reported@(Model.Sort == "date" ? " ▲" : Model.Sort == "date_desc" ? " ▼" : "")</a>
+                    </th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Items.Any())
+                {
+                    <tr><td colspan="10" class="text-center text-muted py-4">No damage records.</td></tr>
+                }
+                @foreach (var p in Model.Items)
+                {
+                    var badgeClass = p.StatusName switch
+                    {
+                        "Pending" => "bg-warning text-dark",
+                        "AppliedToInvoice" => "bg-info text-dark",
+                        "Waived" => "bg-success",
+                        _ => "bg-secondary",
+                    };
+                    <tr>
+                        <td>@p.DamagePenaltyID</td>
+                        <td><a asp-controller="RentalTransactions" asp-action="Details" asp-route-id="@p.RentalTransactionID">#@p.RentalTransactionID</a></td>
+                        <td><span class="badge bg-light text-dark">@p.PenaltyTypeName</span></td>
+                        <td>@p.Description</td>
+                        <td>@(p.EquipmentName ?? "—") @(string.IsNullOrEmpty(p.SerialNumber) ? "" : $"({p.SerialNumber})")</td>
+                        <td class="text-end">₱@p.Amount.ToString("N2")</td>
+                        <td class="text-end">₱@p.WaivedAmount.ToString("N2")</td>
+                        <td><span class="badge @badgeClass">@p.StatusName</span></td>
+                        <td>@p.ReportedAt.ToString("yyyy-MM-dd")</td>
+                        <td><a asp-action="Details" asp-route-id="@p.DamagePenaltyID" class="btn btn-sm btn-outline-primary">Open</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (Model.TotalPages > 1)
+    {
+        <div class="card-footer d-flex justify-content-between align-items-center">
+            <small class="text-muted">
+                Showing @((Model.Page - 1) * Model.PageSize + 1)–@(Math.Min(Model.Page * Model.PageSize, Model.TotalCount))
+                of @Model.TotalCount
+            </small>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
+                        <a class="page-link" href="@Model.PageUrl(Math.Max(1, Model.Page - 1))">‹ Prev</a>
+                    </li>
+                    @for (var p = 1; p <= Model.TotalPages; p++)
+                    {
+                        <li class="page-item @(p == Model.Page ? "active" : "")">
+                            <a class="page-link" href="@Model.PageUrl(p)">@p</a>
+                        </li>
+                    }
+                    <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")">
+                        <a class="page-link" href="@Model.PageUrl(Math.Min(Model.TotalPages, Model.Page + 1))">Next ›</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    }
+</div>

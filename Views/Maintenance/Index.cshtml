@@ -1,0 +1,72 @@
+@model RentalSphere.Modules.Maintenance.ViewModels.MaintenanceIndexViewModel
+@{
+    ViewData["Title"] = "Maintenance";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0"><i class="bi bi-tools"></i> Maintenance</h2>
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Open maintenance
+    </a>
+</div>
+
+@if (TempData["Success"] is string s) { <div class="alert alert-success">@s</div> }
+@if (TempData["Error"] is string e) { <div class="alert alert-danger">@e</div> }
+
+<form method="get" class="mb-3">
+    <div class="row g-2">
+        <div class="col-md-8">
+            <select name="statusFilter" class="form-select" asp-items="@(new SelectList(Model.Statuses, "Value", "Text", Model.StatusFilter))">
+            </select>
+        </div>
+        <div class="col-md-4">
+            <button class="btn btn-outline-primary w-100"><i class="bi bi-search"></i> Filter</button>
+        </div>
+    </div>
+</form>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-striped table-hover mb-0 align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Equipment</th>
+                    <th>Serial</th>
+                    <th>Started</th>
+                    <th>Expected</th>
+                    <th>Closed</th>
+                    <th>Reason</th>
+                    <th>Cost</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Items.Any())
+                {
+                    <tr><td colspan="9" class="text-center text-muted py-4">No maintenance records match your filters.</td></tr>
+                }
+                @foreach (var m in Model.Items)
+                {
+                    var statusClass = m.Status switch
+                    {
+                        "InProgress" => "bg-warning text-dark",
+                        "Completed" => "bg-success",
+                        _ => "bg-secondary",
+                    };
+                    <tr>
+                        <td><a asp-action="Details" asp-route-id="@m.MaintenanceRecordID">#@m.MaintenanceRecordID</a></td>
+                        <td>@m.EquipmentName</td>
+                        <td><code>@m.SerialNumber</code></td>
+                        <td>@m.StartedAt.ToString("yyyy-MM-dd")</td>
+                        <td>@(m.ExpectedEnd?.ToString("yyyy-MM-dd") ?? "—")</td>
+                        <td>@(m.EndedAt?.ToString("yyyy-MM-dd") ?? "—")</td>
+                        <td>@m.Reason</td>
+                        <td>₱@m.Cost.ToString("N2")</td>
+                        <td><span class="badge @statusClass">@m.Status</span></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

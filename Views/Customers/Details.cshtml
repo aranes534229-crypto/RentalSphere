@@ -1,0 +1,91 @@
+@model RentalSphere.Modules.CustomerManagement.DTOs.CustomerDetailsDto
+@{
+    ViewData["Title"] = $"{Model.FirstName} {Model.LastName}";
+    var canDelete = User.IsInRole(RoleNames.Admin);
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Index">Customers</a></li>
+        <li class="breadcrumb-item active">@Model.FirstName @Model.LastName</li>
+    </ol>
+</nav>
+
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <h3 class="card-title mb-0">@Model.FirstName @Model.LastName</h3>
+            @if (Model.IsActive)
+            {
+                <span class="badge bg-success">Active</span>
+            }
+            else
+            {
+                <span class="badge bg-secondary">Inactive</span>
+            }
+        </div>
+        <p class="text-muted mb-3">@Model.Email</p>
+
+        <dl class="row mb-3">
+            <dt class="col-sm-3">Phone</dt>
+            <dd class="col-sm-9">@(Model.Phone ?? "—")</dd>
+            <dt class="col-sm-3">Address</dt>
+            <dd class="col-sm-9">@(string.Join(", ", new[] { Model.Address, Model.City, Model.PostalCode }.Where(s => !string.IsNullOrWhiteSpace(s))) ?? "—")</dd>
+            <dt class="col-sm-3">Loyalty tier</dt>
+            <dd class="col-sm-9">
+                <span class="badge bg-secondary">@Model.LoyaltyTier</span>
+            </dd>
+            <dt class="col-sm-3">Total spent</dt>
+            <dd class="col-sm-9">₱@Model.TotalSpent.ToString("N2")</dd>
+            <dt class="col-sm-3">Reservations</dt>
+            <dd class="col-sm-9">@Model.ReservationCount</dd>
+            <dt class="col-sm-3">Registered</dt>
+            <dd class="col-sm-9">@Model.DateRegistered.ToString("yyyy-MM-dd HH:mm")</dd>
+            <dt class="col-sm-3">Linked login</dt>
+            <dd class="col-sm-9">@(string.IsNullOrEmpty(Model.UserId) ? "—" : Model.UserId)</dd>
+        </dl>
+
+        @if (Model.IsOverridden)
+        {
+            <div class="alert alert-warning mb-3">
+                <i class="bi bi-shield-exclamation"></i>
+                <strong>Tier manually overridden.</strong>
+                @if (Model.OverrideAt.HasValue)
+                {
+                    <span>Set on @Model.OverrideAt.Value.ToString("yyyy-MM-dd HH:mm")</span>
+                }
+                @if (!string.IsNullOrEmpty(Model.OverrideByUserId))
+                {
+                    <span> by <code>@Model.OverrideByUserId</code></span>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.OverrideReason))
+                {
+                    <div class="mt-1 small"><strong>Reason:</strong> @Model.OverrideReason</div>
+                }
+            </div>
+            @if (canDelete)
+            {
+                <form asp-action="ClearTierOverride" asp-route-id="@Model.CustomerID" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-sm btn-outline-warning mb-3"
+                            onclick="return confirm('Clear the manual override? The tier will return to the spend-based value.');">
+                        <i class="bi bi-x-circle"></i> Clear override
+                    </button>
+                </form>
+            }
+        }
+
+        <div class="mt-3">
+            <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+            <a asp-action="Edit" asp-route-id="@Model.CustomerID" class="btn btn-primary"><i class="bi bi-pencil"></i> Edit</a>
+            @if (canDelete)
+            {
+                <a asp-action="Delete" asp-route-id="@Model.CustomerID" class="btn btn-outline-danger"><i class="bi bi-trash"></i> Delete</a>
+            }
+            <a asp-controller="CustomerCrm" asp-action="Index" asp-route-customerId="@Model.CustomerID"
+               class="btn btn-outline-info">
+                <i class="bi bi-journal-text"></i> CRM
+            </a>
+        </div>
+    </div>
+</div>

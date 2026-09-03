@@ -1,0 +1,49 @@
+@model RentalSphere.Identity.Models.ViewModels.UserDetailsViewModel
+@{
+    ViewData["Title"] = "User details";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Index">Accounts</a></li>
+        <li class="breadcrumb-item active">@Model.Email</li>
+    </ol>
+</nav>
+
+<div class="card">
+    <div class="card-body">
+        <h3 class="card-title">@Model.FirstName @Model.LastName</h3>
+        <p class="text-muted mb-3">@Model.Email</p>
+
+        <dl class="row">
+            <dt class="col-sm-3">User ID</dt>
+            <dd class="col-sm-9"><code>@Model.Id</code></dd>
+
+            <dt class="col-sm-3">Phone</dt>
+            <dd class="col-sm-9">@(Model.PhoneNumber ?? "—")</dd>
+
+            <dt class="col-sm-3">Registered</dt>
+            <dd class="col-sm-9">@Model.DateRegistered.ToString("yyyy-MM-dd HH:mm")</dd>
+
+            <dt class="col-sm-3">Status</dt>
+            <dd class="col-sm-9">
+                @if (Model.IsActive) { <span class="badge bg-success">Active</span> }
+                else { <span class="badge bg-secondary">Disabled</span> }
+            </dd>
+
+            <dt class="col-sm-3">Roles</dt>
+            <dd class="col-sm-9">
+                @foreach (var r in Model.Roles)
+                {
+                    <span class="badge bg-secondary me-1">@r</span>
+                }
+            </dd>
+        </dl>
+
+        <div class="mt-4">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary"><i class="bi bi-pencil"></i> Edit</a>
+            <a asp-action="ManageRoles" asp-route-id="@Model.Id" class="btn btn-info text-white"><i class="bi bi-person-gear"></i> Manage Roles</a>
+            <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+        </div>
+    </div>
+</div>

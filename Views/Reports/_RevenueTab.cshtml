@@ -1,0 +1,39 @@
+@model RentalSphere.Modules.Reports.DTOs.ReportsBundleDto
+
+<h4>Revenue by period (@Model.Granularity)</h4>
+@if (!Model.Revenue.Any())
+{
+    <div class="alert alert-info">No revenue recorded in this window.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Period</th>
+                    <th class="text-end">Invoices</th>
+                    <th class="text-end">Rentals</th>
+                    <th class="text-end">Revenue</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var r in Model.Revenue)
+                {
+                    <tr>
+                        <td>@r.Period</td>
+                        <td class="text-end">@r.InvoiceCount</td>
+                        <td class="text-end">@r.RentalTransactionCount</td>
+                        <td class="text-end">₱@r.Revenue.ToString("N2")</td>
+                    </tr>
+                }
+                <tr class="table-success fw-bold">
+                    <td>Total</td>
+                    <td class="text-end">@Model.Revenue.Sum(r => r.InvoiceCount)</td>
+                    <td class="text-end">@Model.Revenue.Sum(r => r.RentalTransactionCount)</td>
+                    <td class="text-end">₱@Model.TotalRevenue.ToString("N2")</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+}

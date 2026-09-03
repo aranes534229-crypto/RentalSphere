@@ -1,0 +1,216 @@
+@model RentalSphere.Modules.ReservationManagement.ViewModels.ReservationDetailsViewModel
+@{
+    ViewData["Title"] = $"Reservation #{Model.Reservation.ReservationID}";
+    var r = Model.Reservation;
+    var isAdmin = User.IsInRole(RoleNames.Admin);
+    var isStaff = User.IsInRole(RoleNames.Staff);
+    var isCustomer = User.IsInRole(RoleNames.Customer);
+    var canConfirm = (isAdmin || isStaff) && r.Status == "Pending";
+    var canCancel = r.Status == "Pending" || r.Status == "Confirmed";
+    var backAction = isCustomer ? "MyReservations" : "Index";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="@backAction">Reservations</a></li>
+        <li class="breadcrumb-item active">#@r.ReservationID</li>
+    </ol>
+</nav>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h3 class="card-title mb-0">Reservation #@r.ReservationID</h3>
+                    <span class="fs-6"><partial name="_StatusBadge" model="r.Status" /></span>
+                </div>
+                <p class="text-muted mb-3">Created @r.ReservationDate.ToString("yyyy-MM-dd HH:mm")@(string.IsNullOrEmpty(r.CreatedByUserName) ? "" : $" by {r.CreatedByUserName}")</p>
+
+                <dl class="row mb-3">
+                    <dt class="col-sm-3">Customer</dt>
+                    <dd class="col-sm-9"><a asp-controller="Customers" asp-action="Details" asp-route-id="@r.CustomerID">@r.CustomerName</a> <small class="text-muted">(@r.CustomerEmail)</small></dd>
+                    <dt class="col-sm-3">Rental dates</dt>
+                    <dd class="col-sm-9">@r.RentalStartDate.ToString("yyyy-MM-dd") → @r.RentalEndDate.ToString("yyyy-MM-dd") <small class="text-muted">(@r.Days day(s))</small></dd>
+                    <dt class="col-sm-3">Total estimated</dt>
+                    <dd class="col-sm-9">₱@r.TotalEstimatedCost.ToString("N2")</dd>
+                    @if (!string.IsNullOrWhiteSpace(r.Notes))
+                    {
+                        <dt class="col-sm-3">Notes</dt>
+                        <dd class="col-sm-9">@r.Notes</dd>
+                    }
+                </dl>
+
+                <h5 class="mt-4">Line items</h5>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Equipment</th>
+                                <th>Qty</th>
+                                <th>Daily</th>
+                                <th class="text-end">Line total</th>
+                                <th>Assigned unit</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var i in r.Items)
+                            {
+                                <tr>
+                                    <td>@i.EquipmentName</td>
+                                    <td>@i.Quantity</td>
+                                    <td>₱@i.DailyRate.ToString("N2")</td>
+                                    <td class="text-end">₱@i.LineTotal.ToString("N2")</td>
+                                    <td>
+                                        @if (i.AssignedItemID.HasValue)
+                                        {
+                                            <a asp-controller="EquipmentItems" asp-action="Details" asp-route-id="@i.AssignedItemID">
+                                                <code>@(i.AssignedSerialNumber ?? $"#{i.AssignedItemID}")</code>
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">—</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Actions</h5>
+                <a asp-action="@backAction" class="btn btn-outline-secondary w-100 mb-2"><i class="bi bi-arrow-left"></i> Back to list</a>
+                @if (canConfirm)
+                {
+                    <form asp-action="Confirm" asp-route-id="@r.ReservationID" method="post" class="mb-2">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-success w-100"><i class="bi bi-check-circle"></i> Confirm</button>
+                    </form>
+                }
+                @if (canCancel)
+                {
+                    <button type="button" class="btn btn-outline-danger w-100 mb-2" data-bs-toggle="modal" data-bs-target="#cancelReservationModal">
+                        <i class="bi bi-x-circle"></i> Cancel reservation
+                    </button>
+                }
+                @if ((isAdmin || isStaff) && r.Status == "Confirmed")
+                {
+                    <a asp-controller="RentalTransactions" asp-action="Checkout" asp-route-reservationId="@r.ReservationID" class="btn btn-primary w-100 mb-2">
+                        <i class="bi bi-box-arrow-up"></i> Check out
+                    </a>
+                }
+                @if (r.Status == "CheckedOut")
+                {
+                    <a asp-controller="RentalTransactions" asp-action="Index" asp-route-statusFilter="Active" class="btn btn-warning w-100 mb-2 text-dark">
+                        <i class="bi bi-box-arrow-up"></i> View active rental
+                    </a>
+                }
+                @if (r.Status == "Completed")
+                {
+                    <div class="alert alert-success mb-0 py-2 small">
+                        <i class="bi bi-check2-circle"></i> This rental has been completed.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (canCancel)
+{
+    <div class="modal fade" id="cancelReservationModal" tabindex="-1" aria-labelledby="cancelReservationModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form asp-action="Cancel" asp-route-id="@r.ReservationID" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="cancelReservationModalLabel"><i class="bi bi-x-circle text-danger"></i> Cancel reservation #@r.ReservationID</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="text-muted">This will release any reserved units and notify the customer. Please pick a reason.</p>
+                        <div class="mb-3">
+                            <label for="cancelReason" class="form-label">Reason for cancellation</label>
+                            <select id="cancelReason" name="reason" class="form-select" required>
+                                <option value="">-- select a reason --</option>
+                                @if (isAdmin || isStaff)
+                                {
+                                    <option value="CustomerRequested">Customer requested cancellation</option>
+                                    <option value="ItemUnavailableOrDamaged">Item unavailable or damaged</option>
+                                    <option value="PaymentOrPolicyViolation">Payment issue / Policy violation</option>
+                                    <option value="Other">Other (Specify below)</option>
+                                }
+                                else
+                                {
+                                    <option value="CustomerRequested">Change of plans / Event cancelled</option>
+                                    <option value="ItemUnavailableOrDamaged">Found a better price elsewhere</option>
+                                    <option value="PaymentOrPolicyViolation">Accidental booking / Wrong dates</option>
+                                    <option value="Other">Weather concerns</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label for="cancelNotes" class="form-label">Additional notes <span class="text-muted small">(optional)</span></label>
+                            <textarea id="cancelNotes" name="notes" class="form-control" rows="3" maxlength="2000" placeholder="e.g. customer called at 9 AM, item already booked for another event"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Keep reservation</button>
+                        <button type="submit" class="btn btn-danger"><i class="bi bi-x-circle"></i> Confirm cancellation</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+@if (r.Status == "Cancelled")
+{
+    var reasonLabel = r.CancellationReason switch
+    {
+        "CustomerRequested" => (isAdmin || isStaff) ? "Customer requested cancellation" : "Change of plans / Event cancelled",
+        "ItemUnavailableOrDamaged" => (isAdmin || isStaff) ? "Item unavailable or damaged" : "Found a better price elsewhere",
+        "PaymentOrPolicyViolation" => (isAdmin || isStaff) ? "Payment issue / Policy violation" : "Accidental booking / Wrong dates",
+        "Other" => (isAdmin || isStaff) ? "Other" : "Weather concerns",
+        _ => r.CancellationReason ?? "Not specified"
+    };
+    <div class="card mt-3 border-danger">
+        <div class="card-header bg-danger-subtle text-danger">
+            <i class="bi bi-x-circle"></i> Cancellation details
+        </div>
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Reason</dt>
+                <dd class="col-sm-9">@reasonLabel</dd>
+                @if (r.CancelledAt.HasValue)
+                {
+                    <dt class="col-sm-3">Cancelled at</dt>
+                    <dd class="col-sm-9">@r.CancelledAt.Value.ToString("yyyy-MM-dd HH:mm")</dd>
+                }
+                @if (!string.IsNullOrWhiteSpace(r.CancelledByName))
+                {
+                    <dt class="col-sm-3">Cancelled by</dt>
+                    <dd class="col-sm-9">
+                        @r.CancelledByName
+                        @if (!string.IsNullOrWhiteSpace(r.CancelledByRole))
+                        {
+                            <span class="badge bg-secondary ms-1">@r.CancelledByRole</span>
+                        }
+                    </dd>
+                }
+                @if (!string.IsNullOrWhiteSpace(r.CancellationNotes))
+                {
+                    <dt class="col-sm-3">Notes</dt>
+                    <dd class="col-sm-9"><pre class="mb-0 small bg-light p-2 rounded">@r.CancellationNotes</pre></dd>
+                }
+            </dl>
+        </div>
+    </div>
+}

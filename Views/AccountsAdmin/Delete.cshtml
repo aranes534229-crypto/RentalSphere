@@ -1,0 +1,31 @@
+@model RentalSphere.Identity.Models.ViewModels.UserDetailsViewModel
+@{
+    ViewData["Title"] = "Delete user";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Index">Accounts</a></li>
+        <li class="breadcrumb-item active">Delete @Model.Email</li>
+    </ol>
+</nav>
+
+<div class="card border-danger">
+    <div class="card-body">
+        <h3 class="card-title text-danger"><i class="bi bi-exclamation-triangle"></i> Delete user?</h3>
+        <p class="lead">You are about to permanently delete the account below. This action cannot be undone.</p>
+        <dl class="row">
+            <dt class="col-sm-3">Email</dt><dd class="col-sm-9">@Model.Email</dd>
+            <dt class="col-sm-3">Name</dt><dd class="col-sm-9">@Model.FirstName @Model.LastName</dd>
+            <dt class="col-sm-3">Roles</dt>
+            <dd class="col-sm-9">
+                @foreach (var r in Model.Roles) { <span class="badge bg-secondary me-1">@r</span> }
+            </dd>
+        </dl>
+        <form asp-action="DeleteConfirmed" asp-route-id="@Model.Id" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-danger"><i class="bi bi-trash"></i> Yes, delete permanently</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+        </form>
+    </div>
+</div>

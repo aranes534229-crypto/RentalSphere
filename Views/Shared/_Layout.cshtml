@@ -1,0 +1,98 @@
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<RentalSphere.Identity.ApplicationUser> SignInManager
+@inject UserManager<RentalSphere.Identity.ApplicationUser> UserManager
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - RentalSphere</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom">
+            <div class="container-fluid">
+                <a class="navbar-brand fw-semibold" asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-stars"></i> RentalSphere
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNav"
+                        aria-controls="topNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="topNav">
+                    <ul class="navbar-nav me-auto"></ul>
+                    <ul class="navbar-nav">
+                        @if (SignInManager.IsSignedIn(User))
+                        {
+                            var currentUser = await UserManager.GetUserAsync(User);
+                            var role = currentUser is null
+                                ? "User"
+                                : (User.IsInRole(RoleNames.Admin) ? "Admin"
+                                    : User.IsInRole(RoleNames.Staff) ? "Staff"
+                                    : User.IsInRole(RoleNames.Customer) ? "Customer"
+                                    : "User");
+                            var roleBadge = role switch
+                            {
+                                "Admin" => "bg-danger",
+                                "Staff" => "bg-primary",
+                                "Customer" => "bg-success",
+                                _ => "bg-secondary"
+                            };
+
+                            <li class="nav-item d-flex align-items-center me-3 text-light">
+                                <i class="bi bi-person-circle me-2"></i>
+                                <span>@(currentUser?.FirstName ?? "User") @(currentUser?.LastName ?? "")</span>
+                                <span class="badge @roleBadge ms-2">@role</span>
+                            </li>
+                            <li class="nav-item">
+                                <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-outline-light btn-sm">
+                                        <i class="bi bi-box-arrow-right"></i> Logout
+                                    </button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Account" asp-action="Login">Login</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Account" asp-action="Register">Register</a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="d-flex flex-grow-1">
+        @if (SignInManager.IsSignedIn(User))
+        {
+            <aside style="width: 240px; flex: 0 0 240px;">
+                @await Html.PartialAsync("_Sidebar")
+            </aside>
+        }
+        <main class="flex-grow-1 p-4">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted py-3 mt-auto">
+        <div class="container-fluid">
+            &copy; 2026 - RentalSphere - <a asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

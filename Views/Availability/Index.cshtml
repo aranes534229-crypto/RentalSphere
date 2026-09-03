@@ -1,0 +1,77 @@
+@model RentalSphere.Modules.EquipmentAvailability.DTOs.AvailabilityCalendarDto
+@{
+    ViewData["Title"] = "Availability calendar";
+    var categories = ViewBag.Categories as List<SelectListItem> ?? new();
+    var start = (DateTime)ViewBag.Start;
+    var end = (DateTime)ViewBag.End;
+    var categoryId = (int?)ViewBag.CategoryId;
+    Func<int, string> cellClass = (n) => n <= 0 ? "table-danger" : (n <= 4 ? "table-warning" : "table-success");
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0"><i class="bi bi-calendar3"></i> Availability calendar</h2>
+</div>
+
+<form method="get" class="mb-3">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label small">Start</label>
+            <input type="date" name="start" value="@start.ToString("yyyy-MM-dd")" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small">End</label>
+            <input type="date" name="end" value="@end.ToString("yyyy-MM-dd")" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label small">Category</label>
+            <select name="categoryId" class="form-select" asp-items="categories"></select>
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-outline-primary w-100"><i class="bi bi-search"></i> Apply</button>
+        </div>
+    </div>
+</form>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-sm table-bordered mb-0 align-middle text-center">
+            <thead class="table-dark">
+                <tr>
+                    <th class="text-start">Equipment</th>
+                    @foreach (var d in Model.Dates)
+                    {
+                        <th style="min-width: 60px">
+                            <div class="small">@d.ToString("ddd")</div>
+                            <div>@d.ToString("MM-dd")</div>
+                        </th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Rows.Any())
+                {
+                    <tr><td colspan="@(Model.Dates.Count + 1)" class="text-center text-muted py-4">No equipment matches the filter.</td></tr>
+                }
+                @foreach (var row in Model.Rows)
+                {
+                    <tr>
+                        <td class="text-start">
+                            <div>@row.EquipmentName</div>
+                            <small class="text-muted">@row.CategoryName · @row.TotalUnits unit(s)</small>
+                        </td>
+                        @foreach (var cell in row.Cells)
+                        {
+                            <td class="@cellClass(cell.Available)"><strong>@cell.Available</strong></td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="card-body small text-muted">
+        <span class="badge bg-success">≥5 available</span>
+        <span class="badge bg-warning text-dark ms-1">1–4 available</span>
+        <span class="badge bg-danger ms-1">0 available</span>
+        <span class="ms-2">Counts already subtract items in maintenance and confirmed reservations overlapping each day.</span>
+    </div>
+</div>

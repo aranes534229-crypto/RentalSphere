@@ -1,0 +1,31 @@
+@model RentalSphere.Modules.CustomerManagement.DTOs.CustomerDetailsDto
+@{
+    ViewData["Title"] = $"Delete {Model.FirstName} {Model.LastName}";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Index">Customers</a></li>
+        <li class="breadcrumb-item active">Delete</li>
+    </ol>
+</nav>
+
+<div class="card border-danger">
+    <div class="card-body">
+        <h3 class="card-title text-danger"><i class="bi bi-exclamation-triangle"></i> Delete customer?</h3>
+        <p>This action will permanently remove the customer record.</p>
+        <dl class="row">
+            <dt class="col-sm-3">Name</dt>
+            <dd class="col-sm-9">@Model.FirstName @Model.LastName</dd>
+            <dt class="col-sm-3">Email</dt>
+            <dd class="col-sm-9">@Model.Email</dd>
+            <dt class="col-sm-3">Reservations</dt>
+            <dd class="col-sm-9">@Model.ReservationCount</dd>
+        </dl>
+        <form asp-action="Delete" asp-route-id="@Model.CustomerID" method="post">
+            <input type="hidden" name="id" value="@Model.CustomerID" />
+            <button type="submit" class="btn btn-danger"><i class="bi bi-trash"></i> Delete</button>
+            <a asp-action="Details" asp-route-id="@Model.CustomerID" class="btn btn-outline-secondary">Cancel</a>
+        </form>
+    </div>
+</div>

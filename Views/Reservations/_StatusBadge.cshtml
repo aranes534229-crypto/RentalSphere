@@ -1,0 +1,15 @@
+@model string
+@{
+    // Reservation status -> Bootstrap badge class mapping.
+    var cls = Model switch
+    {
+        "Pending"    => "bg-warning text-dark",
+        "Confirmed"  => "bg-success",
+        "CheckedOut" => "bg-primary",
+        "Completed"  => "bg-success",
+        "Cancelled"  => "bg-secondary",
+        "Expired"    => "bg-dark",
+        _            => "bg-secondary"
+    };
+}
+<span class="badge @cls">@Model</span>

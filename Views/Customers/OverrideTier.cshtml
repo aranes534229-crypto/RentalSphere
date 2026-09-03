@@ -1,0 +1,67 @@
+@model RentalSphere.Modules.CustomerManagement.ViewModels.CustomerOverrideTierViewModel
+@{
+    ViewData["Title"] = $"Override tier — {Model.CustomerName}";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Index">Customers</a></li>
+        <li class="breadcrumb-item">
+            <a asp-action="Details" asp-route-id="@Model.CustomerID">@Model.CustomerName</a>
+        </li>
+        <li class="breadcrumb-item active">Override tier</li>
+    </ol>
+</nav>
+
+<div class="card">
+    <div class="card-body">
+        <h3 class="card-title mb-3">
+            <i class="bi bi-shield-exclamation"></i> Override loyalty tier
+        </h3>
+        <p class="text-muted">
+            Customer: <strong>@Model.CustomerName</strong> &middot;
+            Current tier: <span class="badge bg-secondary">@Model.CurrentTier</span>
+        </p>
+
+        @if (Model.IsOverridden)
+        {
+            <div class="alert alert-warning">
+                <i class="bi bi-info-circle"></i>
+                A manual override is already in place.
+                @if (!string.IsNullOrWhiteSpace(Model.CurrentOverrideReason))
+                {
+                    <span>Current reason: <em>@Model.CurrentOverrideReason</em></span>
+                }
+            </div>
+        }
+
+        <form asp-action="OverrideTier" method="post">
+            <input type="hidden" asp-for="CustomerID" />
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="mb-3">
+                <label asp-for="Form.Tier" class="form-label"></label>
+                <select asp-for="Form.Tier" class="form-select" asp-items="Model.LoyaltyTiers"></select>
+                <div class="form-text">
+                    Pick the tier this customer should display. This sticks until you clear the override.
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Form.Reason" class="form-label"></label>
+                <textarea asp-for="Form.Reason" class="form-control" rows="3"
+                          maxlength="500" required
+                          placeholder="e.g. VIP corporate account, courtesy upgrade, etc."></textarea>
+                <span asp-validation-for="Form.Reason" class="text-danger"></span>
+                <div class="form-text">
+                    Required. Recorded in the audit log so reviewers can see why the tier was changed.
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-warning">
+                <i class="bi bi-check-circle"></i> Save override
+            </button>
+            <a asp-action="Details" asp-route-id="@Model.CustomerID" class="btn btn-outline-secondary">Cancel</a>
+        </form>
+    </div>
+</div>

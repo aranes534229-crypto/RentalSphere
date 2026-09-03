@@ -1,0 +1,60 @@
+@model RentalSphere.Modules.Maintenance.ViewModels.MaintenanceOpenViewModel
+@{
+    ViewData["Title"] = "Open maintenance";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Index">Maintenance</a></li>
+        <li class="breadcrumb-item active">Open</li>
+    </ol>
+</nav>
+
+<div class="card">
+    <div class="card-body">
+        <h3 class="card-title mb-3"><i class="bi bi-tools"></i> Open maintenance record</h3>
+        <p class="text-muted">Pulling a unit into <code>InMaintenance</code> removes it from the available pool until closed.</p>
+
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger small mb-2"></div>
+
+            <div class="mb-3">
+                <label asp-for="Form.EquipmentItemID" class="form-label"></label>
+                <select asp-for="Form.EquipmentItemID" class="form-select" asp-items="@(new SelectList(Model.AvailableItems, "ItemID", "SerialNumber"))">
+                    <option value="">— pick a unit —</option>
+                </select>
+                <span asp-validation-for="Form.EquipmentItemID" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Form.Reason" class="form-label"></label>
+                <input asp-for="Form.Reason" class="form-control" />
+                <span asp-validation-for="Form.Reason" class="text-danger small"></span>
+            </div>
+
+            <div class="row g-2 mb-3">
+                <div class="col-md-6">
+                    <label asp-for="Form.ExpectedEnd" class="form-label"></label>
+                    <input asp-for="Form.ExpectedEnd" type="date" class="form-control" />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Form.Cost" class="form-label"></label>
+                    <input asp-for="Form.Cost" type="number" step="0.01" class="form-control" />
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Form.Notes" class="form-label"></label>
+                <textarea asp-for="Form.Notes" class="form-control" rows="3"></textarea>
+            </div>
+
+            <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Cancel</a>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle"></i> Open record</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

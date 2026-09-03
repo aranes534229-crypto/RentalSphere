@@ -1,0 +1,73 @@
+@model RentalSphere.Modules.Equipment.DTOs.EquipmentDetailsDto
+@{
+    ViewData["Title"] = "Delete equipment";
+    var hasActiveRentals = Model.BookedCount > 0;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Index">Equipment</a></li>
+        <li class="breadcrumb-item">
+            <a asp-action="Details" asp-route-id="@Model.EquipmentID">@Model.Name</a>
+        </li>
+        <li class="breadcrumb-item active">Delete</li>
+    </ol>
+</nav>
+
+<div class="card border-danger">
+    <div class="card-body">
+        <h3 class="card-title text-danger"><i class="bi bi-exclamation-triangle"></i> Delete this equipment?</h3>
+        <p class="lead">The equipment catalog entry will be permanently removed. Any existing individual items tracked for it will be marked <strong>Retired</strong> (not deleted) so historical rental records remain intact.</p>
+
+        @if (hasActiveRentals)
+        {
+            <div class="alert alert-warning d-flex align-items-start" role="alert">
+                <i class="bi bi-exclamation-circle me-2 mt-1"></i>
+                <div>
+                    There are currently <strong>@Model.BookedCount</strong> active reservation
+                    item@(Model.BookedCount == 1 ? "" : "s") tied to this equipment. Existing
+                    reservations will continue, but new bookings against this catalog entry
+                    will no longer be possible.
+                </div>
+            </div>
+        }
+
+        <div class="row mb-3">
+            <div class="col-md-3">
+                @if (!string.IsNullOrEmpty(Model.ImageURL))
+                {
+                    <img src="@Model.ImageURL" alt="@Model.Name" class="img-fluid rounded border" />
+                }
+                else
+                {
+                    <div class="bg-light rounded border d-flex align-items-center justify-content-center" style="height: 160px;">
+                        <i class="bi bi-image text-muted" style="font-size: 2rem;"></i>
+                    </div>
+                }
+            </div>
+            <div class="col-md-9">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Name</dt>
+                    <dd class="col-sm-8">@Model.Name</dd>
+                    <dt class="col-sm-4">Category</dt>
+                    <dd class="col-sm-8">@Model.CategoryName</dd>
+                    <dt class="col-sm-4">Daily rate</dt>
+                    <dd class="col-sm-8">&#8369;@Model.DailyRate.ToString("N2")</dd>
+                    <dt class="col-sm-4">Tracked items</dt>
+                    <dd class="col-sm-8">@Model.TotalStock</dd>
+                    @if (hasActiveRentals)
+                    {
+                        <dt class="col-sm-4">Active rentals</dt>
+                        <dd class="col-sm-8"><span class="badge bg-warning text-dark">@Model.BookedCount</span></dd>
+                    }
+                </dl>
+            </div>
+        </div>
+
+        <form asp-action="DeleteConfirmed" asp-route-id="@Model.EquipmentID" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-danger"><i class="bi bi-trash"></i> Yes, delete</button>
+            <a asp-action="Details" asp-route-id="@Model.EquipmentID" class="btn btn-outline-secondary">Cancel</a>
+        </form>
+    </div>
+</div>

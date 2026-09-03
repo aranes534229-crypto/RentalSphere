@@ -1,0 +1,115 @@
+@model RentalSphere.Modules.Reports.DTOs.ReportsBundleDto
+@{
+    ViewData["Title"] = "Reports";
+    var activeTab = ViewBag.ActiveTab as string ?? "revenue";
+}
+
+<h1 class="h3 mb-3"><i class="bi bi-bar-chart"></i> Reports</h1>
+
+<form method="get" class="row g-2 align-items-end mb-3">
+    <div class="col-auto">
+        <label class="form-label small">Start</label>
+        <input type="date" name="start" value="@ViewBag.Start" class="form-control form-control-sm" />
+    </div>
+    <div class="col-auto">
+        <label class="form-label small">End</label>
+        <input type="date" name="end" value="@ViewBag.End" class="form-control form-control-sm" />
+    </div>
+    <div class="col-auto">
+        <label class="form-label small">Granularity</label>
+        <select name="granularity" class="form-select form-select-sm">
+            @if ((string)ViewBag.Granularity == "Weekly") { <option>Daily</option><option selected>Weekly</option><option>Monthly</option> }
+            else if ((string)ViewBag.Granularity == "Monthly") { <option>Daily</option><option>Weekly</option><option selected>Monthly</option> }
+            else { <option selected>Daily</option><option>Weekly</option><option>Monthly</option> }
+        </select>
+    </div>
+    <input type="hidden" name="tab" value="@activeTab" />
+    <div class="col-auto">
+        <button type="submit" class="btn btn-primary btn-sm">
+            <i class="bi bi-arrow-clockwise"></i> Refresh
+        </button>
+    </div>
+</form>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-3">
+        <div class="card text-bg-success">
+            <div class="card-body">
+                <small class="text-uppercase">Revenue realized</small>
+                <h3 class="mb-0">₱@Model.TotalRevenue.ToString("N2")</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-bg-warning">
+            <div class="card-body">
+                <small class="text-uppercase">Outstanding</small>
+                <h3 class="mb-0">₱@Model.TotalOutstanding.ToString("N2")</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-bg-danger">
+            <div class="card-body">
+                <small class="text-uppercase">Late returns</small>
+                <h3 class="mb-0">@Model.LateReturnCount</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-bg-dark">
+            <div class="card-body">
+                <small class="text-uppercase">Damage amount</small>
+                <h3 class="mb-0">₱@Model.TotalDamageAmount.ToString("N2")</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item">
+        <a class="nav-link @(activeTab == "revenue" ? "active" : "")"
+           asp-action="Index" asp-route-tab="revenue"
+           asp-route-start="@ViewBag.Start" asp-route-end="@ViewBag.End" asp-route-granularity="@ViewBag.Granularity">
+            <i class="bi bi-cash-stack"></i> Revenue
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @(activeTab == "utilization" ? "active" : "")"
+           asp-action="Index" asp-route-tab="utilization"
+           asp-route-start="@ViewBag.Start" asp-route-end="@ViewBag.End" asp-route-granularity="@ViewBag.Granularity">
+            <i class="bi bi-speedometer2"></i> Utilization
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @(activeTab == "outstanding" ? "active" : "")"
+           asp-action="Index" asp-route-tab="outstanding"
+           asp-route-start="@ViewBag.Start" asp-route-end="@ViewBag.End" asp-route-granularity="@ViewBag.Granularity">
+            <i class="bi bi-exclamation-circle"></i> Outstanding
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @(activeTab == "late" ? "active" : "")"
+           asp-action="Index" asp-route-tab="late"
+           asp-route-start="@ViewBag.Start" asp-route-end="@ViewBag.End" asp-route-granularity="@ViewBag.Granularity">
+            <i class="bi bi-clock-history"></i> Late + Damage
+        </a>
+    </li>
+</ul>
+
+@switch (activeTab)
+{
+    case "utilization":
+        @await Html.PartialAsync("_UtilizationTab", Model)
+        break;
+    case "outstanding":
+        @await Html.PartialAsync("_OutstandingTab", Model)
+        break;
+    case "late":
+        @await Html.PartialAsync("_LateReturnsTab", Model)
+        @await Html.PartialAsync("_DamageTrendsTab", Model)
+        break;
+    default:
+        @await Html.PartialAsync("_RevenueTab", Model)
+        break;
+}

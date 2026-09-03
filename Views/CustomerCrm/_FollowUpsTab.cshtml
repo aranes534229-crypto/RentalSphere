@@ -1,0 +1,133 @@
+@model RentalSphere.Modules.CustomerCrm.ViewModels.CustomerCrmViewModel
+@{
+    var canEdit = User.IsInRole("Admin") || User.IsInRole("Staff");
+}
+
+<div class="row g-3">
+    @if (canEdit)
+    {
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">Schedule Follow-up</div>
+                <div class="card-body">
+                    <form asp-action="AddFollowUp" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="CustomerID" value="@Model.NewFollowUp.CustomerID" />
+                        <input type="hidden" name="tab" value="followups" />
+                        <div class="mb-3">
+                            <label class="form-label">Reason</label>
+                            <input name="Reason" class="form-control" required maxlength="500"
+                                   value="@Model.NewFollowUp.Reason"
+                                   placeholder="e.g. Check satisfaction, follow up on quote" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Follow-up date</label>
+                            <input name="FollowUpDate" type="date" class="form-control" required
+                                   value="@(Model.NewFollowUp.FollowUpDate == default ? DateTime.UtcNow.Date.AddDays(1).ToString("yyyy-MM-dd") : Model.NewFollowUp.FollowUpDate.ToString("yyyy-MM-dd"))" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Assigned to</label>
+                            <select name="AssignedToUserId" class="form-select">
+                                <option value="">— Unassigned —</option>
+                                @foreach (var s in Model.StaffOptions)
+                                {
+                                    if (s.Value == Model.NewFollowUp.AssignedToUserId)
+                                    {
+                                        <option value="@s.Value" selected>@s.Text</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@s.Value">@s.Text</option>
+                                    }
+                                }
+                            </select>
+                            @if (!string.IsNullOrEmpty(Model.NewFollowUp.AssignedToUserId))
+                            {
+                                <div class="form-text">Defaulted to you. Change to delegate.</div>
+                            }
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-calendar-plus"></i> Schedule
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="@(canEdit ? "col-md-8" : "col-12")">
+        @if (!Model.FollowUps.Any())
+        {
+            <div class="alert alert-info">No follow-ups scheduled.</div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Reason</th>
+                            <th>Assigned</th>
+                            <th>Status</th>
+                            @if (canEdit) { <th class="text-end">Actions</th> }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var f in Model.FollowUps)
+                        {
+                            <tr class="@(f.Status == "Pending" && f.FollowUpDate < DateTime.UtcNow.Date ? "table-warning" : "")">
+                                <td>@f.FollowUpDate.ToString("yyyy-MM-dd")</td>
+                                <td>@f.Reason</td>
+                                <td>@(string.IsNullOrEmpty(f.AssignedToUserName) ? "—" : f.AssignedToUserName)</td>
+                                <td>
+                                    @switch (f.Status)
+                                    {
+                                        case "Pending":
+                                            <span class="badge bg-primary">Pending</span>
+                                            break;
+                                        case "Done":
+                                            <span class="badge bg-success">Done</span>
+                                            break;
+                                        case "Cancelled":
+                                            <span class="badge bg-secondary">Cancelled</span>
+                                            break;
+                                    }
+                                </td>
+                                @if (canEdit && f.Status == "Pending")
+                                {
+                                    <td class="text-end">
+                                        <form asp-action="CompleteFollowUp" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="followUpId" value="@f.CustomerFollowUpID" />
+                                            <input type="hidden" name="customerId" value="@Model.CustomerID" />
+                                            <input type="hidden" name="tab" value="followups" />
+                                            <button type="submit" class="btn btn-sm btn-success" title="Mark done">
+                                                <i class="bi bi-check-lg"></i>
+                                            </button>
+                                        </form>
+                                        <form asp-action="CancelFollowUp" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="followUpId" value="@f.CustomerFollowUpID" />
+                                            <input type="hidden" name="customerId" value="@Model.CustomerID" />
+                                            <input type="hidden" name="tab" value="followups" />
+                                            <button type="submit" class="btn btn-sm btn-outline-secondary"
+                                                    title="Cancel"
+                                                    onclick="return confirm('Cancel this follow-up?');">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                }
+                                else if (canEdit)
+                                {
+                                    <td></td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

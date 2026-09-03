@@ -1,0 +1,72 @@
+@model RentalSphere.Modules.Equipment.Controllers.EquipmentItemFormViewModel
+@{
+    ViewData["Title"] = "Add equipment item";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Index">Equipment units</a></li>
+        <li class="breadcrumb-item active">Create</li>
+    </ol>
+</nav>
+
+<div class="card">
+    <div class="card-body">
+        <h3 class="card-title"><i class="bi bi-plus-circle"></i> Add equipment unit</h3>
+        <p class="text-muted">Track an individual rental unit (one chair, one table, etc.) under a parent equipment type.</p>
+
+        <div class="alert alert-light border small">
+            <i class="bi bi-info-circle"></i>
+            Need to add <strong>many</strong> units at once (e.g. "we just received 20 chairs")?
+            Use <a asp-controller="Equipment" asp-action="Create">Equipment catalog &rarr; Add equipment</a>
+            with a stock count instead &mdash; it auto-generates that many units.
+        </div>
+
+        <div class="alert alert-info d-flex align-items-start" role="alert">
+            <i class="bi bi-info-circle me-2 mt-1"></i>
+            <div>
+                Adding an item in <strong>Available</strong> status increments the parent equipment's
+                <em>Stock quantity</em> automatically. Items in any other status do not.
+            </div>
+        </div>
+
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="mb-3">
+                <label asp-for="Form.EquipmentID" class="form-label"></label>
+                <select asp-for="Form.EquipmentID" class="form-select" asp-items="Model.EquipmentLookup">
+                    <option value="">-- pick equipment --</option>
+                </select>
+                <span asp-validation-for="Form.EquipmentID" class="text-danger"></span>
+                <small class="form-text text-muted">The parent equipment type this unit belongs to.</small>
+            </div>
+
+            <div class="alert alert-info py-2 small mb-3">
+                <i class="bi bi-magic"></i>
+                A serial number will be auto-generated for the new unit based on the parent
+                equipment's <strong>SerialPrefix</strong>. You'll see it in the success message after saving.
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Form.AvailabilityStatus" class="form-label"></label>
+                    <select asp-for="Form.AvailabilityStatus" class="form-select" asp-items="Model.StatusOptions"></select>
+                </div>
+                <div class="col-md-6 mb-3"></div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Form.Location" class="form-label"></label>
+                <input asp-for="Form.Location" class="form-control" placeholder="Warehouse A / Shelf 3" />
+                <small class="form-text text-muted">Optional. Where the unit is stored when not rented.</small>
+            </div>
+
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check"></i> Save</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

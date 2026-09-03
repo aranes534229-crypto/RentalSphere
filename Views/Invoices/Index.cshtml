@@ -1,0 +1,122 @@
+@model RentalSphere.Modules.Billing.ViewModels.InvoiceIndexViewModel
+@{
+    ViewData["Title"] = "Invoices";
+    var hasFilter = !string.IsNullOrWhiteSpace(Model.Search) || !string.IsNullOrWhiteSpace(Model.StatusFilter);
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-0"><i class="bi bi-receipt"></i> Invoices</h1>
+        <small class="text-muted">Track issued invoices and their payment status.</small>
+    </div>
+</div>
+
+@if (TempData["Success"] is string ok) { <div class="alert alert-success alert-dismissible fade show">@ok<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div> }
+@if (TempData["Error"] is string err) { <div class="alert alert-danger alert-dismissible fade show">@err<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div> }
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-3">
+        <select name="statusFilter" class="form-select" asp-items="@(new Microsoft.AspNetCore.Mvc.Rendering.SelectList(Model.Statuses, "Value", "Text", Model.StatusFilter))"></select>
+    </div>
+    <div class="col-md-5">
+        <input type="text" name="search" value="@Model.Search" class="form-control" placeholder="Search by invoice # or customer name…" />
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100">Filter</button>
+    </div>
+    <div class="col-md-2">
+        <a asp-action="Index" class="btn btn-outline-secondary w-100">Reset</a>
+    </div>
+    <input type="hidden" name="pageSize" value="@Model.PageSize" />
+</form>
+
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>
+                        <a class="link-dark text-decoration-none" href="@Model.SortUrl("number")">Invoice #@(Model.Sort == "number" ? " ▲" : Model.Sort == "number_desc" ? " ▼" : "")</a>
+                    </th>
+                    <th>
+                        <a class="link-dark text-decoration-none" href="@Model.SortUrl("date")">Date@(Model.Sort == "date" ? " ▲" : Model.Sort == "date_desc" ? " ▼" : "")</a>
+                    </th>
+                    <th>
+                        <a class="link-dark text-decoration-none" href="@Model.SortUrl("customer")">Customer@(Model.Sort == "customer" ? " ▲" : Model.Sort == "customer_desc" ? " ▼" : "")</a>
+                    </th>
+                    <th class="text-end">
+                        <a class="link-dark text-decoration-none" href="@Model.SortUrl("total")">Total@(Model.Sort == "total" ? " ▲" : Model.Sort == "total_desc" ? " ▼" : "")</a>
+                    </th>
+                    <th class="text-end">Paid</th>
+                    <th class="text-end">Balance</th>
+                    <th>
+                        <a class="link-dark text-decoration-none" href="@Model.SortUrl("due")">Due@(Model.Sort == "due" ? " ▲" : Model.Sort == "due_desc" ? " ▼" : "")</a>
+                    </th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Items.Any())
+                {
+                    <tr><td colspan="9" class="p-0">
+                        <div class="text-center text-muted py-5">
+                            <i class="bi bi-receipt" style="font-size: 2.5rem;"></i>
+                            <p class="mb-1 mt-2">No invoices match your filters.</p>
+                            @if (hasFilter)
+                            {
+                                <a asp-action="Index" class="btn btn-sm btn-outline-secondary mt-2">
+                                    <i class="bi bi-x-lg"></i> Reset filters
+                                </a>
+                            }
+                        </div>
+                    </td></tr>
+                }
+                @foreach (var i in Model.Items)
+                {
+                    var balance = i.TotalAmount - i.AmountPaid;
+                    <tr>
+                        <td><code>@i.InvoiceNumber</code></td>
+                        <td>@i.InvoiceDate.ToString("yyyy-MM-dd")</td>
+                        <td>@i.CustomerName</td>
+                        <td class="text-end">₱@i.TotalAmount.ToString("N2")</td>
+                        <td class="text-end">₱@i.AmountPaid.ToString("N2")</td>
+                        <td class="text-end">₱@balance.ToString("N2")</td>
+                        <td>@(i.DueDate?.ToString("yyyy-MM-dd") ?? "—")</td>
+                        <td><partial name="_StatusBadge" model="i.Status" /></td>
+                        <td>
+                            <a asp-action="Details" asp-route-id="@i.InvoiceID"
+                               class="btn btn-sm btn-outline-primary" title="Open">
+                                <i class="bi bi-box-arrow-up-right"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (Model.TotalPages > 1)
+    {
+        <div class="card-footer d-flex justify-content-between align-items-center">
+            <small class="text-muted">
+                Showing @((Model.Page - 1) * Model.PageSize + 1)–@(Math.Min(Model.Page * Model.PageSize, Model.TotalCount))
+                of @Model.TotalCount
+            </small>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
+                        <a class="page-link" href="@Model.PageUrl(Math.Max(1, Model.Page - 1))">‹ Prev</a>
+                    </li>
+                    @for (var p = 1; p <= Model.TotalPages; p++)
+                    {
+                        <li class="page-item @(p == Model.Page ? "active" : "")">
+                            <a class="page-link" href="@Model.PageUrl(p)">@p</a>
+                        </li>
+                    }
+                    <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")">
+                        <a class="page-link" href="@Model.PageUrl(Math.Min(Model.TotalPages, Model.Page + 1))">Next ›</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    }
+</div>

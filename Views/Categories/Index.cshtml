@@ -1,0 +1,118 @@
+@model RentalSphere.Modules.Equipment.ViewModels.CategoryIndexViewModel
+@{
+    ViewData["Title"] = "Categories";
+    var hasFilter = !string.IsNullOrWhiteSpace(Model.Search);
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2 class="mb-0"><i class="bi bi-tags"></i> Categories</h2>
+        <small class="text-muted">Equipment categories and their usage.</small>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Add category
+    </a>
+</div>
+
+@if (TempData["Success"] is string s) { <div class="alert alert-success alert-dismissible fade show">@s<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div> }
+@if (TempData["Error"] is string e) { <div class="alert alert-danger alert-dismissible fade show">@e<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div> }
+
+<form method="get" class="mb-3">
+    <div class="row g-2">
+        <div class="col-md-10">
+            <input type="text" name="search" value="@Model.Search" class="form-control" placeholder="Search by name..." />
+        </div>
+        <div class="col-md-2 d-flex gap-1">
+            <button class="btn btn-outline-primary flex-grow-1"><i class="bi bi-search"></i> Filter</button>
+            @if (hasFilter)
+            {
+                <a asp-action="Index" class="btn btn-outline-secondary" title="Clear filters"><i class="bi bi-x-lg"></i></a>
+            }
+        </div>
+    </div>
+    <input type="hidden" name="pageSize" value="@Model.PageSize" />
+</form>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-striped table-hover mb-0 align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th class="text-end">Equipment</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Items.Any())
+                {
+                    <tr><td colspan="4" class="p-0">
+                        <div class="text-center text-muted py-5">
+                            <i class="bi bi-tags" style="font-size: 2.5rem;"></i>
+                            <p class="mb-1 mt-2">
+                                @if (hasFilter)
+                                {
+                                    <text>No categories match your filters.</text>
+                                }
+                                else
+                                {
+                                    <text>No categories yet.</text>
+                                }
+                            </p>
+                            @if (hasFilter)
+                            {
+                                <a asp-action="Index" class="btn btn-sm btn-outline-secondary mt-2">
+                                    <i class="bi bi-x-lg"></i> Reset filters
+                                </a>
+                            }
+                        </div>
+                    </td></tr>
+                }
+                @foreach (var c in Model.Items)
+                {
+                    <tr>
+                        <td>@c.Name</td>
+                        <td><small class="text-muted">@(c.Description ?? "—")</small></td>
+                        <td class="text-end"><span class="badge bg-secondary">@c.EquipmentCount</span></td>
+                        <td class="text-end">
+                            <a asp-action="Edit" asp-route-id="@c.CategoryID" class="btn btn-sm btn-outline-primary" title="Edit"><i class="bi bi-pencil"></i></a>
+                            <a asp-action="Delete" asp-route-id="@c.CategoryID" class="btn btn-sm btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (Model.TotalPages > 1)
+    {
+        <div class="card-footer d-flex justify-content-between align-items-center">
+            <small class="text-muted">
+                Showing @((Model.Page - 1) * Model.PageSize + 1)–@(Math.Min(Model.Page * Model.PageSize, Model.TotalCount))
+                of @Model.TotalCount @(Model.TotalCount == 1 ? "category" : "categories")
+            </small>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
+                        <a class="page-link" href="@Model.PageUrl(Math.Max(1, Model.Page - 1))">&#8249; Prev</a>
+                    </li>
+                    @for (var p = 1; p <= Model.TotalPages; p++)
+                    {
+                        <li class="page-item @(p == Model.Page ? "active" : "")">
+                            <a class="page-link" href="@Model.PageUrl(p)">@p</a>
+                        </li>
+                    }
+                    <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")">
+                        <a class="page-link" href="@Model.PageUrl(Math.Min(Model.TotalPages, Model.Page + 1))">Next &#8250;</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    }
+    else if (Model.TotalCount > 0)
+    {
+        <div class="card-footer text-muted small">
+            Showing @Model.TotalCount @(Model.TotalCount == 1 ? "category" : "categories")
+        </div>
+    }
+</div>

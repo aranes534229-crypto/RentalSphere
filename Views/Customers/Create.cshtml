@@ -1,0 +1,65 @@
+@model RentalSphere.Modules.CustomerManagement.ViewModels.CustomerCreateViewModel
+@{
+    ViewData["Title"] = "New customer";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Index">Customers</a></li>
+        <li class="breadcrumb-item active">Create</li>
+    </ol>
+</nav>
+
+<div class="card">
+    <div class="card-body">
+        <h3 class="card-title mb-3"><i class="bi bi-person-plus"></i> New customer</h3>
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Form.FirstName" class="form-label"></label>
+                    <input asp-for="Form.FirstName" class="form-control" />
+                    <span asp-validation-for="Form.FirstName" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Form.LastName" class="form-label"></label>
+                    <input asp-for="Form.LastName" class="form-control" />
+                    <span asp-validation-for="Form.LastName" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Form.Email" class="form-label"></label>
+                    <input asp-for="Form.Email" class="form-control" />
+                    <span asp-validation-for="Form.Email" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Form.Phone" class="form-label"></label>
+                    <input asp-for="Form.Phone" class="form-control" />
+                    <span asp-validation-for="Form.Phone" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Form.Address" class="form-label"></label>
+                <input asp-for="Form.Address" class="form-control" />
+                <span asp-validation-for="Form.Address" class="text-danger"></span>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Form.City" class="form-label"></label>
+                    <input asp-for="Form.City" class="form-control" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Form.PostalCode" class="form-label"></label>
+                    <input asp-for="Form.PostalCode" class="form-control" />
+                </div>
+            </div>
+            <p class="text-muted small mb-3">
+                <i class="bi bi-info-circle"></i>
+                Loyalty tier is set automatically based on the customer's rental spend. New customers start at <strong>Bronze</strong>.
+            </p>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle"></i> Create</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+        </form>
+    </div>
+</div>

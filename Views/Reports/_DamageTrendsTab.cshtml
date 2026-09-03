@@ -1,0 +1,39 @@
+@model RentalSphere.Modules.Reports.DTOs.ReportsBundleDto
+
+<h4 class="mt-3">Damage cost trends (@Model.Granularity)</h4>
+@if (!Model.DamageTrends.Any())
+{
+    <div class="alert alert-info">No damage recorded in this window.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Period</th>
+                    <th class="text-end">Penalties</th>
+                    <th class="text-end">Affected txns</th>
+                    <th class="text-end">Damage amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var d in Model.DamageTrends)
+                {
+                    <tr>
+                        <td>@d.Period</td>
+                        <td class="text-end">@d.PenaltyCount</td>
+                        <td class="text-end">@d.AffectedTransactions</td>
+                        <td class="text-end">₱@d.DamageAmount.ToString("N2")</td>
+                    </tr>
+                }
+                <tr class="table-dark fw-bold">
+                    <td>Total</td>
+                    <td class="text-end">@Model.DamageTrends.Sum(d => d.PenaltyCount)</td>
+                    <td class="text-end">@Model.DamageTrends.Sum(d => d.AffectedTransactions)</td>
+                    <td class="text-end">₱@Model.TotalDamageAmount.ToString("N2")</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+}

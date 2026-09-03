@@ -1,0 +1,139 @@
+@model RentalSphere.Modules.RentalTransaction.ViewModels.RentalTransactionDetailsViewModel
+@{
+    ViewData["Title"] = $"Rental Transaction #{Model.Transaction.RentalTransactionID}";
+    var t = Model.Transaction;
+    var isAdminOrStaff = User.IsInRole(RoleNames.Admin) || User.IsInRole(RoleNames.Staff);
+    var backLabel = Model.Transaction.CustomerID > 0 && !isAdminOrStaff ? "My Rentals" : "Rental Transactions";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Index">@backLabel</a></li>
+        <li class="breadcrumb-item active">#@t.RentalTransactionID</li>
+    </ol>
+</nav>
+
+@if (TempData["Success"] is string succ) { <div class="alert alert-success alert-dismissible fade show">@succ<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div> }
+@if (TempData["Error"] is string err) { <div class="alert alert-danger alert-dismissible fade show">@err<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div> }
+@if (!string.IsNullOrEmpty(Model.FlashMessage)) { <div class="alert alert-warning">@Model.FlashMessage</div> }
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h3 class="card-title mb-0">Rental Transaction #@t.RentalTransactionID</h3>
+                    <span class="fs-6"><partial name="_StatusBadge" model="t.Status" /></span>
+                </div>
+                <p class="text-muted mb-3">
+                    Source reservation:
+                    @if (t.ReservationID > 0)
+                    {
+                        <a asp-controller="Reservations" asp-action="Details" asp-route-id="@t.ReservationID">#@t.ReservationID</a>
+                    }
+                    else
+                    {
+                        <span class="text-muted">walk-in</span>
+                    }
+                </p>
+
+                <dl class="row mb-3">
+                    <dt class="col-sm-3">Customer</dt>
+                    <dd class="col-sm-9"><a asp-controller="Customers" asp-action="Details" asp-route-id="@t.CustomerID">@t.CustomerName</a> <small class="text-muted">(@t.CustomerEmail)</small></dd>
+                    <dt class="col-sm-3">Checked out</dt>
+                    <dd class="col-sm-9">@t.CheckoutDate.ToString("yyyy-MM-dd HH:mm")@(string.IsNullOrEmpty(t.ProcessedByUserName) ? "" : $" by {t.ProcessedByUserName}")</dd>
+                    <dt class="col-sm-3">Expected return</dt>
+                    <dd class="col-sm-9">@t.ExpectedReturnDate.ToString("yyyy-MM-dd")</dd>
+                    @if (t.ReturnDate.HasValue)
+                    {
+                        <dt class="col-sm-3">Returned</dt>
+                        <dd class="col-sm-9">@t.ReturnDate.Value.ToString("yyyy-MM-dd HH:mm")@(string.IsNullOrEmpty(t.ReturnedToUserName) ? "" : $" by {t.ReturnedToUserName}")</dd>
+                    }
+                    <dt class="col-sm-3">Total amount</dt>
+                    <dd class="col-sm-9">₱@t.TotalAmount.ToString("N2")</dd>
+                    @if (!string.IsNullOrWhiteSpace(t.ConditionNotes))
+                    {
+                        <dt class="col-sm-3">Condition notes</dt>
+                        <dd class="col-sm-9">@t.ConditionNotes</dd>
+                    }
+                </dl>
+
+                <h5 class="mt-4">Items</h5>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Equipment</th>
+                                <th>Qty</th>
+                                <th>Daily</th>
+                                <th class="text-end">Line total</th>
+                                <th>Pinned unit</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var i in t.Items)
+                            {
+                                <tr>
+                                    <td>@i.EquipmentName</td>
+                                    <td>@i.Quantity</td>
+                                    <td>₱@i.DailyRate.ToString("N2")</td>
+                                    <td class="text-end">₱@i.LineTotal.ToString("N2")</td>
+                                    <td>
+                                        @if (i.EquipmentItemID.HasValue)
+                                        {
+                                            <code>@(i.SerialNumber ?? $"#{i.EquipmentItemID}")</code>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">—</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        @if (t.Status == "Returned" && Model.Invoice is not null)
+        {
+            var inv = Model.Invoice;
+            var balance = inv.TotalAmount - inv.AmountPaid;
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between">
+                    <span>Invoice</span>
+                    <span><partial name="~/Views/Invoices/_StatusBadge.cshtml" model="inv.Status" /></span>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2"><code>@inv.InvoiceNumber</code></div>
+                    <dl class="row mb-3">
+                        <dt class="col-sm-6">Subtotal</dt><dd class="col-sm-6 text-end">₱@inv.SubTotal.ToString("N2")</dd>
+                        <dt class="col-sm-6">Total</dt><dd class="col-sm-6 text-end">₱@inv.TotalAmount.ToString("N2")</dd>
+                        <dt class="col-sm-6">Paid</dt><dd class="col-sm-6 text-end">₱@inv.AmountPaid.ToString("N2")</dd>
+                        <dt class="col-sm-6">Balance</dt><dd class="col-sm-6 text-end text-danger">₱@balance.ToString("N2")</dd>
+                    </dl>
+                    <a asp-controller="Invoices" asp-action="Details" asp-route-id="@inv.InvoiceID"
+                       class="btn btn-primary w-100">
+                        <i class="bi bi-receipt"></i> View Invoice
+                    </a>
+                </div>
+            </div>
+        }
+
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Actions</h5>
+                <a asp-action="Index" class="btn btn-outline-secondary w-100 mb-2"><i class="bi bi-arrow-left"></i> Back to list</a>
+                @if (isAdminOrStaff && t.Status == "Active")
+                {
+                    <a asp-action="Return" asp-route-id="@t.RentalTransactionID" class="btn btn-success w-100 mb-2">
+                        <i class="bi bi-arrow-return-left"></i> Record return
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+</div>

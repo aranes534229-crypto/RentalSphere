@@ -1,0 +1,78 @@
+@model RentalSphere.Modules.Equipment.DTOs.EquipmentItemDetailsDto
+@{
+    ViewData["Title"] = $"Item {Model.SerialNumber}";
+    var canWrite = User.IsInRole(RoleNames.Admin) || User.IsInRole(RoleNames.Staff);
+    var canDelete = User.IsInRole(RoleNames.Admin);
+    var backUrl = ViewData["ReturnUrl"] as string;
+    var backHref = !string.IsNullOrEmpty(backUrl) ? backUrl : Url.Action("Index")!;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Index">Equipment units</a></li>
+        <li class="breadcrumb-item">
+            <a asp-controller="Equipment" asp-action="Details" asp-route-id="@Model.EquipmentID">@Model.EquipmentName</a>
+        </li>
+        <li class="breadcrumb-item active">@Model.SerialNumber</li>
+    </ol>
+</nav>
+
+<div class="row g-3">
+    @* ponytail: parent summary card is name+link only — extend with stock/rate when the items details DTO grows. *@
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h6 class="text-muted text-uppercase small mb-2">Parent equipment</h6>
+                <h5 class="card-title mb-2">@Model.EquipmentName</h5>
+                <p class="text-muted small mb-3">This unit is one of the tracked items under that equipment type.</p>
+                <a asp-controller="Equipment" asp-action="Details" asp-route-id="@Model.EquipmentID" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-box-seam"></i> Open parent
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h3 class="card-title mb-0"><code>@Model.SerialNumber</code></h3>
+                    <partial name="_StatusBadge" model="Model.AvailabilityStatus" />
+                </div>
+                <p class="text-muted mb-3">Item under <strong>@Model.EquipmentName</strong></p>
+
+                <dl class="row mb-3">
+                    <dt class="col-sm-4">Equipment</dt>
+                    <dd class="col-sm-8">
+                        <a asp-controller="Equipment" asp-action="Details" asp-route-id="@Model.EquipmentID">@Model.EquipmentName</a>
+                    </dd>
+
+                    <dt class="col-sm-4">Status</dt>
+                    <dd class="col-sm-8"><partial name="_StatusBadge" model="Model.AvailabilityStatus" /></dd>
+
+                    <dt class="col-sm-4">Location</dt>
+                    <dd class="col-sm-8">@(Model.Location ?? "—")</dd>
+
+                    <dt class="col-sm-4">Last status change</dt>
+                    <dd class="col-sm-8">@(Model.LastStatusChange?.ToString("yyyy-MM-dd HH:mm") ?? "—")</dd>
+                </dl>
+
+                <div class="mt-3">
+                    <a href="@backHref" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+                    @if (canWrite)
+                    {
+                        <a asp-action="Edit" asp-route-id="@Model.ItemID" asp-route-returnUrl="@backUrl" class="btn btn-primary">
+                            <i class="bi bi-pencil"></i> Edit
+                        </a>
+                    }
+                    @if (canDelete)
+                    {
+                        <a asp-action="Delete" asp-route-id="@Model.ItemID" class="btn btn-outline-danger">
+                            <i class="bi bi-trash"></i> Delete
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

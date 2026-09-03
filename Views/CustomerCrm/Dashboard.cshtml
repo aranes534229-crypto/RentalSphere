@@ -1,0 +1,117 @@
+@model RentalSphere.Modules.CustomerCrm.ViewModels.CustomerCrmDashboardViewModel
+@{
+    ViewData["Title"] = "CRM Dashboard";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-0">CRM Dashboard</h1>
+        <p class="text-muted mb-0">Customer notes & follow-up health at a glance.</p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        @if (Model.TotalUnreadCrmItems > 0)
+        {
+            <span class="badge bg-danger fs-6">
+                <i class="bi bi-bell-fill"></i> @Model.TotalUnreadCrmItems unread
+                (@Model.TotalUnreadNotesForMe notes, @Model.TotalPendingForMe follow-ups)
+            </span>
+        }
+    </div>
+</div>
+
+<form method="get" class="row g-2 align-items-end mb-3">
+    <div class="col-md-4">
+        <label class="form-label small">Search</label>
+        <input type="text" name="search" value="@Model.Search" class="form-control"
+               placeholder="Name or email…" />
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-primary btn-sm">
+            <i class="bi bi-search"></i> Search
+        </button>
+        @if (!string.IsNullOrEmpty(Model.Search))
+        {
+            <a asp-action="Dashboard" class="btn btn-outline-secondary btn-sm">Clear</a>
+        }
+    </div>
+</form>
+
+@if (!Model.Rows.Any())
+{
+    <div class="alert alert-info">No customers match.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Customer</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th class="text-end">Total notes</th>
+                    <th class="text-end">Unread notes</th>
+                    <th class="text-end">Overdue</th>
+                    <th class="text-end">Pending for you</th>
+                    <th class="text-end">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var r in Model.Rows)
+                {
+                    <tr class="@(r.OverdueFollowUps > 0 || r.PendingForMe > 0 || r.UnreadNotesForMe > 0 ? "table-warning" : "")">
+                        <td>@r.CustomerName</td>
+                        <td>@r.CustomerEmail</td>
+                        <td>
+                            @if (r.IsActive)
+                            {
+                                <span class="badge bg-success">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Inactive</span>
+                            }
+                        </td>
+                        <td class="text-end">@r.NoteCount</td>
+                        <td class="text-end">
+                            @if (r.UnreadNotesForMe > 0)
+                            {
+                                <span class="badge bg-primary">@r.UnreadNotesForMe new</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">0</span>
+                            }
+                        </td>
+                        <td class="text-end">
+                            @if (r.OverdueFollowUps > 0)
+                            {
+                                <span class="badge bg-danger">@r.OverdueFollowUps</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">0</span>
+                            }
+                        </td>
+                        <td class="text-end">
+                            @if (r.PendingForMe > 0)
+                            {
+                                <span class="badge bg-warning text-dark">@r.PendingForMe pending</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">0</span>
+                            }
+                        </td>
+                        <td class="text-end">
+                            <a asp-action="Index" asp-route-customerId="@r.CustomerID"
+                               class="btn btn-sm btn-outline-primary" title="Open CRM tab">
+                                <i class="bi bi-journal-text"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

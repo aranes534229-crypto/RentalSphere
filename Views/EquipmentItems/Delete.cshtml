@@ -1,0 +1,52 @@
+@model RentalSphere.Modules.Equipment.DTOs.EquipmentItemDetailsDto
+@{
+    ViewData["Title"] = "Delete equipment item";
+    var isAvailable = Model.AvailabilityStatus == "Available";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Index">Equipment units</a></li>
+        <li class="breadcrumb-item">
+            <a asp-action="Details" asp-route-id="@Model.ItemID">@Model.SerialNumber</a>
+        </li>
+        <li class="breadcrumb-item active">Delete</li>
+    </ol>
+</nav>
+
+<div class="card border-danger">
+    <div class="card-body">
+        <h3 class="card-title text-danger"><i class="bi bi-exclamation-triangle"></i> Delete this item?</h3>
+        <p class="lead">The item will be permanently removed from the catalog.</p>
+
+        @if (isAvailable)
+        {
+            <div class="alert alert-warning d-flex align-items-start" role="alert">
+                <i class="bi bi-exclamation-circle me-2 mt-1"></i>
+                <div>
+                    This item is currently <strong>Available</strong>, so deleting it will
+                    reduce the parent equipment's <em>Stock quantity</em> by 1.
+                </div>
+            </div>
+        }
+
+        <dl class="row">
+            <dt class="col-sm-3">Serial number</dt>
+            <dd class="col-sm-9"><code>@Model.SerialNumber</code></dd>
+            <dt class="col-sm-3">Equipment</dt>
+            <dd class="col-sm-9">
+                <a asp-controller="Equipment" asp-action="Details" asp-route-id="@Model.EquipmentID">@Model.EquipmentName</a>
+            </dd>
+            <dt class="col-sm-3">Status</dt>
+            <dd class="col-sm-9"><partial name="_StatusBadge" model="Model.AvailabilityStatus" /></dd>
+            <dt class="col-sm-3">Location</dt>
+            <dd class="col-sm-9">@(Model.Location ?? "—")</dd>
+        </dl>
+
+        <form asp-action="DeleteConfirmed" asp-route-id="@Model.ItemID" method="post" class="mt-3">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-danger"><i class="bi bi-trash"></i> Yes, delete</button>
+            <a asp-action="Details" asp-route-id="@Model.ItemID" class="btn btn-outline-secondary">Cancel</a>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,82 @@
+@model RentalSphere.Identity.Models.ViewModels.UserDetailsViewModel
+@{
+    ViewData["Title"] = "Manage roles";
+    var allRoles = (ViewData["AllRoles"] as IEnumerable<string> ?? Enumerable.Empty<string>()).ToList();
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Index">Accounts</a></li>
+        <li class="breadcrumb-item active">Roles — @Model.Email</li>
+    </ol>
+</nav>
+
+@if (TempData["Success"] is string s) { <div class="alert alert-success">@s</div> }
+@if (TempData["Error"] is string e) { <div class="alert alert-danger">@e</div> }
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h3 class="card-title">@Model.FirstName @Model.LastName</h3>
+        <p class="text-muted">@Model.Email</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <i class="bi bi-check2-circle"></i> Current roles
+            </div>
+            <ul class="list-group list-group-flush">
+                @if (!Model.Roles.Any())
+                {
+                    <li class="list-group-item text-muted text-center">No roles assigned.</li>
+                }
+                @foreach (var r in Model.Roles)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="badge bg-secondary">@r</span>
+                        <form asp-action="RemoveRole" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="userId" value="@Model.Id" />
+                            <input type="hidden" name="role" value="@r" />
+                            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-x"></i> Remove</button>
+                        </form>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <i class="bi bi-plus-circle"></i> Assign new role
+            </div>
+            <div class="card-body">
+                <form asp-action="AssignRole" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="userId" value="@Model.Id" />
+                    <div class="mb-3">
+                        <label class="form-label">Role</label>
+                        <select name="role" class="form-select">
+                            @foreach (var r in allRoles)
+                            {
+                                if (!Model.Roles.Contains(r))
+                                {
+                                    <option value="@r">@r</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <button class="btn btn-primary"><i class="bi bi-check"></i> Assign</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-3">
+    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Back to user
+    </a>
+</div>

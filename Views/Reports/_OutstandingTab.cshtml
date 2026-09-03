@@ -1,0 +1,57 @@
+@model RentalSphere.Modules.Reports.DTOs.ReportsBundleDto
+
+<h4>Outstanding balances</h4>
+@if (!Model.OutstandingBalances.Any())
+{
+    <div class="alert alert-success">No outstanding balances.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Invoice</th>
+                    <th>Customer</th>
+                    <th class="text-end">Total</th>
+                    <th class="text-end">Paid</th>
+                    <th class="text-end">Outstanding</th>
+                    <th>Due</th>
+                    <th class="text-end">Days overdue</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var o in Model.OutstandingBalances)
+                {
+                    var overdueClass = o.DaysOverdue > 30 ? "table-danger"
+                                       : o.DaysOverdue > 7 ? "table-warning"
+                                       : "";
+                    <tr class="@overdueClass">
+                        <td>
+                            <a asp-controller="Invoices" asp-action="Details" asp-route-id="@o.InvoiceID">
+                                @o.InvoiceNumber
+                            </a>
+                        </td>
+                        <td>
+                            <a asp-controller="Customers" asp-action="Details" asp-route-id="@o.CustomerID">
+                                @o.CustomerName
+                            </a>
+                        </td>
+                        <td class="text-end">₱@o.TotalAmount.ToString("N2")</td>
+                        <td class="text-end">₱@o.AmountPaid.ToString("N2")</td>
+                        <td class="text-end fw-bold">₱@o.Outstanding.ToString("N2")</td>
+                        <td>@o.DueDate.ToString("yyyy-MM-dd")</td>
+                        <td class="text-end">@(o.DaysOverdue > 0 ? o.DaysOverdue : "—")</td>
+                        <td><span class="badge bg-secondary">@o.Status</span></td>
+                    </tr>
+                }
+                <tr class="table-warning fw-bold">
+                    <td colspan="4" class="text-end">Total outstanding</td>
+                    <td class="text-end">₱@Model.TotalOutstanding.ToString("N2")</td>
+                    <td colspan="3"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+}

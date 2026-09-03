@@ -1,0 +1,175 @@
+@*
+    Role-aware sidebar. Items appear only when the current user is in the matching role.
+    Modules marked deferred in the plan have no controller yet, so they are commented out
+    and will be uncommented as those modules ship in subsequent phases.
+*@
+@{
+    var isAdmin = User.IsInRole(RoleNames.Admin);
+    var isStaff = User.IsInRole(RoleNames.Staff);
+    var isCustomer = User.IsInRole(RoleNames.Customer);
+    var isEmployee = isAdmin || isStaff;
+}
+
+<nav class="sidebar bg-light border-end p-3" style="min-height: calc(100vh - 56px);">
+    <ul class="nav flex-column">
+
+        <li class="nav-item">
+            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")"
+               asp-controller="Home" asp-action="Index">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+        </li>
+
+        @* ============ Equipment Management ============ *@
+        @if (isAdmin || isStaff || isCustomer)
+        {
+            <li class="nav-item mt-2 text-uppercase text-muted small">Equipment</li>
+
+            @if (isAdmin || isStaff || isCustomer)
+            {
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Equipment" asp-action="Index">
+                        <i class="bi bi-box-seam"></i> Equipment catalog
+                    </a>
+                </li>
+            }
+            @if (isAdmin || isStaff)
+            {
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Categories" asp-action="Index">
+                        <i class="bi bi-tags"></i> Categories
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="EquipmentItems" asp-action="Index">
+                        <i class="bi bi-upc-scan"></i> Equipment units
+                    </a>
+                </li>
+            }
+        }
+
+        @* ============ User & Role Management (Admin only) ============ *@
+        @if (isAdmin)
+        {
+            <li class="nav-item mt-2 text-uppercase text-muted small">Administration</li>
+            <li class="nav-item">
+                <a class="nav-link" asp-controller="AccountsAdmin" asp-action="Index">
+                    <i class="bi bi-people-fill"></i> Accounts &amp; Roles
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" asp-controller="AuditLog" asp-action="Index">
+                    <i class="bi bi-journal-text"></i> Audit Log
+                </a>
+            </li>
+        }
+
+        @* ============ Customer & Reservation Management ============ *@
+        @if (isAdmin || isStaff)
+        {
+            <li class="nav-item mt-2 text-uppercase text-muted small">People</li>
+            <li class="nav-item">
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Customers" ? "active" : "")"
+                   asp-controller="Customers" asp-action="Index">
+                    <i class="bi bi-people"></i> Customers
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Reservations" ? "active" : "")"
+                   asp-controller="Reservations" asp-action="Index">
+                    <i class="bi bi-calendar-check"></i> Reservations
+                </a>
+            </li>
+        }
+
+        @if (isCustomer)
+        {
+            <li class="nav-item mt-2 text-uppercase text-muted small">My Account</li>
+            <li class="nav-item">
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Customers" && ViewContext.RouteData.Values["action"]?.ToString() == "MyProfile" ? "active" : "")"
+                   asp-controller="Customers" asp-action="MyProfile">
+                    <i class="bi bi-person-circle"></i> My Profile
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Reservations" && ViewContext.RouteData.Values["action"]?.ToString() == "MyReservations" ? "active" : "")"
+                   asp-controller="Reservations" asp-action="MyReservations">
+                    <i class="bi bi-calendar-event"></i> My Reservations
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "RentalTransactions" ? "active" : "")"
+                   asp-controller="RentalTransactions" asp-action="Index">
+                    <i class="bi bi-box-arrow-up"></i> My Rentals
+                </a>
+            </li>
+        }
+
+        @if (isAdmin || isStaff)
+        {
+            <li class="nav-item mt-2 text-uppercase text-muted small">Operations</li>
+            <li class="nav-item">
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Availability" ? "active" : "")"
+                   asp-controller="Availability" asp-action="Index">
+                    <i class="bi bi-calendar3"></i> Availability
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "RentalTransactions" ? "active" : "")"
+                   asp-controller="RentalTransactions" asp-action="Index">
+                    <i class="bi bi-box-seam"></i> Rental Transactions
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Maintenance" ? "active" : "")"
+                   asp-controller="Maintenance" asp-action="Index">
+                    <i class="bi bi-tools"></i> Maintenance
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Invoices" ? "active" : "")"
+                   asp-controller="Invoices" asp-action="Index">
+                    <i class="bi bi-receipt"></i> Billing
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "DamagePenalties" ? "active" : "")"
+                   asp-controller="DamagePenalties" asp-action="Index">
+                    <i class="bi bi-exclamation-octagon"></i> Damage &amp; Penalty
+                </a>
+            </li>
+        }
+
+        @*
+            ============ Deferred modules ============
+
+            @if (isCustomer)
+            {
+                <li class="nav-item"><a class="nav-link" asp-controller="MyInvoices" asp-action="Index">My Invoices</a></li>
+            }
+        *@
+
+        @if (isAdmin || isStaff)
+        {
+            <li class="nav-item mt-2">
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "CustomerCrm" && ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")"
+                   asp-controller="CustomerCrm" asp-action="Dashboard">
+                    <i class="bi bi-journal-text"></i> CRM
+                    @await Component.InvokeAsync("CrmUnreadBadge")
+                </a>
+            </li>
+        }
+
+        @if (isAdmin || isStaff)
+        {
+            <li class="nav-item mt-2 text-uppercase text-muted small">Insights</li>
+            <li class="nav-item">
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Reports" ? "active" : "")"
+                   asp-controller="Reports" asp-action="Index">
+                    <i class="bi bi-bar-chart"></i> Reports
+                </a>
+            </li>
+        }
+
+    </ul>
+</nav>

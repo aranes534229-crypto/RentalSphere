@@ -1,0 +1,88 @@
+@model RentalSphere.Modules.RentalTransaction.ViewModels.RentalTransactionCheckoutViewModel
+@{
+    ViewData["Title"] = $"Check out reservation #{Model.ReservationID}";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Reservations" asp-action="Details" asp-route-id="@Model.ReservationID">Reservation #@Model.ReservationID</a></li>
+        <li class="breadcrumb-item active">Check out</li>
+    </ol>
+</nav>
+
+<div class="card">
+    <div class="card-body">
+        <h3 class="card-title mb-3"><i class="bi bi-box-arrow-up"></i> Check out rental</h3>
+
+        <div class="alert alert-info d-flex align-items-start" role="alert">
+            <i class="bi bi-info-circle me-2 mt-1"></i>
+            <div>
+                Confirming this checkout creates the rental transaction and moves each
+                pinned unit into <code>CheckedOut</code> status. The customer is then
+                responsible for returning them by the expected date.
+            </div>
+        </div>
+
+        <dl class="row mb-3">
+            <dt class="col-sm-3">Customer</dt>
+            <dd class="col-sm-9">@Model.CustomerName</dd>
+            <dt class="col-sm-3">Rental dates</dt>
+            <dd class="col-sm-9">
+                @Model.RentalStartDate.ToString("yyyy-MM-dd") &rarr;
+                @Model.ExpectedReturnDate.ToString("yyyy-MM-dd")
+            </dd>
+            <dt class="col-sm-3">Total amount</dt>
+            <dd class="col-sm-9">
+                <strong class="text-success fs-5">&#8369;@Model.TotalAmount.ToString("N2")</strong>
+            </dd>
+        </dl>
+
+        <h5 class="mt-4">Items</h5>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-3">
+                <thead class="table-light">
+                    <tr>
+                        <th>Equipment</th>
+                        <th>Qty</th>
+                        <th>Daily</th>
+                        <th class="text-end">Line total</th>
+                        <th>Assigned unit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var i in Model.Items)
+                    {
+                        <tr>
+                            <td>@i.EquipmentName</td>
+                            <td>@i.Quantity</td>
+                            <td>&#8369;@i.DailyRate.ToString("N2")</td>
+                            <td class="text-end">&#8369;@i.LineTotal.ToString("N2")</td>
+                            <td>
+                                @if (i.EquipmentItemID.HasValue)
+                                {
+                                    <code>@(i.SerialNumber ?? $"#{i.EquipmentItemID}")</code>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">will pick at checkout</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <form asp-action="Checkout" asp-route-reservationId="@Model.ReservationID" method="post">
+            @Html.AntiForgeryToken()
+            <div class="d-flex justify-content-between align-items-center">
+                <a asp-controller="Reservations" asp-action="Details" asp-route-id="@Model.ReservationID" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle"></i> Confirm checkout
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,27 @@
+@model RentalSphere.Modules.Equipment.DTOs.CategoryDto
+@{
+    ViewData["Title"] = "Delete category";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Index">Categories</a></li>
+        <li class="breadcrumb-item active">Delete</li>
+    </ol>
+</nav>
+
+<div class="card border-danger">
+    <div class="card-body">
+        <h3 class="card-title text-danger"><i class="bi bi-exclamation-triangle"></i> Delete category?</h3>
+        <p class="lead">@Model.Name will be permanently removed. This will fail if any equipment is still assigned to it.</p>
+        @if (!string.IsNullOrEmpty(Model.Description))
+        {
+            <p class="text-muted">@Model.Description</p>
+        }
+        <form asp-action="DeleteConfirmed" asp-route-id="@Model.CategoryID" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-danger"><i class="bi bi-trash"></i> Yes, delete</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,47 @@
+@model RentalSphere.Modules.Reports.DTOs.ReportsBundleDto
+
+<h4>Equipment utilization (window = @Model.Start.ToString("yyyy-MM-dd") → @Model.End.ToString("yyyy-MM-dd"))</h4>
+@if (!Model.Utilization.Any())
+{
+    <div class="alert alert-info">No equipment in catalog.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Equipment</th>
+                    <th>Category</th>
+                    <th class="text-end">Units</th>
+                    <th class="text-end">Reserved days</th>
+                    <th class="text-end">Available days</th>
+                    <th style="min-width: 180px;">Utilization</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var u in Model.Utilization)
+                {
+                    <tr>
+                        <td>@u.EquipmentName</td>
+                        <td>@u.CategoryName</td>
+                        <td class="text-end">@u.TotalUnits</td>
+                        <td class="text-end">@u.ReservedDays</td>
+                        <td class="text-end">@u.AvailableDays</td>
+                        <td>
+                            <div class="progress" style="height: 18px;">
+                                <div class="progress-bar @(u.UtilizationPercent >= 80 ? "bg-danger" : u.UtilizationPercent >= 50 ? "bg-warning" : "bg-success")"
+                                     role="progressbar"
+                                     style="width: @u.UtilizationPercent%"
+                                     aria-valuenow="@u.UtilizationPercent"
+                                     aria-valuemin="0" aria-valuemax="100">
+                                    @u.UtilizationPercent.ToString("N1")%
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

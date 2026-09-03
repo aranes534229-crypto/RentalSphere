@@ -1,0 +1,139 @@
+@model RentalSphere.Modules.Equipment.ViewModels.EquipmentFormViewModel
+@{
+    ViewData["Title"] = "Add equipment";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Index">Equipment</a></li>
+        <li class="breadcrumb-item active">Create</li>
+    </ol>
+</nav>
+
+<div class="card">
+    <div class="card-body">
+        <h3 class="card-title"><i class="bi bi-plus-circle"></i> Add equipment</h3>
+        <p class="text-muted">Catalog-level equipment type. The daily rate and stock quantity apply to all tracked units.</p>
+
+        <form asp-action="Create" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="row">
+                <div class="col-md-8 mb-3">
+                    <label asp-for="Form.Name" class="form-label"></label>
+                    <input asp-for="Form.Name" class="form-control" placeholder="e.g. Round Banquet Table" />
+                    <span asp-validation-for="Form.Name" class="text-danger"></span>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label asp-for="Form.Status" class="form-label"></label>
+                    <select asp-for="Form.Status" class="form-select" asp-items="Model.Statuses"></select>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Form.CategoryID" class="form-label"></label>
+                <select asp-for="Form.CategoryID" class="form-select" asp-items="Model.Categories">
+                    <option value="">-- pick a category --</option>
+                </select>
+                <span asp-validation-for="Form.CategoryID" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Form.Description" class="form-label"></label>
+                <textarea asp-for="Form.Description" class="form-control" rows="3" placeholder="Optional. Size, material, color, what's included..."></textarea>
+                <span asp-validation-for="Form.Description" class="text-danger"></span>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Form.DailyRate" class="form-label"></label>
+                    <div class="input-group">
+                        <span class="input-group-text">&#8369;</span>
+                        <input asp-for="Form.DailyRate" class="form-control" type="number" step="0.01" min="0" />
+                    </div>
+                    <span asp-validation-for="Form.DailyRate" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Form.StockQuantity" class="form-label"></label>
+                    <input asp-for="Form.StockQuantity" class="form-control" type="number" min="0" />
+                    <span asp-validation-for="Form.StockQuantity" class="text-danger"></span>
+                    <small class="form-text text-muted">
+                        Saved value auto-generates that many EquipmentItem rows in
+                        <em>Available</em> status. To retire individual units later, use
+                        <a asp-controller="EquipmentItems" asp-action="Index">Equipment Items</a>.
+                    </small>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Form.SerialPrefix" class="form-label"></label>
+                <input asp-for="Form.SerialPrefix" class="form-control text-uppercase" placeholder="TBL-" maxlength="8" />
+                <span asp-validation-for="Form.SerialPrefix" class="text-danger"></span>
+                <small class="form-text text-muted">
+                    Used to auto-generate serial numbers for new items, e.g. <code>TBL-0001</code>, <code>TBL-0002</code>.
+                    Uppercase letters, digits, and dashes only. Falls back to <code>EQ-</code> when blank.
+                </small>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Form.ImageFile" class="form-label"></label>
+                <div class="alert alert-info py-2 small mb-2">
+                    <i class="bi bi-info-circle"></i>
+                    JPG, PNG, GIF, or WEBP. Max <strong>2 MB</strong>. Optional.
+                </div>
+                <input asp-for="Form.ImageFile" class="form-control" type="file" accept="image/*" />
+                <span asp-validation-for="Form.ImageFile" class="text-danger"></span>
+                <input type="hidden" asp-for="Form.ImageURL" />
+            </div>
+
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check"></i> Save</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            var nameInput = document.getElementById('Form_Name');
+            var prefixInput = document.getElementById('Form_SerialPrefix');
+            if (!nameInput || !prefixInput) return;
+
+            // Derive a prefix from the equipment name: strip non-alphanumerics,
+            // take the first 3 chars, uppercase, append a dash.
+            // "Round Banquet Table" -> "ROU-", "iPad Pro 11" -> "IPA-".
+            function derive(name) {
+                var cleaned = (name || '').replace(/[^A-Za-z0-9]/g, '');
+                if (cleaned.length === 0) return '';
+                return cleaned.substring(0, 3).toUpperCase() + '-';
+            }
+
+            function maybeAutofill() {
+                // Auto-fill while the user hasn't manually edited the prefix,
+                // OR the prefix is empty. Once they touch it, we leave it alone.
+                if (prefixInput.dataset.autofilled === 'true' || prefixInput.value === '') {
+                    var next = derive(nameInput.value);
+                    if (next) {
+                        prefixInput.value = next;
+                        prefixInput.dataset.autofilled = 'true';
+                    }
+                }
+            }
+
+            nameInput.addEventListener('input', maybeAutofill);
+            prefixInput.addEventListener('input', function () {
+                // User typed in the prefix directly -> stop auto-suggesting.
+                prefixInput.dataset.autofilled = 'false';
+            });
+
+            // On initial render: if the prefix is empty, derive from the
+            // current name. If the prefix is already filled (e.g. on
+            // re-render after validation failure), don't touch it.
+            if (prefixInput.value === '' && nameInput.value) {
+                maybeAutofill();
+            }
+        })();
+    </script>
+}

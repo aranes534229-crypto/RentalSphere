@@ -1,0 +1,144 @@
+@model RentalSphere.Modules.Equipment.ViewModels.EquipmentEditViewModel
+@{
+    ViewData["Title"] = "Edit equipment";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Index">Equipment</a></li>
+        <li class="breadcrumb-item active">Edit @Model.Form.Name</li>
+    </ol>
+</nav>
+
+<div class="card">
+    <div class="card-body">
+        <h3 class="card-title"><i class="bi bi-pencil"></i> Edit @Model.Form.Name</h3>
+
+        <form asp-action="Edit" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Form.EquipmentID" />
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="row">
+                <div class="col-md-8 mb-3">
+                    <label asp-for="Form.Name" class="form-label"></label>
+                    <input asp-for="Form.Name" class="form-control" />
+                    <span asp-validation-for="Form.Name" class="text-danger"></span>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label asp-for="Form.Status" class="form-label"></label>
+                    <select asp-for="Form.Status" class="form-select" asp-items="Model.Statuses"></select>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Form.CategoryID" class="form-label"></label>
+                <select asp-for="Form.CategoryID" class="form-select" asp-items="Model.Categories"></select>
+                <span asp-validation-for="Form.CategoryID" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Form.Description" class="form-label"></label>
+                <textarea asp-for="Form.Description" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Form.Description" class="text-danger"></span>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Form.DailyRate" class="form-label"></label>
+                    <div class="input-group">
+                        <span class="input-group-text">&#8369;</span>
+                        <input asp-for="Form.DailyRate" class="form-control" type="number" step="0.01" min="0" />
+                    </div>
+                    <span asp-validation-for="Form.DailyRate" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Form.StockQuantity" class="form-label"></label>
+                    <input asp-for="Form.StockQuantity" class="form-control" type="number" min="0" />
+                    <span asp-validation-for="Form.StockQuantity" class="text-danger"></span>
+                    <small class="form-text text-muted">
+                        Increasing this value auto-generates that many new
+                        <a asp-controller="EquipmentItems" asp-action="Index" asp-route-equipmentId="@Model.Form.EquipmentID">EquipmentItem</a>
+                        rows. Lowering it below the current tracked count is rejected &mdash; retire or delete units individually instead.
+                    </small>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Form.SerialPrefix" class="form-label"></label>
+                <input asp-for="Form.SerialPrefix" class="form-control text-uppercase" placeholder="TBL-" maxlength="8" />
+                <span asp-validation-for="Form.SerialPrefix" class="text-danger"></span>
+                <small class="form-text text-muted">
+                    Used to auto-generate serial numbers for new items, e.g. <code>TBL-0001</code>.
+                    Uppercase letters, digits, and dashes only. Falls back to <code>EQ-</code> when blank.
+                </small>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Image</label>
+                <div class="alert alert-info py-2 small mb-2">
+                    <i class="bi bi-info-circle"></i>
+                    JPG, PNG, GIF, or WEBP. Max <strong>2 MB</strong>. Leave empty to keep the current image.
+                </div>
+                @if (!string.IsNullOrEmpty(Model.Form.ImageURL))
+                {
+                    <div class="mb-2">
+                        <img src="@Model.Form.ImageURL" alt="Current image" class="img-thumbnail" style="max-height: 160px;" />
+                    </div>
+                }
+                else
+                {
+                    <div class="text-muted small mb-2">No image set.</div>
+                }
+                <input type="hidden" asp-for="Form.ImageURL" />
+                <input asp-for="Form.ImageFile" class="form-control" type="file" accept="image/*" />
+                <span asp-validation-for="Form.ImageFile" class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check"></i> Save</button>
+            <a asp-action="Details" asp-route-id="@Model.Form.EquipmentID" class="btn btn-outline-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            var nameInput = document.getElementById('Form_Name');
+            var prefixInput = document.getElementById('Form_SerialPrefix');
+            if (!nameInput || !prefixInput) return;
+
+            // Derive a prefix from the equipment name: strip non-alphanumerics,
+            // take the first 3 chars, uppercase, append a dash.
+            function derive(name) {
+                var cleaned = (name || '').replace(/[^A-Za-z0-9]/g, '');
+                if (cleaned.length === 0) return '';
+                return cleaned.substring(0, 3).toUpperCase() + '-';
+            }
+
+            function maybeAutofill() {
+                if (prefixInput.dataset.autofilled === 'true' || prefixInput.value === '') {
+                    var next = derive(nameInput.value);
+                    if (next) {
+                        prefixInput.value = next;
+                        prefixInput.dataset.autofilled = 'true';
+                    }
+                }
+            }
+
+            nameInput.addEventListener('input', maybeAutofill);
+            prefixInput.addEventListener('input', function () {
+                prefixInput.dataset.autofilled = 'false';
+            });
+
+            // On initial render: if the prefix is empty, derive from the
+            // current name. On Edit, the saved prefix is pre-populated, so
+            // we leave it alone — renaming the equipment doesn't silently
+            // change the prefix (the user has to clear + retype to opt in).
+            if (prefixInput.value === '' && nameInput.value) {
+                maybeAutofill();
+            }
+        })();
+    </script>
+}
