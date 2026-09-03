@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: rentalsphere
+    env: dotnet
+    plan: free
+    branch: main
+    buildCommand: dotnet publish RentalSphere.csproj -c Release -o /app
+    startCommand: cd /app && dotnet RentalSphere.dll --urls=http://0.0.0.0:$PORT
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
