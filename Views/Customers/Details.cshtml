@@ -17,11 +17,11 @@
             <h3 class="card-title mb-0">@Model.FirstName @Model.LastName</h3>
             @if (Model.IsActive)
             {
-                <span class="badge bg-success">Active</span>
+                <span class="text-success">Active</span>
             }
             else
             {
-                <span class="badge bg-secondary">Inactive</span>
+                <span class="text-danger">Inactive</span>
             }
         </div>
         <p class="text-muted mb-3">@Model.Email</p>
@@ -33,7 +33,7 @@
             <dd class="col-sm-9">@(string.Join(", ", new[] { Model.Address, Model.City, Model.PostalCode }.Where(s => !string.IsNullOrWhiteSpace(s))) ?? "—")</dd>
             <dt class="col-sm-3">Loyalty tier</dt>
             <dd class="col-sm-9">
-                <span class="badge bg-secondary">@Model.LoyaltyTier</span>
+                @Model.LoyaltyTier
             </dd>
             <dt class="col-sm-3">Total spent</dt>
             <dd class="col-sm-9">₱@Model.TotalSpent.ToString("N2")</dd>

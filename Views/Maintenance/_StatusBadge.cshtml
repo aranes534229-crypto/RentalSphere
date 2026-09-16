@@ -1,0 +1,11 @@
+@model string
+@{
+    // Maintenance status -> text color. No badge — plain inline text.
+    var cls = Model switch
+    {
+        "InProgress" => "text-warning",
+        "Completed"  => "text-success",
+        _            => "text-muted"
+    };
+}
+<span class="@cls">@Model</span>

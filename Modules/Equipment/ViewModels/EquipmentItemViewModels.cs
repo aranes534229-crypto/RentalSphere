@@ -23,7 +23,7 @@ public class EquipmentItemsIndexViewModel
     public int TotalPages => PageSize <= 0 ? 1 : (int)Math.Ceiling((double)TotalCount / PageSize);
 
     public string PageUrl(int page) =>
-        $"?search={Search}&equipmentId={EquipmentID}&categoryId={CategoryId}&status={StatusFilter}&page={page}&pageSize={PageSize}";
+        $"?search={Uri.EscapeDataString(Search ?? "")}&equipmentId={EquipmentID}&categoryId={CategoryId}&status={StatusFilter}&page={page}&pageSize={PageSize}";
 
     public List<SelectListItem> StatusOptions { get; } = new()
     {

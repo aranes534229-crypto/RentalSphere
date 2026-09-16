@@ -70,7 +70,7 @@
                         @foreach (var l in Model.Lines)
                         {
                             <tr>
-                                <td><span class="badge bg-light text-dark">@l.LineType</span></td>
+                                <td><span class="text-muted">@l.LineType</span></td>
                                 <td>@l.Description</td>
                                 <td class="text-end">@l.Quantity</td>
                                 <td class="text-end">₱@l.UnitAmount.ToString("N2")</td>

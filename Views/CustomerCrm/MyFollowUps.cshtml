@@ -3,30 +3,54 @@
     ViewData["Title"] = "My Follow-ups";
 }
 
-<h1 class="h3 mb-3">My Follow-ups</h1>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2 class="mb-0"><i class="bi bi-calendar-check"></i> @ViewData["Title"]</h2>
+        <small class="text-muted d-block mt-1">Follow-ups scheduled for your account.</small>
+    </div>
+</div>
+
+@if (TempData["Success"] is string s) { <div class="alert alert-success alert-dismissible fade show" role="alert">@s<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div> }
+@if (TempData["Error"] is string e) { <div class="alert alert-danger alert-dismissible fade show" role="alert">@e<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div> }
 
 @if (!Model.Any())
 {
-    <div class="alert alert-info">No follow-ups on your account yet.</div>
+    <div class="crm-main-card">
+        <div class="card-body text-center text-muted py-5">
+            <i class="bi bi-calendar-check" style="font-size: 2.5rem;"></i>
+            <p class="mb-0 mt-2">No follow-ups on your account yet.</p>
+        </div>
+    </div>
 }
 else
 {
-    <div class="list-group">
-        @foreach (var f in Model)
-        {
-            <div class="list-group-item">
-                <div class="d-flex justify-content-between">
-                    <strong>@f.Reason</strong>
-                    <small class="text-muted">@f.FollowUpDate.ToString("yyyy-MM-dd")</small>
-                </div>
-                <span class="badge bg-@(f.Status == "Done" ? "success" : f.Status == "Cancelled" ? "secondary" : "primary")">
-                    @f.Status
-                </span>
-                @if (!string.IsNullOrEmpty(f.ResolutionNotes))
-                {
-                    <p class="mb-0 mt-2 text-muted">@f.ResolutionNotes</p>
-                }
-            </div>
-        }
+    <div class="crm-main-card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle crm-table">
+                <thead class="crm-table-header">
+                    <tr>
+                        <th>Reason</th>
+                        <th class="text-end">Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var f in Model)
+                    {
+                        <tr>
+                            <td>
+                                <span class="crm-name-link">@f.Reason</span>
+                                @if (!string.IsNullOrEmpty(f.ResolutionNotes))
+                                {
+                                    <p class="mb-0 mt-1 text-muted small" style="white-space: pre-wrap;">@f.ResolutionNotes</p>
+                                }
+                            </td>
+                            <td class="text-end"><small>@f.FollowUpDate.ToString("yyyy-MM-dd")</small></td>
+                            <td><partial name="_StatusBadge" model="f.Status" /></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
 }

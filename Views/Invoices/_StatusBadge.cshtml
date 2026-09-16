@@ -1,13 +1,13 @@
 @model string
 @{
-    // Invoice status -> Bootstrap badge class mapping.
+    // Invoice status -> text color. No badge — plain inline text.
     var cls = Model switch
     {
-        "Paid"          => "bg-success",
-        "PartiallyPaid" => "bg-warning text-dark",
-        "Voided"        => "bg-secondary",
-        "Overdue"       => "bg-danger",
-        _               => "bg-secondary"
+        "Paid"          => "text-success",
+        "PartiallyPaid" => "text-warning",
+        "Voided"        => "text-muted",
+        "Overdue"       => "text-danger",
+        _               => "text-muted"
     };
 }
-<span class="badge @cls">@Model</span>
+<span class="@cls">@Model</span>

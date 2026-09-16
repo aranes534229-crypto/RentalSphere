@@ -32,11 +32,11 @@
                     <h3 class="card-title mb-0">@Model.FirstName @Model.LastName</h3>
                     @if (Model.IsActive)
                     {
-                        <span class="badge bg-success">Active</span>
+                        <span class="text-success">Active</span>
                     }
                     else
                     {
-                        <span class="badge bg-secondary">Inactive</span>
+                        <span class="text-muted">Inactive</span>
                     }
                 </div>
                 <p class="text-muted mb-3">@Model.Email</p>
@@ -48,7 +48,7 @@
                     <dd class="col-sm-9">@(string.Join(", ", new[] { Model.Address, Model.City, Model.PostalCode }.Where(s => !string.IsNullOrWhiteSpace(s))) ?? "—")</dd>
                     <dt class="col-sm-3">Loyalty tier</dt>
                     <dd class="col-sm-9">
-                        <span class="badge bg-secondary">@Model.LoyaltyTier</span>
+                        <span class="text-muted">@Model.LoyaltyTier</span>
                     </dd>
                     <dt class="col-sm-3">Total reservations</dt>
                     <dd class="col-sm-9">@Model.ReservationCount</dd>
@@ -91,22 +91,22 @@
                                             @switch (r.Status)
                                             {
                                                 case "Pending":
-                                                    <span class="badge bg-warning text-dark">Pending</span>
+                                                    <span class="text-warning">Pending</span>
                                                     break;
                                                 case "Confirmed":
-                                                    <span class="badge bg-primary">Confirmed</span>
+                                                    <span class="text-primary">Confirmed</span>
                                                     break;
                                                 case "Active":
-                                                    <span class="badge bg-info text-dark">Active</span>
+                                                    <span class="text-info">Active</span>
                                                     break;
                                                 case "Completed":
-                                                    <span class="badge bg-success">Completed</span>
+                                                    <span class="text-success">Completed</span>
                                                     break;
                                                 case "Cancelled":
-                                                    <span class="badge bg-secondary">Cancelled</span>
+                                                    <span class="text-muted">Cancelled</span>
                                                     break;
                                                 default:
-                                                    <span class="badge bg-light text-dark">@r.Status</span>
+                                                    <span class="text-muted">@r.Status</span>
                                                     break;
                                             }
                                         </td>

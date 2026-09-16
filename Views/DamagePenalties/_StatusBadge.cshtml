@@ -1,0 +1,13 @@
+@model string
+@{
+    // DamagePenalty status -> text color. No badge — plain inline text.
+    var cls = Model switch
+    {
+        "Pending"          => "text-warning",
+        "AppliedToInvoice" => "text-info",
+        "Waived"           => "text-success",
+        "Voided"           => "text-danger",
+        _                  => "text-muted"
+    };
+}
+<span class="@cls">@Model</span>

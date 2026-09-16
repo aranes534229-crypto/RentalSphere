@@ -5,7 +5,33 @@
     var start = (DateTime)ViewBag.Start;
     var end = (DateTime)ViewBag.End;
     var categoryId = (int?)ViewBag.CategoryId;
-    Func<int, string> cellClass = (n) => n <= 0 ? "table-danger" : (n <= 4 ? "table-warning" : "table-success");
+
+    // Per-cell background for the day columns. Pinned to exact hex values so a
+    // site-wide Bootstrap override can't shift them. The legend at the bottom
+    // uses the same hex codes — both should be edited together.
+    //   available == 0                    -> #dc3545 (vibrant red, white text, inset ring)
+    //   available > 0 and < 5             -> #fff3cd (yellow, "low stock")
+    //   available >= 5                    -> #d1e7dd (green,  "sufficient")
+    // Zero-stock cells get an extra inline ring so they pop off the grid; the
+    // helper returns a `style` string instead of a bg/fg pair to carry that
+    // extra property. Yellow and green cells keep the flat two-color treatment.
+    string CellStyle(int available, out string aria)
+    {
+        if (available == 0)
+        {
+            aria = "0 available — out of stock";
+            return "background-color: #dc3545; color: #ffffff; font-weight: 700; box-shadow: inset 0 0 0 2px #b02a37;";
+        }
+
+        if (available < 5)
+        {
+            aria = $"{available} available — low stock";
+            return "background-color: #fff3cd; color: #664d03;";
+        }
+
+        aria = $"{available} available — sufficient";
+        return "background-color: #d1e7dd; color: #0f5132;";
+    }
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -34,13 +60,13 @@
 
 <div class="card">
     <div class="table-responsive">
-        <table class="table table-sm table-bordered mb-0 align-middle text-center">
-            <thead class="table-dark">
+        <table class="table table-sm table-bordered mb-0 align-middle text-center" style="border-color: #ffffff;">
+            <thead style="background-color: #f8f9fa; color: #212529; border-bottom: 2px solid #dee2e6;">
                 <tr>
-                    <th class="text-start">Equipment</th>
+                    <th class="text-start" style="background-color: #f8f9fa; color: #212529; border-bottom: 2px solid #dee2e6;">Equipment</th>
                     @foreach (var d in Model.Dates)
                     {
-                        <th style="min-width: 60px">
+                        <th style="min-width: 60px; background-color: #f8f9fa; color: #212529; border-bottom: 2px solid #dee2e6;">
                             <div class="small">@d.ToString("ddd")</div>
                             <div>@d.ToString("MM-dd")</div>
                         </th>
@@ -55,23 +81,26 @@
                 @foreach (var row in Model.Rows)
                 {
                     <tr>
-                        <td class="text-start">
+                        <td class="text-start" style="background-color: transparent;">
                             <div>@row.EquipmentName</div>
-                            <small class="text-muted">@row.CategoryName · @row.TotalUnits unit(s)</small>
+                            <small class="text-muted">@row.CategoryName · @row.TotalUnits in stock</small>
                         </td>
                         @foreach (var cell in row.Cells)
                         {
-                            <td class="@cellClass(cell.Available)"><strong>@cell.Available</strong></td>
+                            var style = CellStyle(cell.Available, out var aria);
+                            <td style="@style" aria-label="@aria">
+                                <strong>@cell.Available</strong>
+                            </td>
                         }
                     </tr>
                 }
             </tbody>
         </table>
     </div>
-    <div class="card-body small text-muted">
-        <span class="badge bg-success">≥5 available</span>
-        <span class="badge bg-warning text-dark ms-1">1–4 available</span>
-        <span class="badge bg-danger ms-1">0 available</span>
-        <span class="ms-2">Counts already subtract items in maintenance and confirmed reservations overlapping each day.</span>
+    <div class="card-body small text-muted d-flex flex-wrap align-items-center gap-2">
+        <span class="badge" style="background-color: #dc3545; color: #fff;">0 available (Out of stock)</span>
+        <span class="badge" style="background-color: #fff3cd; color: #664d03;">Low stock (&lt;5 available)</span>
+        <span class="badge" style="background-color: #d1e7dd; color: #0f5132;">Sufficient stock (≥5 available)</span>
+        <span class="ms-2">Counts start from each equipment's stock, then subtract units in maintenance and confirmed/checked-out reservations overlapping each day.</span>
     </div>
 </div>

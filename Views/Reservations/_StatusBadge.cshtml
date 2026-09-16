@@ -1,15 +1,16 @@
 @model string
 @{
-    // Reservation status -> Bootstrap badge class mapping.
+    // Reservation status -> text color. No badge — plain inline text.
+    // Green = positive/active states, red = negative/ended states.
     var cls = Model switch
     {
-        "Pending"    => "bg-warning text-dark",
-        "Confirmed"  => "bg-success",
-        "CheckedOut" => "bg-primary",
-        "Completed"  => "bg-success",
-        "Cancelled"  => "bg-secondary",
-        "Expired"    => "bg-dark",
-        _            => "bg-secondary"
+        "Confirmed"  => "text-success",
+        "CheckedOut" => "text-info",
+        "Completed"  => "text-success",
+        "Pending"    => "text-warning",
+        "Cancelled"  => "text-danger",
+        "Expired"    => "text-muted",
+        _            => "text-muted"
     };
 }
-<span class="badge @cls">@Model</span>
+<span class="@cls">@Model</span>

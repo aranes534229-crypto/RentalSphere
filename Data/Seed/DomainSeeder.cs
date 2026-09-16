@@ -52,7 +52,11 @@ public static class DomainSeeder
             var now = DateTime.UtcNow;
             foreach (var eq in eqLookup)
             {
-                var units = Math.Min(eq.StockQuantity, 3); // keep seed pool small.
+                // One EquipmentItem row per unit so the items list, catalog StockQuantity,
+                // and the Availability calendar all agree. Cap only at StockQuantity to
+                // avoid a hard floor of 3 (which used to leave every large catalog row
+                // under-stocked vs. its declared stock).
+                var units = eq.StockQuantity;
                 for (var i = 1; i <= units; i++)
                 {
                     db.EquipmentItems.Add(new EquipmentItem

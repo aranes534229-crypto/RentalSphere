@@ -1,109 +1,175 @@
 @model RentalSphere.Modules.DamagePenalty.ViewModels.DamagePenaltyIndexViewModel
 @{
     ViewData["Title"] = "Damage & Penalty";
+    var hasFilter = !string.IsNullOrWhiteSpace(Model.StatusFilter) || Model.RentalTransactionFilter.HasValue;
 }
+
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3 mb-0">Damage &amp; Penalty</h1>
-    <a asp-action="Create" class="btn btn-primary">+ Record</a>
+    <div>
+        <h2 class="mb-0"><i class="bi bi-emoji-frown"></i> @ViewData["Title"]</h2>
+        <small class="text-muted d-block mt-1">
+            Damage assessments and late/loss fees on rental transactions.
+        </small>
+    </div>
+    <a asp-action="Create" class="btn damage-add-btn">
+        <i class="bi bi-plus-circle"></i> Add record
+    </a>
 </div>
 
-@if (TempData["Success"] is string ok) { <div class="alert alert-success">@ok</div> }
-@if (TempData["Error"] is string err) { <div class="alert alert-danger">@err</div> }
+@if (TempData["Success"] is string s) { <div class="alert alert-success alert-dismissible fade show">@s<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div> }
+@if (TempData["Error"] is string e) { <div class="alert alert-danger alert-dismissible fade show">@e<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div> }
 
-<form method="get" class="row g-2 mb-3">
-    <div class="col-md-4">
-        <select name="statusFilter" class="form-select" asp-items="@(new Microsoft.AspNetCore.Mvc.Rendering.SelectList(Model.Statuses, "Value", "Text", Model.StatusFilter))"></select>
+<form method="get" class="mb-3 damage-filter-form" id="damageFilterForm">
+    <div class="row g-2 align-items-center">
+        <div class="col-md-4">
+            <select name="statusFilter" class="form-select damage-filter-control" id="damageStatusSelect"
+                    asp-items="@(new Microsoft.AspNetCore.Mvc.Rendering.SelectList(Model.Statuses, "Value", "Text", Model.StatusFilter))"
+                    onchange="this.form.submit();">
+            </select>
+        </div>
+        <div class="col-md-3">
+            <input type="number" name="rentalTransactionId" value="@Model.RentalTransactionFilter" class="form-control damage-filter-control"
+                   placeholder="Rental Tx #"
+                   onchange="this.form.submit();" />
+        </div>
+        <div class="col-md-1 d-flex gap-1">
+            @if (hasFilter)
+            {
+                <a asp-action="Index" class="btn btn-outline-secondary" title="Clear filters"><i class="bi bi-x-lg"></i></a>
+            }
+        </div>
     </div>
-    <div class="col-md-3">
-        <input type="number" name="rentalTransactionId" value="@Model.RentalTransactionFilter" class="form-control" placeholder="Rental Tx #" />
-    </div>
-    <div class="col-md-2">
-        <button type="submit" class="btn btn-primary w-100">Filter</button>
-    </div>
-    <div class="col-md-2">
-        <a asp-action="Index" class="btn btn-outline-secondary w-100">Reset</a>
-    </div>
-    <input type="hidden" name="pageSize" value="@Model.PageSize" />
+    <input type="hidden" name="pageSize" id="damagePageSize" value="@Model.PageSize" />
+    <input type="hidden" name="sort" value="@Model.Sort" />
 </form>
 
-<div class="card">
-    <div class="card-body p-0">
-        <table class="table table-hover mb-0">
-            <thead class="table-light">
+<div class="damage-main-card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle damage-table">
+            <thead class="damage-table-header">
                 <tr>
                     <th>
-                        <a class="link-dark text-decoration-none" href="@Model.SortUrl("id")">#@(Model.Sort == "id" ? " ▲" : Model.Sort == "id_desc" ? " ▼" : "")</a>
+                        <a class="damage-header-link" href="@Model.SortUrl("id")">#@(Model.Sort == "id" ? " ▲" : Model.Sort == "id_desc" ? " ▼" : "")</a>
                     </th>
                     <th>
-                        <a class="link-dark text-decoration-none" href="@Model.SortUrl("tx")">Tx #@(Model.Sort == "tx" ? " ▲" : Model.Sort == "tx_desc" ? " ▼" : "")</a>
+                        <a class="damage-header-link" href="@Model.SortUrl("tx")">Tx #@(Model.Sort == "tx" ? " ▲" : Model.Sort == "tx_desc" ? " ▼" : "")</a>
                     </th>
                     <th>Type</th>
                     <th>Description</th>
                     <th>Equipment</th>
                     <th class="text-end">
-                        <a class="link-dark text-decoration-none" href="@Model.SortUrl("amount")">Amount@(Model.Sort == "amount" ? " ▲" : Model.Sort == "amount_desc" ? " ▼" : "")</a>
+                        <a class="damage-header-link" href="@Model.SortUrl("amount")">Amount@(Model.Sort == "amount" ? " ▲" : Model.Sort == "amount_desc" ? " ▼" : "")</a>
                     </th>
                     <th class="text-end">Waived</th>
                     <th>Status</th>
                     <th>
-                        <a class="link-dark text-decoration-none" href="@Model.SortUrl("date")">Reported@(Model.Sort == "date" ? " ▲" : Model.Sort == "date_desc" ? " ▼" : "")</a>
+                        <a class="damage-header-link" href="@Model.SortUrl("date")">Reported@(Model.Sort == "date" ? " ▲" : Model.Sort == "date_desc" ? " ▼" : "")</a>
                     </th>
-                    <th></th>
+                    <th class="text-end">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 @if (!Model.Items.Any())
                 {
-                    <tr><td colspan="10" class="text-center text-muted py-4">No damage records.</td></tr>
+                    <tr><td colspan="10" class="p-0">
+                        <div class="text-center text-muted py-5">
+                            <i class="bi bi-emoji-frown" style="font-size: 2.5rem;"></i>
+                            <p class="mb-1 mt-2">No damage records match your filters.</p>
+                            @if (hasFilter)
+                            {
+                                <a asp-action="Index" class="btn btn-sm btn-outline-secondary mt-2">
+                                    <i class="bi bi-x-lg"></i> Reset filters
+                                </a>
+                            }
+                        </div>
+                    </td></tr>
                 }
                 @foreach (var p in Model.Items)
                 {
-                    var badgeClass = p.StatusName switch
-                    {
-                        "Pending" => "bg-warning text-dark",
-                        "AppliedToInvoice" => "bg-info text-dark",
-                        "Waived" => "bg-success",
-                        _ => "bg-secondary",
-                    };
-                    <tr>
-                        <td>@p.DamagePenaltyID</td>
-                        <td><a asp-controller="RentalTransactions" asp-action="Details" asp-route-id="@p.RentalTransactionID">#@p.RentalTransactionID</a></td>
-                        <td><span class="badge bg-light text-dark">@p.PenaltyTypeName</span></td>
+                    var netAmount = p.Amount - p.WaivedAmount;
+                    var balance = netAmount > 0 ? netAmount : 0m;
+                    <tr class="@(p.StatusName == "Pending" ? "table-warning" : "")">
+                        <td><code>@p.DamagePenaltyID</code></td>
+                        <td><a asp-controller="RentalTransactions" asp-action="Details" asp-route-id="@p.RentalTransactionID" class="damage-name-link">#@p.RentalTransactionID</a></td>
+                        <td><span class="text-muted">@p.PenaltyTypeName</span></td>
                         <td>@p.Description</td>
-                        <td>@(p.EquipmentName ?? "—") @(string.IsNullOrEmpty(p.SerialNumber) ? "" : $"({p.SerialNumber})")</td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(p.EquipmentName))
+                            {
+                                <span>@p.EquipmentName</span>
+                                @if (!string.IsNullOrEmpty(p.SerialNumber))
+                                {
+                                    <span class="text-muted">(@p.SerialNumber)</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </td>
                         <td class="text-end">₱@p.Amount.ToString("N2")</td>
                         <td class="text-end">₱@p.WaivedAmount.ToString("N2")</td>
-                        <td><span class="badge @badgeClass">@p.StatusName</span></td>
-                        <td>@p.ReportedAt.ToString("yyyy-MM-dd")</td>
-                        <td><a asp-action="Details" asp-route-id="@p.DamagePenaltyID" class="btn btn-sm btn-outline-primary">Open</a></td>
+                        <td><partial name="_StatusBadge" model="p.StatusName" /></td>
+                        <td><small>@p.ReportedAt.ToString("yyyy-MM-dd")</small></td>
+                        <td class="text-end">
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-link p-0 damage-action-btn" type="button"
+                                        data-bs-toggle="dropdown" aria-expanded="false" aria-label="Actions">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end damage-popout">
+                                    <li><a class="dropdown-item" asp-action="Details" asp-route-id="@p.DamagePenaltyID"><i class="bi bi-eye me-2"></i>Open</a></li>
+                                </ul>
+                            </div>
+                        </td>
                     </tr>
                 }
             </tbody>
         </table>
     </div>
-    @if (Model.TotalPages > 1)
-    {
-        <div class="card-footer d-flex justify-content-between align-items-center">
+    <div class="card-footer d-flex justify-content-between align-items-center py-3">
+        <div class="d-flex align-items-center">
+            <label for="damagePageSizeSelect" class="me-2 mb-0 fw-medium">Show:</label>
+            <select id="damagePageSizeSelect" class="form-select form-select-sm" aria-label="Rows per page"
+                    onchange="document.getElementById('damagePageSize').value = this.value; document.getElementById('damageFilterForm').submit();">
+                @if (Model.PageSize == 5) { <option value="5" selected>5</option> } else { <option value="5">5</option> }
+                @if (Model.PageSize == 10) { <option value="10" selected>10</option> } else { <option value="10">10</option> }
+                @if (Model.PageSize == 20) { <option value="20" selected>20</option> } else { <option value="20">20</option> }
+                @if (Model.PageSize == 50) { <option value="50" selected>50</option> } else { <option value="50">50</option> }
+            </select>
+        </div>
+        @if (Model.TotalPages > 1)
+        {
             <small class="text-muted">
                 Showing @((Model.Page - 1) * Model.PageSize + 1)–@(Math.Min(Model.Page * Model.PageSize, Model.TotalCount))
                 of @Model.TotalCount
             </small>
             <nav>
-                <ul class="pagination pagination-sm mb-0">
-                    <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
-                        <a class="page-link" href="@Model.PageUrl(Math.Max(1, Model.Page - 1))">‹ Prev</a>
-                    </li>
+                <div class="d-flex align-items-center damage-pagination" style="gap: 6px;">
+                    <a class="pagination-pill @(Model.Page <= 1 ? "disabled" : "")" href="@Model.PageUrl(1)">&laquo;</a>
+                    <a class="pagination-pill @(Model.Page <= 1 ? "disabled" : "")" href="@Model.PageUrl(Math.Max(1, Model.Page - 1))">&#8249;</a>
                     @for (var p = 1; p <= Model.TotalPages; p++)
                     {
-                        <li class="page-item @(p == Model.Page ? "active" : "")">
-                            <a class="page-link" href="@Model.PageUrl(p)">@p</a>
-                        </li>
+                        if (p == Model.Page)
+                        {
+                            <a class="pagination-pill active" href="#">@p</a>
+                        }
+                        else
+                        {
+                            <a class="pagination-pill" href="@Model.PageUrl(p)">@p</a>
+                        }
                     }
-                    <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")">
-                        <a class="page-link" href="@Model.PageUrl(Math.Min(Model.TotalPages, Model.Page + 1))">Next ›</a>
-                    </li>
-                </ul>
+                    <span class="pagination-ellipsis" aria-hidden="true">…</span>
+                    <a class="pagination-pill @(Model.Page >= Model.TotalPages ? "disabled" : "")" href="@Model.PageUrl(Math.Min(Model.TotalPages, Model.Page + 1))">&#8250;</a>
+                    <a class="pagination-pill @(Model.Page >= Model.TotalPages ? "disabled" : "")" href="@Model.PageUrl(Model.TotalPages)">&raquo;</a>
+                </div>
             </nav>
-        </div>
-    }
+        }
+        else if (Model.TotalCount > 0)
+        {
+            <small class="text-muted">
+                Showing @Model.TotalCount record@(Model.TotalCount == 1 ? "" : "s")
+            </small>
+        }
+    </div>
 </div>

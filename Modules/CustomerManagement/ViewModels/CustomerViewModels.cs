@@ -25,10 +25,10 @@ public class CustomerIndexViewModel
     };
 
     public string SortUrl(string column) =>
-        $"?search={Search}&loyaltyTier={LoyaltyFilter}&sort={ToggleSort(column)}&page={Page}&pageSize={PageSize}";
+        $"?search={Uri.EscapeDataString(Search ?? "")}&loyaltyTier={Uri.EscapeDataString(LoyaltyFilter ?? "")}&sort={ToggleSort(column)}&page={Page}&pageSize={PageSize}";
 
     public string PageUrl(int page) =>
-        $"?search={Search}&loyaltyTier={LoyaltyFilter}&sort={Sort}&page={page}&pageSize={PageSize}";
+        $"?search={Uri.EscapeDataString(Search ?? "")}&loyaltyTier={Uri.EscapeDataString(LoyaltyFilter ?? "")}&sort={Sort}&page={page}&pageSize={PageSize}";
 
     private string ToggleSort(string column)
     {

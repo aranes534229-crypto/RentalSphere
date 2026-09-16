@@ -7,8 +7,8 @@
     @if (canEdit)
     {
         <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">Add Note</div>
+            <div class="crm-main-card">
+                <div class="card-header crm-table-header">Add Note</div>
                 <div class="card-body">
                     <form asp-action="AddNote" method="post">
                         @Html.AntiForgeryToken()
@@ -16,7 +16,7 @@
                         <input type="hidden" name="tab" value="notes" />
                         <div class="mb-3">
                             <label class="form-label">Note</label>
-                            <textarea name="Body" class="form-control" rows="5" required maxlength="2000"
+                            <textarea name="Body" class="form-control crm-filter-control" rows="5" required maxlength="2000"
                                       placeholder="Interaction summary, observation, or follow-up context…">@Model.NewNote.Body</textarea>
                         </div>
                         <div class="form-check mb-3">
@@ -27,7 +27,7 @@
                             @* ASP.NET checkbox binding for non-string bool: include a hidden "false" so unchecked still sends false *@
                             <input type="hidden" name="IsFlagged" value="false" />
                         </div>
-                        <button type="submit" class="btn btn-primary w-100">
+                        <button type="submit" class="btn crm-add-btn w-100">
                             <i class="bi bi-plus-lg"></i> Add Note
                         </button>
                     </form>
@@ -43,32 +43,32 @@
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="customerId" value="@Model.CustomerID" />
                 <input type="hidden" name="tab" value="notes" />
-                <button type="submit" class="btn btn-sm btn-outline-primary">
+                <button type="submit" class="btn btn-sm btn-outline-primary crm-action-btn">
                     <i class="bi bi-envelope-open"></i> Mark all as read
                 </button>
             </form>
         }
         @if (!Model.Notes.Any())
         {
-            <div class="alert alert-info">No notes yet.</div>
+            <div class="alert alert-info crm-filter-form">No notes yet.</div>
         }
         else
         {
-            <div class="list-group">
+            <div class="list-group crm-table">
                 @foreach (var n in Model.Notes)
                 {
-                    <div class="list-group-item @(n.IsUnreadForCurrentUser ? "list-group-item-warning" : "")">
+                    <div class="list-group-item @(n.IsUnreadForCurrentUser ? "table-warning" : "")">
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
                                 @if (n.IsUnreadForCurrentUser)
                                 {
-                                    <span class="badge bg-primary me-2" title="Unread for you">
+                                    <span class="text-primary crm-table-badge me-2" title="Unread for you">
                                         <i class="bi bi-circle-fill"></i> New
                                     </span>
                                 }
                                 @if (n.IsFlagged)
                                 {
-                                    <span class="badge bg-warning text-dark me-2">
+                                    <span class="text-warning crm-table-badge me-2">
                                         <i class="bi bi-flag-fill"></i> Flagged
                                     </span>
                                 }
@@ -87,14 +87,14 @@
                                     @if (n.IsUnreadForCurrentUser)
                                     {
                                         <input type="hidden" name="makeRead" value="true" />
-                                        <button type="submit" class="btn btn-sm btn-outline-primary" title="Mark as read">
+                                        <button type="submit" class="btn btn-sm btn-outline-primary crm-action-btn" title="Mark as read">
                                             <i class="bi bi-envelope-open"></i> Mark read
                                         </button>
                                     }
                                     else
                                     {
                                         <input type="hidden" name="makeRead" value="false" />
-                                        <button type="submit" class="btn btn-sm btn-outline-secondary" title="Mark as unread">
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary crm-action-btn" title="Mark as unread">
                                             <i class="bi bi-envelope"></i> Mark unread
                                         </button>
                                     }

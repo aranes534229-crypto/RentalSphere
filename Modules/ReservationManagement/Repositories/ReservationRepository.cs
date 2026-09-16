@@ -10,8 +10,10 @@ public interface IReservationRepository
     Task<Reservation?> GetAsync(int id);
     Task<Reservation?> GetWithItemsAsync(int id);
     Task<List<Reservation>> ListByCustomerAsync(int customerId);
-    Task<int> CountByCustomerAsync(int customerId);
-    Task<List<Reservation>> ListByCustomerPagedAsync(int customerId, int skip, int take);
+    Task<int> CountByCustomerAsync(int customerId, string? statusFilter = null);
+    Task<List<Reservation>> ListByCustomerPagedAsync(int customerId, int skip, int take, string? statusFilter = null);
+    Task<int> CountByStatusAsync(ReservationStatus status);
+    Task<int> CountPendingForCustomerAsync(int customerId);
     Task AddAsync(Reservation entity);
     void Update(Reservation entity);
     Task RemoveAsync(Reservation entity);
@@ -66,16 +68,52 @@ public class ReservationRepository : IReservationRepository
             .OrderByDescending(r => r.ReservationDate)
             .ToListAsync();
 
-    public async Task<int> CountByCustomerAsync(int customerId) =>
-        await _db.Reservations.CountAsync(r => r.CustomerID == customerId);
+    public async Task<int> CountByCustomerAsync(int customerId, string? statusFilter = null)
+    {
+        var q = _db.Reservations.AsQueryable().Where(r => r.CustomerID == customerId);
+        q = ApplyStatusFilter(q, statusFilter);
+        return await q.CountAsync();
+    }
 
-    public async Task<List<Reservation>> ListByCustomerPagedAsync(int customerId, int skip, int take) =>
-        await _db.Reservations
+    public Task<int> CountByStatusAsync(ReservationStatus status) =>
+        _db.Reservations.CountAsync(r => r.Status == status);
+
+    // Pending only — Confirmed/Cancelled/Completed/CheckedOut/Expired all
+    // clear the sidebar badge. Used by the customer-portal sidebar ViewComponent.
+    public Task<int> CountPendingForCustomerAsync(int customerId) =>
+        _db.Reservations.CountAsync(r =>
+            r.CustomerID == customerId
+            && r.Status == ReservationStatus.Pending);
+
+    public async Task<List<Reservation>> ListByCustomerPagedAsync(
+        int customerId, int skip, int take, string? statusFilter = null)
+    {
+        var q = _db.Reservations
             .Include(r => r.Items)
-            .Where(r => r.CustomerID == customerId)
-            .OrderByDescending(r => r.ReservationDate)
+            .Where(r => r.CustomerID == customerId);
+        q = ApplyStatusFilter(q, statusFilter);
+        return await q.OrderByDescending(r => r.ReservationDate)
             .Skip(skip).Take(take)
             .ToListAsync();
+    }
+
+    // Status filtering shared by the paged and count paths. An empty/unknown
+    // filter returns everything; "Other" captures every closed/cancelled state
+    // in one pill. Mirrors how RentalTransactions treats derived filters.
+    private static IQueryable<Reservation> ApplyStatusFilter(IQueryable<Reservation> q, string? statusFilter)
+    {
+        if (string.IsNullOrWhiteSpace(statusFilter)) return q;
+        if (statusFilter == "Other")
+        {
+            return q.Where(r => r.Status != ReservationStatus.Pending
+                             && r.Status != ReservationStatus.Confirmed);
+        }
+        if (Enum.TryParse<ReservationStatus>(statusFilter, out var st))
+        {
+            q = q.Where(r => r.Status == st);
+        }
+        return q;
+    }
 
     public async Task AddAsync(Reservation entity) => await _db.Reservations.AddAsync(entity);
 

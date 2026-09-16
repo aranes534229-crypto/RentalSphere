@@ -43,11 +43,17 @@ public class CustomerCrmController : Controller
         _current = current;
     }
 
-    // GET /CustomerCrm/Dashboard — Admin/Staff landing. Lists all customers with note + follow-up counts.
+    // GET /CustomerCrm/Dashboard — Admin/Staff landing. Lists all customers with
+    // note + follow-up counts. Paged + sortable to match the Maintenance/Billing
+    // module landing pages.
     [HttpGet]
     [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Staff)]
-    public async Task<IActionResult> Dashboard(string? search)
+    public async Task<IActionResult> Dashboard(string? search, int page = 1, int pageSize = 20, string? sort = null)
     {
+        page = page < 1 ? 1 : page;
+        pageSize = pageSize < 1 ? 20 : Math.Min(pageSize, 200);
+
+        // Build the base query (filter + sort) so we can page it server-side.
         var q = _db.Customers.AsQueryable();
         if (!string.IsNullOrWhiteSpace(search))
         {
@@ -58,18 +64,33 @@ public class CustomerCrmController : Controller
                 c.Email.ToLower().Contains(s));
         }
 
-        var customers = await q.OrderBy(c => c.LastName).ThenBy(c => c.FirstName).ToListAsync();
-        var ids = customers.Select(c => c.CustomerID).ToList();
+        q = sort?.ToLowerInvariant() switch
+        {
+            "name"         => q.OrderBy(c => c.LastName).ThenBy(c => c.FirstName),
+            "name_desc"    => q.OrderByDescending(c => c.LastName).ThenByDescending(c => c.FirstName),
+            "email"        => q.OrderBy(c => c.Email),
+            "email_desc"   => q.OrderByDescending(c => c.Email),
+            _              => q.OrderBy(c => c.LastName).ThenBy(c => c.FirstName),
+        };
+
+        var totalCount = await q.CountAsync();
+        var skip = (page - 1) * pageSize;
+        var pagedCustomers = await q.Skip(skip).Take(pageSize).ToListAsync();
+
+        // NOTE: aggregate counts below run over the full filtered set so the KPI
+        // summary (bell badge numbers) stays a whole-customer view, not just this
+        // page. We re-query the filtered id set rather than the page slice.
+        var allIds = await q.Select(c => c.CustomerID).ToListAsync();
 
         var noteCounts = await _db.CustomerNotes
-            .Where(n => ids.Contains(n.CustomerID))
+            .Where(n => allIds.Contains(n.CustomerID))
             .GroupBy(n => n.CustomerID)
             .Select(g => new { CustomerID = g.Key, Count = g.Count() })
             .ToDictionaryAsync(x => x.CustomerID, x => x.Count);
 
         var today = DateTime.UtcNow.Date;
         var openFollowUps = await _db.CustomerFollowUps
-            .Where(f => ids.Contains(f.CustomerID)
+            .Where(f => allIds.Contains(f.CustomerID)
                      && f.Status == FollowUpStatus.Pending
                      && f.FollowUpDate < today)
             .GroupBy(f => f.CustomerID)
@@ -78,7 +99,7 @@ public class CustomerCrmController : Controller
 
         var viewerId = _current.UserId ?? "";
         var pendingByCustomer = await _db.CustomerFollowUps
-            .Where(f => ids.Contains(f.CustomerID)
+            .Where(f => allIds.Contains(f.CustomerID)
                      && f.Status == FollowUpStatus.Pending
                      && f.AssignedToUserId == viewerId)
             .GroupBy(f => f.CustomerID)
@@ -87,7 +108,7 @@ public class CustomerCrmController : Controller
 
         // Per-customer unread note count for the current user.
         var unreadNotesByCustomer = await _db.CustomerNotes
-            .Where(n => ids.Contains(n.CustomerID)
+            .Where(n => allIds.Contains(n.CustomerID)
                      && !_db.NoteReads.Any(r => r.CustomerNoteID == n.CustomerNoteID
                                               && r.UserId == viewerId))
             .GroupBy(n => n.CustomerID)
@@ -100,10 +121,14 @@ public class CustomerCrmController : Controller
         var vm = new CustomerCrmDashboardViewModel
         {
             Search = search,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount,
+            Sort = sort,
             TotalPendingForMe = totalPending,
             TotalUnreadNotesForMe = totalUnreadNotes,
             TotalUnreadCrmItems = totalPending + totalUnreadNotes,
-            Rows = customers.Select(c => new CustomerCrmDashboardRow
+            Rows = pagedCustomers.Select(c => new CustomerCrmDashboardRow
             {
                 CustomerID = c.CustomerID,
                 CustomerName = $"{c.FirstName} {c.LastName}".Trim(),

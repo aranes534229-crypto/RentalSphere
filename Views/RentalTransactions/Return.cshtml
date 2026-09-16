@@ -1,7 +1,8 @@
-@model RentalSphere.Modules.RentalTransaction.ViewModels.RentalTransactionReturnViewModel
+@model RentalSphere.Modules.RentalTransaction.DTOs.RentalTransactionReturnDto
 @{
-    ViewData["Title"] = $"Return rental #{Model.Transaction.RentalTransactionID}";
-    var t = Model.Transaction;
+    ViewData["Title"] = $"Return rental #{ViewBag.Transaction.RentalTransactionID}";
+    var t = (RentalSphere.Modules.RentalTransaction.DTOs.RentalTransactionDetailsDto)ViewBag.Transaction;
+    var allLines = (List<RentalSphere.Modules.RentalTransaction.ViewModels.DamageAssignmentRow>)ViewBag.AllLines;
 }
 
 <nav aria-label="breadcrumb">
@@ -19,8 +20,8 @@
             <i class="bi bi-info-circle me-2 mt-1"></i>
             <div>
                 Each pinned unit will be moved from <code>CheckedOut</code> back to
-                <code>Available</code>. Use the flag below to flag the transaction for
-                the upcoming damage/penalty workflow if anything needs follow-up.
+                <code>Available</code>. Use the flags below to route the return
+                to the right follow-up workflow.
             </div>
         </div>
 
@@ -35,25 +36,86 @@
 
         <form asp-action="Return" asp-route-id="@t.RentalTransactionID" method="post">
             @Html.AntiForgeryToken()
-            <input type="hidden" asp-for="Form.RentalTransactionID" />
+            <input type="hidden" asp-for="RentalTransactionID" />
 
             <div class="mb-3">
-                <label asp-for="Form.ConditionNotes" class="form-label"></label>
-                <textarea asp-for="Form.ConditionNotes" class="form-control" rows="4" placeholder="e.g., minor scratch on top; all other items clean"></textarea>
-                <span asp-validation-for="Form.ConditionNotes" class="text-danger small"></span>
+                <label asp-for="ConditionNotes" class="form-label"></label>
+                <textarea asp-for="ConditionNotes" class="form-control" rows="4" placeholder="e.g., minor scratch on top; all other items clean"></textarea>
+                <span asp-validation-for="ConditionNotes" class="text-danger small"></span>
                 <small class="form-text text-muted">Free-form notes about the condition of the returned equipment.</small>
             </div>
 
             <div class="alert alert-warning d-flex align-items-start" role="alert">
                 <i class="bi bi-exclamation-circle me-2 mt-1"></i>
                 <div class="flex-grow-1">
-                    <div class="form-check mb-0">
-                        <input asp-for="Form.FlaggedForDamage" class="form-check-input" type="checkbox" />
-                        <label asp-for="Form.FlaggedForDamage" class="form-check-label">
-                            Flag this return for damage / penalty review
+                    <div class="form-check mb-2">
+                        <input asp-for="FlagForMaintenance" class="form-check-input" type="checkbox" id="flagMaintenance" />
+                        <label asp-for="FlagForMaintenance" class="form-check-label">
+                            Flag for maintenance / inspection <span class="text-muted small">(Equipment is damaged, dirty, or needs repair)</span>
                         </label>
                     </div>
-                    <small class="text-muted">Use when equipment was returned damaged, dirty, or late.</small>
+                    <div class="form-check mb-0">
+                        <input asp-for="FlagForLatePenalty" class="form-check-input" type="checkbox" id="flagLate" />
+                        <label asp-for="FlagForLatePenalty" class="form-check-label">
+                            Assess late return penalty <span class="text-muted small">(Equipment is fine, but returned past due date)</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div id="damageSection" class="card border-warning mb-3" style="display:none;">
+                <div class="card-body">
+                    <h6 class="card-title text-warning"><i class="bi bi-tools"></i> Damage quarantine</h6>
+                    <p class="small text-muted">
+                        Each line below is the unit that will be moved to
+                        <code>InMaintenance</code> on this return. Pinned lines move
+                        automatically; unpinned lines need a unit picked below.
+                    </p>
+
+                    <div class="list-group">
+                        @foreach (var row in allLines)
+                        {
+                            <div class="list-group-item damage-line @(row.IsPinned ? "" : "bg-warning-subtle")"
+                                 data-pinned="@row.IsPinned.ToString().ToLowerInvariant()">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <div>
+                                        <strong>@row.EquipmentName</strong>
+                                        @if (row.IsPinned)
+                                        {
+                                            <span class="text-muted ms-2">auto: <code>@row.PinnedSerialNumber</code></span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-warning ms-2">unpinned — pick a unit</span>
+                                        }
+                                    </div>
+                                </div>
+
+                                @if (row.IsPinned)
+                                {
+                                    <small class="text-muted">Will be moved to <code>InMaintenance</code> automatically.</small>
+                                }
+                                else
+                                {
+                                    <select class="form-select form-select-sm damage-assign"
+                                            name="DamageAssignments[@row.RentalTransactionItemID].EquipmentItemID"
+                                            data-line-id="@row.RentalTransactionItemID">
+                                        <option value="">— pick a unit —</option>
+                                        @foreach (var c in row.Candidates)
+                                        {
+                                            <option value="@c.ItemID">@c.SerialNumber (@c.Status)</option>
+                                        }
+                                    </select>
+                                    <input type="hidden"
+                                           name="DamageAssignments[@row.RentalTransactionItemID].RentalTransactionItemID"
+                                           value="@row.RentalTransactionItemID" />
+                                    <div class="invalid-feedback d-none damage-feedback">
+                                        Pick a unit to quarantine this item.
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
                 </div>
             </div>
 
@@ -61,7 +123,7 @@
                 <a asp-action="Details" asp-route-id="@t.RentalTransactionID" class="btn btn-outline-secondary">
                     <i class="bi bi-arrow-left"></i> Cancel
                 </a>
-                <button type="submit" class="btn btn-success">
+                <button type="submit" class="btn btn-success" id="submitBtn">
                     <i class="bi bi-check-circle"></i> Complete return
                 </button>
             </div>
@@ -71,4 +133,61 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const flagMaint = document.getElementById('flagMaintenance');
+            const flagLate = document.getElementById('flagLate');
+            const section = document.getElementById('damageSection');
+            const submitBtn = document.getElementById('submitBtn');
+            if (!flagMaint || !section) return;
+
+            // The damage card holds one .damage-line per transaction item.
+            // Pinned lines are informational; only unpinned lines carry a
+            // .damage-assign <select> that the operator must fill in — and
+            // only when the maintenance flag is on.
+            const unpinnedSelects = () => section.querySelectorAll(
+                '.damage-line[data-pinned="false"] .damage-assign');
+
+            function paintValidation() {
+                let ok = true;
+                unpinnedSelects().forEach(sel => {
+                    const empty = !sel.value;
+                    sel.classList.toggle('is-invalid', empty);
+                    const fb = sel.parentElement.querySelector('.damage-feedback');
+                    if (fb) fb.classList.toggle('d-none', !empty);
+                    if (empty) ok = false;
+                });
+                return ok;
+            }
+
+            function sync() {
+                // The damage picker is only relevant when the operator
+                // flagged for maintenance. Late-only returns don't need a
+                // per-unit assignment and don't quarantine anything.
+                const on = flagMaint.checked;
+                section.style.display = on ? '' : 'none';
+                if (on) {
+                    const ok = paintValidation();
+                    if (submitBtn) submitBtn.disabled = !ok;
+                } else if (submitBtn) {
+                    submitBtn.disabled = false;
+                }
+            }
+
+            section.addEventListener('change', (e) => {
+                if (e.target.classList && e.target.classList.contains('damage-assign')) {
+                    if (flagMaint.checked) {
+                        const ok = paintValidation();
+                        if (submitBtn) submitBtn.disabled = !ok;
+                    }
+                }
+            });
+
+            flagMaint.addEventListener('change', sync);
+            // The late flag has no UI implications of its own — just trigger
+            // sync() in case the picker is open and needs to re-validate.
+            if (flagLate) flagLate.addEventListener('change', sync);
+            sync();
+        })();
+    </script>
 }

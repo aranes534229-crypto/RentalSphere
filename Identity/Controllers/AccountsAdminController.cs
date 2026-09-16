@@ -31,11 +31,23 @@ public class AccountsAdminController : Controller
         _current = current;
     }
 
-    public async Task<IActionResult> Index(string? search)
+    public async Task<IActionResult> Index(string? search, int page = 1, int pageSize = 20)
     {
-        var users = await _service.ListAsync(search);
-        ViewData["Search"] = search;
-        return View(users);
+        page = page < 1 ? 1 : page;
+        pageSize = pageSize < 1 ? 20 : Math.Min(pageSize, 200);
+        var skip = (page - 1) * pageSize;
+
+        var (items, total) = await _service.ListPagedAsync(search, skip, pageSize);
+
+        var vm = new AccountsAdminIndexViewModel
+        {
+            Items = items,
+            Search = search,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = total,
+        };
+        return View(vm);
     }
 
     public async Task<IActionResult> Details(string id)

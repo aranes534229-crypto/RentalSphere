@@ -3,9 +3,12 @@ using RentalSphere.Common.Services;
 using RentalSphere.Identity.Services;
 using RentalSphere.Modules.Billing.Services;
 using RentalSphere.Modules.CustomerManagement.Repositories;
+using RentalSphere.Modules.DamagePenalty.Services;
 using RentalSphere.Modules.Equipment.Models;
 using RentalSphere.Modules.Equipment.Repositories;
 using RentalSphere.Modules.Equipment.Services;
+using RentalSphere.Modules.Maintenance.Services;
+using RentalSphere.Modules.Maintenance.Repositories;
 using RentalSphere.Modules.RentalTransaction.DTOs;
 using RentalSphere.Modules.RentalTransaction.Models;
 using RentalSphere.Modules.RentalTransaction.Repositories;
@@ -21,6 +24,8 @@ public interface IRentalTransactionService
     Task<(List<RentalTransactionListItemDto> Items, int TotalCount)> ListPagedAsync(
         string? statusFilter, bool mineOnly, int skip, int take);
     Task<int> CountAsync(string? statusFilter, bool mineOnly);
+    Task<int> CountOverdueAsync(int? customerId = null);
+    Task<int> CountOverdueForCurrentUserAsync();
     Task<RentalTransactionDetailsDto> GetDetailsAsync(int id);
     Task<int> CheckoutAsync(int reservationId, string actorUserId);
     Task ReturnAsync(RentalTransactionReturnDto dto, string actorUserId);
@@ -35,6 +40,9 @@ public class RentalTransactionService : IRentalTransactionService
     private readonly IEquipmentItemService _itemService;
     private readonly ICustomerRepository _customers;
     private readonly IBillingService _billing;
+    private readonly IDamagePenaltyService _damagePenalties;
+    private readonly IMaintenanceService _maintenance;
+    private readonly IMaintenanceRepository _maintenanceRepo;
     private readonly ICurrentUser _current;
     private readonly IAuditLogger _audit;
 
@@ -45,6 +53,9 @@ public class RentalTransactionService : IRentalTransactionService
         IEquipmentItemService itemService,
         ICustomerRepository customers,
         IBillingService billing,
+        IDamagePenaltyService damagePenalties,
+        IMaintenanceService maintenance,
+        IMaintenanceRepository maintenanceRepo,
         ICurrentUser current,
         IAuditLogger audit)
     {
@@ -54,6 +65,9 @@ public class RentalTransactionService : IRentalTransactionService
         _itemService = itemService;
         _customers = customers;
         _billing = billing;
+        _damagePenalties = damagePenalties;
+        _maintenance = maintenance;
+        _maintenanceRepo = maintenanceRepo;
         _current = current;
         _audit = audit;
     }
@@ -80,6 +94,37 @@ public class RentalTransactionService : IRentalTransactionService
     {
         var (customerId, _) = await ResolveCustomerScopeAsync(mineOnly);
         return await _repo.CountAsync(statusFilter, customerId);
+    }
+
+    public async Task<int> CountOverdueAsync(int? customerId = null)
+    {
+        // Staff/Admin get a global overdue count; passing a customerId scopes
+        // the count to that customer's overdue rentals for the customer-portal
+        // sidebar badge.
+        if (customerId.HasValue)
+        {
+            return await _repo.CountOverdueForCustomerAsync(customerId.Value);
+        }
+        if (!_current.IsAdmin && !_current.IsStaff) return 0;
+        return await _repo.CountOverdueAsync();
+    }
+
+    /// <summary>
+    /// Role-aware overdue count used by the sidebar ViewComponent. Resolves
+    /// the current user to a Customer when in customer scope and forwards
+    /// the id; returns the global overdue count for staff. No-op for
+    /// anonymous or other roles.
+    /// </summary>
+    public async Task<int> CountOverdueForCurrentUserAsync()
+    {
+        if (_current.IsCustomerScoped)
+        {
+            var customer = await _customers.GetByUserIdAsync(_current.UserId!);
+            if (customer is null) return 0;
+            return await CountOverdueAsync(customer.CustomerID);
+        }
+        if (!_current.IsAdmin && !_current.IsStaff) return 0;
+        return await CountOverdueAsync();
     }
 
     /// <summary>Returns (customerId, ok). ok=false when the scope is wrong.</summary>
@@ -121,29 +166,21 @@ public class RentalTransactionService : IRentalTransactionService
             throw new InvalidOperationException(
                 $"Reservation {reservationId} has already been checked out.");
 
-        // Pin one concrete EquipmentItem per unit. The reservation's Confirm step already
-        // moved items into Reserved status; here we pick concrete units from that pool,
-        // preferring the AssignedItemID recorded by Confirm.
+        // Pin one concrete EquipmentItem per unit. Pull items physically bookable
+        // AND not currently pinned to a Confirmed/CheckedOut reservation overlapping
+        // the checkout window half-open. Per-item status is unreliable for "is this
+        // unit free"; the reservation table is the source of truth.
         var itemLines = new List<RentalTransactionItem>();
         var pinnedIds = new List<int>();
         foreach (var line in r.Items)
         {
-            var reserved = await _items.ListReservedByEquipmentAsync(line.EquipmentID);
-            var picked = reserved
+            var free = await _items.ListFreeForRangeAsync(
+                line.EquipmentID, r.RentalStartDate, r.RentalEndDate,
+                excludeReservationId: r.ReservationID);
+            var picked = free
                 .Where(i => !pinnedIds.Contains(i.ItemID))
                 .Take(line.Quantity)
                 .ToList();
-
-            // If we still need units, fall back to the Available pool (covers reservations
-            // that pre-dated the per-line AssignedItemID logic, plus any manual edge cases).
-            if (picked.Count < line.Quantity)
-            {
-                var stillNeeded = line.Quantity - picked.Count;
-                var fallback = await _items.ListAvailableByEquipmentAsync(line.EquipmentID);
-                picked.AddRange(fallback
-                    .Where(i => !pinnedIds.Contains(i.ItemID))
-                    .Take(stillNeeded));
-            }
 
             if (picked.Count < line.Quantity)
                 throw new InvalidOperationException(
@@ -215,32 +252,178 @@ public class RentalTransactionService : IRentalTransactionService
             throw new InvalidOperationException(
                 $"Only Active transactions can be returned (current status: {t.Status}).");
 
+        // ponytail: maintenance-flagged returns go straight to InMaintenance so
+        // the unit is quarantined and removed from the customer booking pool
+        // until staff explicitly close the maintenance record. Late-fee-only
+        // returns (equipment is fine, just past due) go back to Available —
+        // we never quarantine a unit that's in good condition.
+        var postReturnStatus = dto.FlagForMaintenance
+            ? AvailabilityStatus.InMaintenance
+            : AvailabilityStatus.Available;
+
+        // Backfill any unpinned line items with a unit chosen by the operator
+        // when the return is flagged for maintenance. This is what makes "9
+        // Avail / 1 Mx" reflect correctly on the Equipment Units page after a
+        // damaged walk-in return or any line that was created without a serial.
+        var explicitAssignments = (dto.DamageAssignments ?? new())
+            .GroupBy(a => a.RentalTransactionItemID)
+            .ToDictionary(g => g.Key, g => g.Last().EquipmentItemID);
+
+        if (dto.FlagForMaintenance)
+        {
+            foreach (var line in t.Items.Where(i => !i.EquipmentItemID.HasValue))
+            {
+                if (!explicitAssignments.TryGetValue(line.RentalTransactionItemID, out var chosenId) || chosenId <= 0)
+                    throw new InvalidOperationException(
+                        $"Line {line.RentalTransactionItemID} ({line.Equipment?.Name ?? "equipment"}) has no pinned unit. " +
+                        "Pick a unit to quarantine before flagging this return for damage.");
+
+                // Verify the chosen unit is actually a unit of this equipment
+                // row and not already InMaintenance/Retired — prevent the
+                // operator from accidentally quarantining a unit that was
+                // already off-rotation for someone else's repair.
+                var chosen = await _items.GetAsync(chosenId)
+                    ?? throw new NotFoundException($"Equipment unit #{chosenId} not found.");
+                if (chosen.EquipmentID != line.EquipmentID)
+                    throw new InvalidOperationException(
+                        $"Unit {chosen.SerialNumber} is not a unit of {line.Equipment?.Name}.");
+                if (chosen.AvailabilityStatus == AvailabilityStatus.Retired)
+                    throw new InvalidOperationException(
+                        $"Unit {chosen.SerialNumber} is retired and cannot be quarantined.");
+                if (chosen.AvailabilityStatus == AvailabilityStatus.InMaintenance)
+                    throw new InvalidOperationException(
+                        $"Unit {chosen.SerialNumber} is already InMaintenance. Close the existing maintenance record first.");
+
+                line.EquipmentItemID = chosenId;
+                // The line is already tracked by EF (Include in GetWithItemsAsync);
+                // setting EquipmentItemID is enough — SaveChanges below will persist it.
+            }
+        }
+
         var pinned = t.Items
             .Where(i => i.EquipmentItemID.HasValue)
             .Select(i => i.EquipmentItemID!.Value)
             .Distinct()
             .ToList();
 
-        // ponytail: damage-flagged returns go straight to InMaintenance so the
-        // unit is quarantined and removed from the customer booking pool until
-        // staff explicitly close the maintenance record. Non-damaged returns
-        // go back to Available as before.
-        var postReturnStatus = dto.FlaggedForDamage
-            ? AvailabilityStatus.InMaintenance
-            : AvailabilityStatus.Available;
-
-        foreach (var itemId in pinned)
+        // ponytail: flip the pinned units' AvailabilityStatus AND seed the
+        // pending DamagePenalty rows as part of the SAME DbContext commit as
+        // the rental-transaction closeout. Three concerns (rental closeout +
+        // unit status flip + damage seed) all share one SaveChanges at the
+        // bottom of this method, so they're atomic.
+        //
+        // Req 1a: explicitly fetch the matching EquipmentItem entity per
+        // pinned id (GetAsync gives a fresh read; do not rely on the
+        // Include-tracked navigation on t.Items because that's the stale
+        // snapshot EF loaded with the rental).
+        // Req 1b: item.AvailabilityStatus = AvailabilityStatus.InMaintenance
+        // (when FlaggedForDamage) — explicit field assignment on the tracked
+        // entity, no per-unit SaveChanges.
+        // Req 1c: _damagePenalties.SeedPendingRecords attaches a Pending
+        // (Amount=0) DamagePenalty row per unit to the SAME DbContext.
+        var unitStatusChanges = new List<(int ItemID, string Old, string New)>();
+        if (pinned.Count > 0)
         {
-            await _itemService.ChangeStatusAsync(itemId, postReturnStatus.ToString(), actorUserId);
+            var now = DateTime.UtcNow;
+            foreach (var itemId in pinned)
+            {
+                // 1a. Explicit fetch.
+                var item = await _items.GetAsync(itemId)
+                    ?? throw new NotFoundException($"Equipment unit #{itemId} not found.");
+
+                // 1b. Explicit status flip. Set the field on the tracked
+                // entity; the SaveChanges at the bottom of this method
+                // commits the change.
+                var oldStatus = item.AvailabilityStatus;
+                if (oldStatus != postReturnStatus)
+                {
+                    item.AvailabilityStatus = postReturnStatus;
+                    item.LastStatusChange = now;
+                    unitStatusChanges.Add((item.ItemID, oldStatus.ToString(), postReturnStatus.ToString()));
+                }
+            }
         }
 
-        var oldStatus = t.Status;
+        // 1c. Seed the pending damage records. Only when the operator
+        // explicitly flagged the return for maintenance. The service attaches
+        // to the current DbContext; SaveChanges at the bottom commits them in
+        // the same transaction as the unit status flip and the rental closeout.
+        if (dto.FlagForMaintenance && pinned.Count > 0)
+        {
+            _damagePenalties.SeedPendingRecords(
+                t.RentalTransactionID, pinned, actorUserId, notes: dto.ConditionNotes);
+        }
+
+        // 1c-late. Seed a single transaction-level LateFee DamagePenalty when
+        // the operator flagged the return for late penalty. Equipment units
+        // are NOT quarantined in this path — the unit status is already set
+        // to Available above. The penalty row carries no EquipmentItemID so
+        // it's a transaction-level fee, not a per-unit charge. We pre-fill
+        // Amount = overdueDays * totalDailyRate so the operator has a
+        // sensible default; the Update Amount form on the Details view still
+        // lets them adjust before the invoice is finalized.
+        if (dto.FlagForLatePenalty)
+        {
+            var overdueDays = Math.Max(1, (int)Math.Ceiling((DateTime.UtcNow - t.ExpectedReturnDate).TotalDays));
+            var totalDailyRate = t.Items.Sum(i => i.Quantity * (i.Equipment?.DailyRate ?? 0m));
+            var suggestedAmount = overdueDays * totalDailyRate;
+            _damagePenalties.SeedLateFeeRecord(
+                t.RentalTransactionID,
+                suggestedAmount,
+                overdueDays,
+                t.ExpectedReturnDate,
+                actorUserId,
+                notes: dto.ConditionNotes);
+        }
+
+        // 1d. Auto-open a MaintenanceRecord per quarantined unit so the unit
+        // has an active repair ticket on the Maintenance dashboard the
+        // moment the return is recorded. Only when the operator flagged
+        // the return for maintenance. The service attaches to the caller's
+        // tracked DbContext via AddSync (no SaveChanges) so the maintenance
+        // record commits atomically with the unit status flip, the damage
+        // seed, and the rental closeout in the single SaveChanges at the
+        // bottom.
+        //
+        // Req 2: MaintenanceRecord.EquipmentItemID = unit ID,
+        //        Status = InProgress, Reason seeded from the rental context,
+        //        StartedAt = now (UTC).
+        if (dto.FlagForMaintenance && pinned.Count > 0)
+        {
+            // Pre-filter units that already have an open record so we
+            // don't double-open. ItemsWithOpenRecordAsync does one DB hit
+            // and returns the set; we skip those when seeding.
+            var alreadyOpen = await _maintenanceRepo.ItemsWithOpenRecordAsync(pinned);
+            var now = DateTime.UtcNow;
+            var seedReason = $"Damage flagged on Return for Tx #{t.RentalTransactionID}";
+            foreach (var itemId in pinned)
+            {
+                if (alreadyOpen.Contains(itemId)) continue;
+                _maintenance.SeedRecordForReturn(
+                    equipmentItemID: itemId,
+                    rentalTransactionId: t.RentalTransactionID,
+                    reason: seedReason,
+                    actorUserId: actorUserId,
+                    now: now);
+            }
+        }
+
+        var oldTxStatus = t.Status;
         t.ReturnDate = DateTime.UtcNow;
         t.ConditionNotes = dto.ConditionNotes;
-        t.FlaggedForDamage = dto.FlaggedForDamage;
+        // The persisted FlaggedForDamage flag drives BillingService:
+        // it adds a damage-assessment invoice line per pending DamagePenalty
+        // for this transaction. Either the maintenance flag or the late
+        // penalty flag produces pending penalty rows, so the persisted flag
+        // is the OR of the two.
+        t.FlaggedForDamage = dto.FlagForMaintenance || dto.FlagForLatePenalty;
         t.Status = RentalTransactionStatus.Returned;
         t.ReturnedToUserId = _current.UserId;
         _repo.Update(t);
+
+        // Single SaveChanges commits: rental closeout + every unit status
+        // flip + every pending DamagePenalty row. If any of them fails, the
+        // whole batch rolls back.
         await _repo.SaveChangesAsync();
 
         // ponytail: when the source reservation is CheckedOut (set by CheckoutAsync),
@@ -259,7 +442,7 @@ public class RentalTransactionService : IRentalTransactionService
 
         await _audit.LogAsync(
             actorUserId, "RentalTransaction.Return", "RentalTransaction", t.RentalTransactionID.ToString(),
-            oldValues: new { Status = oldStatus.ToString() },
+            oldValues: new { Status = oldTxStatus.ToString() },
             newValues: new
             {
                 Status = RentalTransactionStatus.Returned.ToString(),
@@ -267,18 +450,25 @@ public class RentalTransactionService : IRentalTransactionService
                 t.ConditionNotes,
                 ReturnedUnits = pinned.Count,
                 FlaggedForDamage = t.FlaggedForDamage,
+                UnitStatusChanges = unitStatusChanges,
             });
 
         // Auto-generate the invoice now that the rental is fully closed out.
-        // If generation fails (e.g. one already exists from a manual call), the rental
-        // remains Returned — invoice can be regenerated from the Invoices UI later.
+        // The narrow InvalidOperationException catch is for the specific
+        // "invoice already exists" path in BillingService; anything else
+        // (DbUpdateException, NullReferenceException, etc.) propagates so the
+        // operator sees a 500 with the real cause instead of a silent
+        // "looks fine, but invoice is missing" outcome. We still write an
+        // audit entry for the swallowed case so it leaves a trail.
         try
         {
             await _billing.GenerateForReturnAsync(t.RentalTransactionID, actorUserId);
         }
-        catch (InvalidOperationException)
+        catch (InvalidOperationException ex) when (ex.Message.Contains("already", StringComparison.OrdinalIgnoreCase))
         {
-            // Invoice already exists — safe to ignore.
+            await _audit.LogAsync(
+                actorUserId, "RentalTransaction.Return.InvoiceSkipped", "RentalTransaction", t.RentalTransactionID.ToString(),
+                newValues: new { Reason = ex.Message });
         }
     }
 

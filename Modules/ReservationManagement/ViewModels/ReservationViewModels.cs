@@ -56,13 +56,33 @@ public class ReservationDetailsViewModel
     public ReservationDetailsDto Reservation { get; set; } = new();
 }
 
+/// <summary>
+/// Customer self-service list, mirrors the Rental Transaction "My Rentals"
+/// customer view: server-driven status pills + table + card-footer pagination.
+/// </summary>
 public class MyReservationsViewModel
 {
     public List<ReservationListItemDto> Items { get; set; } = new();
+    public string? StatusFilter { get; set; }
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = 20;
     public int TotalCount { get; set; }
     public int TotalPages => PageSize <= 0 ? 1 : (int)Math.Ceiling((double)TotalCount / PageSize);
 
-    public string PageUrl(int page) => $"?page={page}&pageSize={PageSize}";
+    // Per-status counts for the customer pill row. Reflects the customer's
+    // full dataset (not just the current page slice), mirroring RentalTransactions.
+    public int PendingCount { get; set; }
+    public int ConfirmedCount { get; set; }
+    public int OtherCount { get; set; }
+
+    public string PageUrl(int page) =>
+        $"?statusFilter={StatusFilter}&page={page}&pageSize={PageSize}";
+
+    public List<SelectListItem> Statuses { get; } = new()
+    {
+        new SelectListItem("All", ""),
+        new SelectListItem("Pending", nameof(ReservationStatus.Pending)),
+        new SelectListItem("Confirmed", nameof(ReservationStatus.Confirmed)),
+        new SelectListItem("Other", "Other"),
+    };
 }

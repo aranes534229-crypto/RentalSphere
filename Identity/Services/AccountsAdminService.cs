@@ -11,6 +11,7 @@ namespace RentalSphere.Identity.Services;
 public interface IAccountsAdminService
 {
     Task<List<UserListItemViewModel>> ListAsync(string? search = null);
+    Task<(List<UserListItemViewModel> Items, int TotalCount)> ListPagedAsync(string? search = null, int skip = 0, int take = 20);
     Task<UserDetailsViewModel> GetAsync(string id);
     Task CreateAsync(UserCreateViewModel model, string actorUserId);
     Task UpdateAsync(UserEditViewModel model, string actorUserId);
@@ -42,6 +43,13 @@ public class AccountsAdminService : IAccountsAdminService
 
     public async Task<List<UserListItemViewModel>> ListAsync(string? search = null)
     {
+        // Non-paged callers get everything.
+        var (items, _) = await ListPagedAsync(search, 0, int.MaxValue);
+        return items;
+    }
+
+    public async Task<(List<UserListItemViewModel> Items, int TotalCount)> ListPagedAsync(string? search = null, int skip = 0, int take = 20)
+    {
         var query = _users.Users.AsQueryable();
         if (!string.IsNullOrWhiteSpace(search))
         {
@@ -52,10 +60,14 @@ public class AccountsAdminService : IAccountsAdminService
                 (u.LastName != null && u.LastName.ToLower().Contains(s)));
         }
 
-        var users = await query.OrderBy(u => u.Email).ToListAsync();
+        var total = await query.CountAsync();
+        var rows = await query.OrderBy(u => u.Email)
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync();
 
         var result = new List<UserListItemViewModel>();
-        foreach (var u in users)
+        foreach (var u in rows)
         {
             var roles = await _users.GetRolesAsync(u);
             result.Add(new UserListItemViewModel
@@ -69,7 +81,7 @@ public class AccountsAdminService : IAccountsAdminService
                 Roles = roles.ToList(),
             });
         }
-        return result;
+        return (result, total);
     }
 
     public async Task<UserDetailsViewModel> GetAsync(string id)

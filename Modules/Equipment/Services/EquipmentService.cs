@@ -24,7 +24,15 @@ public interface IEquipmentService
 }
 
 public record EquipmentLookupDto(int EquipmentID, string Name, decimal DailyRate);
-public record EquipmentItemLookupDto(int ItemID, int EquipmentID, string EquipmentName, string SerialNumber, string Status);
+public record EquipmentItemLookupDto(
+    int ItemID,
+    int EquipmentID,
+    string EquipmentName,
+    int CategoryID,
+    string CategoryName,
+    decimal DailyRate,
+    string SerialNumber,
+    string Status);
 
 public class EquipmentService : IEquipmentService
 {
@@ -105,8 +113,7 @@ public class EquipmentService : IEquipmentService
         {
             bookedCount = await _db.ReservationItems
                 .Where(ri => ri.EquipmentID == id
-                    && (ri.Reservation.Status == RentalSphere.Modules.ReservationManagement.Models.ReservationStatus.Pending
-                        || ri.Reservation.Status == RentalSphere.Modules.ReservationManagement.Models.ReservationStatus.Confirmed
+                    && (ri.Reservation.Status == RentalSphere.Modules.ReservationManagement.Models.ReservationStatus.Confirmed
                         || ri.Reservation.Status == RentalSphere.Modules.ReservationManagement.Models.ReservationStatus.CheckedOut)
                     && ri.Reservation.RentalStartDate < end
                     && ri.Reservation.RentalEndDate > s)

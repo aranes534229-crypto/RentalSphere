@@ -57,19 +57,30 @@ public class ReservationsController : Controller
     }
 
     [Authorize(Roles = RoleNames.Customer)]
-    public async Task<IActionResult> MyReservations(int page = 1, int pageSize = 20)
+    public async Task<IActionResult> MyReservations(string? statusFilter, int page = 1, int pageSize = 20)
     {
         page = page < 1 ? 1 : page;
         pageSize = pageSize < 1 ? 20 : Math.Min(pageSize, 200);
         var skip = (page - 1) * pageSize;
 
-        var (items, total) = await _service.ListMinePagedAsync(skip, pageSize);
+        var (items, total) = await _service.ListMinePagedAsync(statusFilter, skip, pageSize);
+
+        // Per-status counts for the customer pill row (counts are across the
+        // full customer dataset, not just the current page slice).
+        var pendingCount = await _service.CountMineByStatusAsync(nameof(ReservationStatus.Pending));
+        var confirmedCount = await _service.CountMineByStatusAsync(nameof(ReservationStatus.Confirmed));
+        var otherCount = await _service.CountMineByStatusAsync("Other");
+
         var vm = new MyReservationsViewModel
         {
             Items = items,
+            StatusFilter = statusFilter,
             Page = page,
             PageSize = pageSize,
             TotalCount = total,
+            PendingCount = pendingCount,
+            ConfirmedCount = confirmedCount,
+            OtherCount = otherCount,
         };
         return View(vm);
     }

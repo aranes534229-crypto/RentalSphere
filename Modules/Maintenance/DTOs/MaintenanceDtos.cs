@@ -5,9 +5,9 @@ namespace RentalSphere.Modules.Maintenance.DTOs;
 
 public class MaintenanceOpenDto
 {
-    [Required]
-    [Display(Name = "Equipment unit")]
-    public int EquipmentItemID { get; set; }
+    [Required, MinLength(1, ErrorMessage = "Select at least one unit.")]
+    [Display(Name = "Equipment units")]
+    public List<int> EquipmentItemIDs { get; set; } = new();
 
     [Required, StringLength(500)]
     [Display(Name = "Reason")]
@@ -17,7 +17,7 @@ public class MaintenanceOpenDto
     public DateTime? ExpectedEnd { get; set; }
 
     [Range(0, 9_999_999.99)]
-    [Display(Name = "Estimated cost")]
+    [Display(Name = "Estimated cost per unit")]
     public decimal Cost { get; set; }
 
     [StringLength(2000)]
@@ -29,6 +29,13 @@ public class MaintenanceCloseDto
 {
     [Required]
     public int MaintenanceRecordID { get; set; }
+
+    [Range(0, 9_999_999.99)]
+    [Display(Name = "Repair cost")]
+    public decimal Cost { get; set; }
+
+    [Display(Name = "Expected completion")]
+    public DateTime? ExpectedEnd { get; set; }
 
     [StringLength(2000)]
     [Display(Name = "Closure notes")]

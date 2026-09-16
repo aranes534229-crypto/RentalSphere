@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reports - RentalSphere</title>
+    <link rel="icon" type="image/png" href="/images/logo.png" />
+    <link rel="stylesheet" href="/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="/css/site.css?v=qJ38p1vThYj_IqUv_sj24To5JHipwterKtafI1jjIaQ" />
+    <script>
+        (function () {
+            try {
+                var t = window.localStorage.getItem('rentalsphere.theme');
+                document.documentElement.setAttribute('data-bs-theme', t === 'dark' ? 'dark' : 'light');
+            } catch (_) {
+                document.documentElement.setAttribute('data-bs-theme', 'light');
+            }
+        })();
+    </script>
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <div b-zlfbvuyr1l class="app-shell d-flex flex-grow-1">
+            <div b-zlfbvuyr1l class="app-shell-sidebar">
+                <div b-zlfbvuyr1l class="app-shell-sidebar-inner d-flex flex-column">
+                    <a class="app-shell-brand" title="Home" href="/">
+                        <img src="/images/logo.png" alt="RentalSphere" class="app-shell-brand-logo" />
+                        <span b-zlfbvuyr1l class="app-shell-brand-text">RentalSphere</span>
+                    </a>
+                    <button b-zlfbvuyr1l type="button" id="sidebarToggle" class="sidebar-collapse-btn"
+                            aria-label="Toggle navigation" aria-expanded="true" aria-controls="sidebarNav">
+                        <i b-zlfbvuyr1l class="bi bi-chevron-left"></i>
+                    </button>
+                    
+<aside class="sidebar-nav" id="sidebarNav">
+    <nav class="sidebar-body">
+        <ul class="nav flex-column sidebar-sections">
+
+            <li class="nav-item">
+                <a class="nav-link " title="Dashboard" href="/">
+                    <i class="bi bi-speedometer2"></i>
+                    <span class="link-text">Dashboard</span>
+                </a>
+            </li>
+
+                <li class="nav-item-dropdown">
+                    <button type="button" class="nav-group-toggle"
+                            aria-expanded="false" aria-controls="submenu-equipment">
+                        <i class="bi bi-box-seam"></i>
+                        <span class="link-text">Equipment</span>
+                        <i class="bi bi-chevron-right nav-group-chevron"></i>
+                    </button>
+                    <ul class="nav-dropdown-menu collapse" id="submenu-equipment">
+                        <li class="nav-item">
+                            <a class="nav-link " title="Equipment catalog" href="/Equipment">
+                                <i class="bi bi-box-seam"></i>
+                                <span class="link-text">Equipment catalog</span>
+                            </a>
+                        </li>
+                            <li class="nav-item">
+                                <a class="nav-link " title="Categories" href="/Categories">
+                                    <i class="bi bi-tags"></i>
+                                    <span class="link-text">Categories</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link " title="Equipment units" href="/EquipmentItems">
+                                    <i class="bi bi-upc-scan"></i>
+                                    <span class="link-text">Equipment units</span>
+                                </a>
+                            </li>
+                    </ul>
+                </li>
+                <li class="nav-item-dropdown">
+                    <button type="button" class="nav-group-toggle"
+                            aria-expanded="false" aria-controls="submenu-people">
+                        <i class="bi bi-people"></i>
+                        <span class="link-text">People</span>
+                        <i class="bi bi-chevron-right nav-group-chevron"></i>
+                    </button>
+                    <ul class="nav-dropdown-menu collapse" id="submenu-people">
+                        <li class="nav-item">
+                            <a class="nav-link " title="Customers" href="/Customers">
+                                <i class="bi bi-people"></i>
+                                <span class="link-text">Customers</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center " title="Reservations" href="/Reservations">
+                                <i class="bi bi-calendar-check"></i>
+                                <span class="link-text">Reservations</span>
+                                
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="nav-item-dropdown">
+                    <button type="button" class="nav-group-toggle"
+                            aria-expanded="false" aria-controls="submenu-operations">
+                        <i class="bi bi-grid-3x3-gap"></i>
+                        <span class="link-text">Operations</span>
+                        <i class="bi bi-chevron-right nav-group-chevron"></i>
+                    </button>
+                    <ul class="nav-dropdown-menu collapse" id="submenu-operations">
+                        <li class="nav-item">
+                            <a class="nav-link " title="Availability" href="/Availability">
+                                <i class="bi bi-calendar3"></i>
+                                <span class="link-text">Availability</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center " title="Rental Transactions" href="/RentalTransactions">
+                                <i class="bi bi-box-seam"></i>
+                                <span class="link-text">Rental Transactions</span>
+                                
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center " title="Maintenance" href="/Maintenance">
+                                <i class="bi bi-tools"></i>
+                                <span class="link-text">Maintenance</span>
+                                
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center " title="Billing" href="/Invoices">
+                                <i class="bi bi-receipt"></i>
+                                <span class="link-text">Billing</span>
+                                    <span class="badge bg-danger rounded-pill ms-auto badge-glow">1</span>
+
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center " title="Damage &amp; Penalty" href="/DamagePenalties">
+                                <i class="bi bi-exclamation-octagon"></i>
+                                <span class="link-text">Damage &amp; Penalty</span>
+                                    <span class="badge bg-danger rounded-pill ms-auto badge-glow">2</span>
+
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link d-flex align-items-center " title="CRM" href="/CustomerCrm/Dashboard">
+                        <i class="bi bi-journal-text"></i>
+                        <span class="link-text">CRM</span>
+                            <span class="badge bg-danger ms-2 badge-glow">2</span>
+
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" title="Reports" href="/Reports">
+                        <i class="bi bi-bar-chart"></i>
+                        <span class="link-text">Reports</span>
+                    </a>
+                </li>
+
+        </ul>
+    </nav>
+
+    <div class="sidebar-footer">
+        <form id="logoutForm" method="post" class="d-inline" action="/Account/Logout">
+            
+            <button type="button" class="sidebar-logout-btn" title="Sign out"
+                    data-bs-toggle="modal" data-bs-target="#logoutModal">
+                <i class="bi bi-box-arrow-right"></i>
+                <span class="link-text">Sign out</span>
+            </button>
+        <input name="__RequestVerificationToken" type="hidden" value="CfDJ8Hha3twHuvNIhtgDrenrk_lGEVyJb5b-z13uTjtX0yC_tkcs7gkH4tgWqfIJknUkOh5wNswhAPlwYaObWbe5XnQ9X7skVtzxQqEAE40OVRNvA1rXS4zTAXWNxxEZxd3IXrq0zY122LiLO0betN73LrFVpyAEJEoyjdE55a7sx1483PNeOnYLivogfDXsQWBhMg" /></form>
+    </div>
+</aside>
+
+                </div>
+            </div>
+            <div b-zlfbvuyr1l class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+
+        <div b-zlfbvuyr1l class="app-shell-main flex-grow-1 d-flex flex-column min-w-0">
+                <header b-zlfbvuyr1l>
+                    <nav b-zlfbvuyr1l class="app-header">
+                        <div b-zlfbvuyr1l class="app-header-inner">
+                            <div b-zlfbvuyr1l class="app-header-left d-flex align-items-center gap-3 flex-grow-1">
+                                <button b-zlfbvuyr1l type="button" id="sidebarToggleMobile" class="sidebar-mobile-toggle"
+                                        aria-label="Open navigation" aria-controls="sidebarNav">
+                                    <i b-zlfbvuyr1l class="bi bi-list"></i>
+                                </button>
+                                <form class="app-header-search" role="search" action="/Equipment" method="get">
+                                    <i b-zlfbvuyr1l class="bi bi-search app-header-search-icon" aria-hidden="true"></i>
+                                    <input b-zlfbvuyr1l type="text" name="search" class="app-header-search-input"
+                                           placeholder="Type to search..."
+                                           aria-label="Type to search" />
+                                </form>
+                            </div>
+
+                            <div b-zlfbvuyr1l class="app-header-actions d-flex align-items-center">
+
+                                <button b-zlfbvuyr1l type="button" id="themeToggle" class="app-theme-toggle"
+                                        aria-label="Toggle color theme" aria-pressed="false" title="Toggle color theme">
+                                    <span b-zlfbvuyr1l class="app-theme-toggle-track">
+                                        <span b-zlfbvuyr1l class="app-theme-toggle-thumb">
+                                            <i b-zlfbvuyr1l class="bi bi-moon-stars" id="themeIconLight" aria-hidden="true"></i>
+                                            <i b-zlfbvuyr1l class="bi bi-sun d-none" id="themeIconDark" aria-hidden="true"></i>
+                                        </span>
+                                    </span>
+                                </button>
+
+                                <div b-zlfbvuyr1l class="dropdown">
+                                    <button b-zlfbvuyr1l type="button" class="app-icon-btn position-relative"
+                                            data-bs-toggle="dropdown" aria-expanded="false"
+                                            aria-label="Notifications" title="Notifications">
+                                        <i b-zlfbvuyr1l class="bi bi-bell"></i>
+                                        <span b-zlfbvuyr1l class="app-icon-dot d-none" id="notificationDot" aria-hidden="true"></span>
+                                    </button>
+                                    <div b-zlfbvuyr1l class="dropdown-menu dropdown-menu-end app-notifications">
+                                        <h6 b-zlfbvuyr1l class="dropdown-header">Notifications</h6>
+                                        <div b-zlfbvuyr1l class="app-notifications-empty text-muted small px-3 py-3 text-center">
+                                            <i b-zlfbvuyr1l class="bi bi-bell-slash d-block mb-1" style="font-size: 1.25rem;"></i>
+                                            You're all caught up.
+                                        </div>
+                                        <div b-zlfbvuyr1l class="dropdown-divider"></div>
+                                        <a class="dropdown-item small text-center" href="/CustomerCrm/Dashboard">
+                                            View CRM dashboard
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <button b-zlfbvuyr1l type="button" class="app-icon-btn position-relative"
+                                        aria-label="Messages" title="Messages">
+                                    <i b-zlfbvuyr1l class="bi bi-chat-dots"></i>
+                                    <span b-zlfbvuyr1l class="app-icon-dot d-none" id="chatDot" aria-hidden="true"></span>
+                                </button>
+
+                                <div b-zlfbvuyr1l class="dropdown">
+                                    <button b-zlfbvuyr1l type="button" class="app-user-toggle"
+                                            data-bs-toggle="dropdown" aria-expanded="false"
+                                            aria-label="Open user menu">
+                                        <span b-zlfbvuyr1l class="app-user-meta d-none d-md-inline text-end lh-sm">
+                                            <span b-zlfbvuyr1l class="d-block fw-semibold app-user-name">Staff User</span>
+                                            <span b-zlfbvuyr1l class="d-block small app-user-role">Staff</span>
+                                        </span>
+                                        <span b-zlfbvuyr1l class="app-user-avatar">
+                                            <i b-zlfbvuyr1l class="bi bi-person-fill" aria-hidden="true"></i>
+                                        </span>
+                                        <i b-zlfbvuyr1l class="bi bi-chevron-down small app-user-chevron" aria-hidden="true"></i>
+                                    </button>
+                                    <ul b-zlfbvuyr1l class="dropdown-menu dropdown-menu-end app-user-menu">
+                                        <li b-zlfbvuyr1l class="px-3 py-2">
+                                            <div b-zlfbvuyr1l class="d-flex align-items-center gap-2">
+                                                <div b-zlfbvuyr1l class="lh-sm flex-grow-1">
+                                                    <div b-zlfbvuyr1l class="fw-semibold">Staff User</div>
+                                                    <span b-zlfbvuyr1l class="badge bg-primary">Staff</span>
+                                                </div>
+                                                <span b-zlfbvuyr1l class="app-user-avatar">
+                                                    <i b-zlfbvuyr1l class="bi bi-person-fill" aria-hidden="true"></i>
+                                                </span>
+                                            </div>
+                                        </li>
+                                        <li b-zlfbvuyr1l><hr b-zlfbvuyr1l class="dropdown-divider" /></li>
+                                        <li b-zlfbvuyr1l>
+                                            <a class="dropdown-item" href="/Customers/MyProfile">
+                                                <i b-zlfbvuyr1l class="bi bi-person me-2"></i>My profile
+                                            </a>
+                                        </li>
+                                        <li b-zlfbvuyr1l>
+                                            <button b-zlfbvuyr1l type="button" class="dropdown-item dropdown-item-danger"
+                                                    data-bs-toggle="modal" data-bs-target="#logoutModal">
+                                                <i b-zlfbvuyr1l class="bi bi-box-arrow-right me-2"></i>Sign out
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </nav>
+                </header>
+            <main b-zlfbvuyr1l class="flex-grow-1 p-4">
+                
+<h1 class="h3 mb-3"><i class="bi bi-bar-chart"></i> Reports</h1>
+
+<form method="get" class="row g-2 align-items-end mb-3">
+    <div class="col-auto">
+        <label class="form-label small">Start</label>
+        <input type="date" name="start" value="8/14/2026 12:00:00 AM" class="form-control form-control-sm" />
+    </div>
+    <div class="col-auto">
+        <label class="form-label small">End</label>
+        <input type="date" name="end" value="9/13/2026 12:00:00 AM" class="form-control form-control-sm" />
+    </div>
+    <div class="col-auto">
+        <label class="form-label small">Granularity</label>
+        <select name="granularity" class="form-select form-select-sm">
+ <option selected>Daily</option><option>Weekly</option><option>Monthly</option>         </select>
+    </div>
+    <input type="hidden" name="tab" value="revenue" />
+    <div class="col-auto d-flex align-items-end gap-2">
+        <button type="submit" class="btn btn-primary btn-sm">
+            <i class="bi bi-arrow-clockwise"></i> Refresh
+        </button>
+        <a class="btn btn-outline-secondary btn-sm" href="/Reports/ExportPdf?start=8%2F14%2F2026%2012%3A00%3A00%20AM&amp;end=9%2F13%2F2026%2012%3A00%3A00%20AM&amp;granularity=Daily&amp;tab=revenue">
+            <i class="bi bi-download"></i> Export PDF
+        </a>
+    </div>
+</form>
+
+<!-- Row 1: Revenue -->
+<div class="row g-3 mb-3" id="revenue-cards">
+    <div class="col-12">
+        <h6 class="text-uppercase text-muted small mb-2">Revenue</h6>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center p-3">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-2"
+                     style="width: 2rem; height: 2rem; background-color: var(--bs-success-bg-subtle);">
+                    <i class="bi bi-cash-stack fs-5 text-success"></i>
+                </div>
+                <small class="text-uppercase text-muted d-block mb-1">Revenue realized</small>
+                <h3 class="mb-0">₱13,200.00</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center p-3">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-2"
+                     style="width: 2rem; height: 2rem; background-color: var(--bs-secondary-bg-subtle);">
+                    <i class="bi bi-tools fs-5 text-secondary"></i>
+                </div>
+                <small class="text-uppercase text-muted d-block mb-1">Maintenance expenses</small>
+                <h3 class="mb-0">₱4,000.00</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center p-3">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-2"
+                     style="width: 2rem; height: 2rem; background-color: var(--bs-primary-bg-subtle);">
+                    <i class="bi bi-calculator fs-5 text-primary"></i>
+                </div>
+                <small class="text-uppercase text-muted d-block mb-1">Net revenue</small>
+                <h3 class="mb-0">₱9,200.00</h3>
+                <small class="d-block mt-1 opacity-75">Revenue − Maintenance</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Row 2: Risk and follow-up -->
+<div class="row g-3 mb-3" id="risk-cards">
+    <div class="col-12">
+        <h6 class="text-uppercase text-muted small mb-2">Risk and follow-up</h6>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center p-3">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-2"
+                     style="width: 2rem; height: 2rem; background-color: var(--bs-warning-bg-subtle);">
+                    <i class="bi bi-exclamation-triangle fs-5 text-warning"></i>
+                </div>
+                <small class="text-uppercase text-muted d-block mb-1">Outstanding</small>
+                <h3 class="mb-0">₱1,349.00</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center p-3">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-2"
+                     style="width: 2rem; height: 2rem; background-color: var(--bs-danger-bg-subtle);">
+                    <i class="bi bi-clock-history fs-5 text-danger"></i>
+                </div>
+                <small class="text-uppercase text-muted d-block mb-1">Late returns</small>
+                <h3 class="mb-0">10 rentals</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center p-3">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-2"
+                     style="width: 2rem; height: 2rem; background-color: var(--bs-dark-bg-subtle);">
+                    <i class="bi bi-emoji-frown fs-5 text-dark"></i>
+                </div>
+                <small class="text-uppercase text-muted d-block mb-1">Damage amount</small>
+                <h3 class="mb-0">₱5,599.00</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item">
+        <a class="nav-link active" href="/Reports?tab=revenue&amp;start=8%2F14%2F2026%2012%3A00%3A00%20AM&amp;end=9%2F13%2F2026%2012%3A00%3A00%20AM&amp;granularity=Daily">
+            <i class="bi bi-cash-stack"></i> Revenue
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link " href="/Reports?tab=utilization&amp;start=8%2F14%2F2026%2012%3A00%3A00%20AM&amp;end=9%2F13%2F2026%2012%3A00%3A00%20AM&amp;granularity=Daily">
+            <i class="bi bi-speedometer2"></i> Utilization
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link " href="/Reports?tab=outstanding&amp;start=8%2F14%2F2026%2012%3A00%3A00%20AM&amp;end=9%2F13%2F2026%2012%3A00%3A00%20AM&amp;granularity=Daily">
+            <i class="bi bi-exclamation-circle"></i> Outstanding
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link " href="/Reports?tab=late&amp;start=8%2F14%2F2026%2012%3A00%3A00%20AM&amp;end=9%2F13%2F2026%2012%3A00%3A00%20AM&amp;granularity=Daily">
+            <i class="bi bi-clock-history"></i> Late + Damage
+        </a>
+    </li>
+</ul>
+
+
+<h4>Revenue by period (Daily)</h4>
+
+
+    <!-- Revenue trend chart (inline SVG, no JS library) -->
+    <div class="mb-3">
+        <svg height="130" width="100%" viewBox="0 0 140 130"
+             xmlns="http://www.w3.org/2000/svg" overflow="visible" preserveAspectRatio="xMidYMid meet">
+            <text x="0" y="12" font-size="11" fill="var(--bs-secondary-color)" font-weight="600">Revenue trend</text>
+                <g>
+                    <rect x="12" y="20" width="32" height="100"
+                          fill="var(--bs-primary)" rx="2" ry="2" />
+                    <text x="28" y="135" text-anchor="middle"
+                          font-size="9" fill="var(--bs-secondary-color)">
+                        2026-09-06
+                    </text>
+                </g>
+                <g>
+                    <rect x="56" y="91.59533073929961089494163424" width="32" height="28.404669260700389105058365760"
+                          fill="var(--bs-primary)" rx="2" ry="2" />
+                    <text x="72" y="135" text-anchor="middle"
+                          font-size="9" fill="var(--bs-secondary-color)">
+                        2026-09-07
+                    </text>
+                </g>
+        </svg>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Period</th>
+                    <th class="text-end">Invoices</th>
+                    <th class="text-end">Rentals</th>
+                    <th class="text-end">Revenue</th>
+                </tr>
+            </thead>
+            <tbody>
+                    <tr>
+                        <td>2026-09-06</td>
+                        <td class="text-end">33</td>
+                        <td class="text-end">33</td>
+                        <td class="text-end">₱10,280.00</td>
+                    </tr>
+                    <tr>
+                        <td>2026-09-07</td>
+                        <td class="text-end">17</td>
+                        <td class="text-end">17</td>
+                        <td class="text-end">₱2,920.00</td>
+                    </tr>
+                <tr class="table-light fw-bold">
+                    <td>Total</td>
+                    <td class="text-end">50</td>
+                    <td class="text-end">50</td>
+                    <td class="text-end">₱13,200.00</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+            </main>
+        </div>
+    </div>
+
+    <footer b-zlfbvuyr1l class="border-top footer text-muted py-3 mt-auto">
+        <div b-zlfbvuyr1l class="container-fluid">
+            &copy; 2026 - RentalSphere - <a href="/Home/Privacy">Privacy</a>
+        </div>
+    </footer>
+
+    <!--
+        Logout confirmation modal. Triggered by the sidebar's Sign Out
+        button (data-bs-toggle="modal" data-bs-target="#logoutModal").
+        Confirming submits the sidebar's logout form via site.js, which
+        carries the antiforgery token to the POST /Account/Logout
+        action.
+    -->
+    <div b-zlfbvuyr1l class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+        <div b-zlfbvuyr1l class="modal-dialog modal-dialog-centered">
+            <div b-zlfbvuyr1l class="modal-content">
+                <div b-zlfbvuyr1l class="modal-header">
+                    <h5 b-zlfbvuyr1l class="modal-title" id="logoutModalLabel">
+                        <i b-zlfbvuyr1l class="bi bi-exclamation-circle text-warning me-2"></i>Confirm Sign Out
+                    </h5>
+                    <button b-zlfbvuyr1l type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div b-zlfbvuyr1l class="modal-body">
+                    Are you sure you want to sign out of RentalSphere? Any unsaved changes will be lost.
+                </div>
+                <div b-zlfbvuyr1l class="modal-footer">
+                    <button b-zlfbvuyr1l type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button b-zlfbvuyr1l type="button" class="btn btn-danger" id="confirmLogoutBtn">
+                        <i b-zlfbvuyr1l class="bi bi-box-arrow-right"></i> Sign Out
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/lib/jquery/dist/jquery.min.js"></script>
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/site.js?v=huishJ2IVuprO9pwPVy1jEvNcjq35_43VPVuU6pUac4"></script>
+    
+</body>
+</html>

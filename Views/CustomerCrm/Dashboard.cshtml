@@ -5,13 +5,15 @@
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
-        <h1 class="h3 mb-0">CRM Dashboard</h1>
-        <p class="text-muted mb-0">Customer notes & follow-up health at a glance.</p>
+        <h2 class="mb-0"><i class="bi bi-person-heart"></i> @ViewData["Title"]</h2>
+        <small class="text-muted d-block mt-1">
+            Customer relationship health at a glance.
+        </small>
     </div>
     <div class="d-flex align-items-center gap-2">
         @if (Model.TotalUnreadCrmItems > 0)
         {
-            <span class="badge bg-danger fs-6">
+            <span class="text-danger fs-6">
                 <i class="bi bi-bell-fill"></i> @Model.TotalUnreadCrmItems unread
                 (@Model.TotalUnreadNotesForMe notes, @Model.TotalPendingForMe follow-ups)
             </span>
@@ -19,64 +21,70 @@
     </div>
 </div>
 
-<form method="get" class="row g-2 align-items-end mb-3">
-    <div class="col-md-4">
-        <label class="form-label small">Search</label>
-        <input type="text" name="search" value="@Model.Search" class="form-control"
-               placeholder="Name or email…" />
+@if (TempData["Success"] is string s) { <div class="alert alert-success alert-dismissible fade show" role="alert">@s<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div> }
+@if (TempData["Error"] is string e) { <div class="alert alert-danger alert-dismissible fade show" role="alert">@e<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div> }
+
+<form method="get" class="mb-3 crm-filter-form" id="crmFilterForm">
+    <div class="row g-2 align-items-center">
+        <div class="col-md-4">
+            <input type="text" name="search" value="@Model.Search" class="form-control crm-filter-control"
+                   placeholder="Customer name or email…"
+                   onchange="this.form.submit();" />
+        </div>
+        <div class="col-md-1 d-flex gap-1">
+            @if (!string.IsNullOrEmpty(Model.Search))
+            {
+                <a asp-action="Dashboard" class="btn btn-outline-secondary" title="Clear search"><i class="bi bi-x-lg"></i></a>
+            }
+        </div>
     </div>
-    <div class="col-auto">
-        <button type="submit" class="btn btn-primary btn-sm">
-            <i class="bi bi-search"></i> Search
-        </button>
-        @if (!string.IsNullOrEmpty(Model.Search))
-        {
-            <a asp-action="Dashboard" class="btn btn-outline-secondary btn-sm">Clear</a>
-        }
-    </div>
+    <input type="hidden" name="pageSize" id="crmPageSize" value="@Model.PageSize" />
+    <input type="hidden" name="sort" value="@Model.Sort" />
 </form>
 
-@if (!Model.Rows.Any())
-{
-    <div class="alert alert-info">No customers match.</div>
-}
-else
-{
+<div class="crm-main-card">
     <div class="table-responsive">
-        <table class="table table-hover align-middle">
-            <thead class="table-light">
+        <table class="table table-hover mb-0 align-middle crm-table">
+            <thead class="crm-table-header">
                 <tr>
-                    <th>Customer</th>
-                    <th>Email</th>
+                    <th>
+                        <a class="crm-header-link" href="@Model.SortUrl("name")">Customer@(Model.Sort == "name" ? " ▲" : Model.Sort == "name_desc" ? " ▼" : "")</a>
+                    </th>
+                    <th>
+                        <a class="crm-header-link" href="@Model.SortUrl("email")">Email@(Model.Sort == "email" ? " ▲" : Model.Sort == "email_desc" ? " ▼" : "")</a>
+                    </th>
                     <th>Status</th>
-                    <th class="text-end">Total notes</th>
-                    <th class="text-end">Unread notes</th>
+                    <th class="text-end">Notes</th>
+                    <th class="text-end">Unread</th>
                     <th class="text-end">Overdue</th>
                     <th class="text-end">Pending for you</th>
-                    <th class="text-end">Action</th>
+                    <th class="text-end">Actions</th>
                 </tr>
             </thead>
             <tbody>
+                @if (!Model.Rows.Any())
+                {
+                    <tr><td colspan="8" class="p-0">
+                        <div class="text-center text-muted py-5">
+                            <i class="bi bi-people" style="font-size: 2.5rem;"></i>
+                            <p class="mb-1 mt-2">No customers match your search.</p>
+                        </div>
+                    </td></tr>
+                }
                 @foreach (var r in Model.Rows)
                 {
                     <tr class="@(r.OverdueFollowUps > 0 || r.PendingForMe > 0 || r.UnreadNotesForMe > 0 ? "table-warning" : "")">
-                        <td>@r.CustomerName</td>
-                        <td>@r.CustomerEmail</td>
                         <td>
-                            @if (r.IsActive)
-                            {
-                                <span class="badge bg-success">Active</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-secondary">Inactive</span>
-                            }
+                            <a asp-action="Index" asp-route-customerId="@r.CustomerID" asp-route-tab="notes"
+                               class="crm-name-link">@r.CustomerName</a>
                         </td>
+                        <td>@r.CustomerEmail</td>
+                        <td>@{ var status = r.IsActive ? "Active" : "Inactive"; }<partial name="_StatusBadge" model="status" /></td>
                         <td class="text-end">@r.NoteCount</td>
                         <td class="text-end">
                             @if (r.UnreadNotesForMe > 0)
                             {
-                                <span class="badge bg-primary">@r.UnreadNotesForMe new</span>
+                                <span class="text-primary">@r.UnreadNotesForMe new</span>
                             }
                             else
                             {
@@ -86,7 +94,7 @@ else
                         <td class="text-end">
                             @if (r.OverdueFollowUps > 0)
                             {
-                                <span class="badge bg-danger">@r.OverdueFollowUps</span>
+                                <span class="text-danger">@r.OverdueFollowUps</span>
                             }
                             else
                             {
@@ -96,7 +104,7 @@ else
                         <td class="text-end">
                             @if (r.PendingForMe > 0)
                             {
-                                <span class="badge bg-warning text-dark">@r.PendingForMe pending</span>
+                                <span class="text-warning">@r.PendingForMe pending</span>
                             }
                             else
                             {
@@ -104,14 +112,65 @@ else
                             }
                         </td>
                         <td class="text-end">
-                            <a asp-action="Index" asp-route-customerId="@r.CustomerID"
-                               class="btn btn-sm btn-outline-primary" title="Open CRM tab">
-                                <i class="bi bi-journal-text"></i>
-                            </a>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-link p-0 crm-action-btn" type="button"
+                                        data-bs-toggle="dropdown" aria-expanded="false" aria-label="Actions">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end crm-popout">
+                                    <li><a class="dropdown-item" asp-action="Index" asp-route-customerId="@r.CustomerID" asp-route-tab="notes"><i class="bi bi-journal-text me-2"></i>Open CRM tab</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Customers" asp-action="Details" asp-route-id="@r.CustomerID"><i class="bi bi-eye me-2"></i>Customer details</a></li>
+                                </ul>
+                            </div>
                         </td>
                     </tr>
                 }
             </tbody>
         </table>
     </div>
-}
+    <div class="card-footer d-flex justify-content-between align-items-center py-3">
+        <div class="d-flex align-items-center">
+            <label for="crmPageSizeSelect" class="me-2 mb-0 fw-medium">Show:</label>
+            <select id="crmPageSizeSelect" class="form-select form-select-sm" aria-label="Rows per page"
+                    onchange="document.getElementById('crmPageSize').value = this.value; document.getElementById('crmFilterForm').submit();">
+                @if (Model.PageSize == 5) { <option value="5" selected>5</option> } else { <option value="5">5</option> }
+                @if (Model.PageSize == 10) { <option value="10" selected>10</option> } else { <option value="10">10</option> }
+                @if (Model.PageSize == 20) { <option value="20" selected>20</option> } else { <option value="20">20</option> }
+                @if (Model.PageSize == 50) { <option value="50" selected>50</option> } else { <option value="50">50</option> }
+            </select>
+        </div>
+        @if (Model.TotalPages > 1)
+        {
+            <small class="text-muted">
+                Showing @((Model.Page - 1) * Model.PageSize + 1)–@(Math.Min(Model.Page * Model.PageSize, Model.TotalCount))
+                of @Model.TotalCount
+            </small>
+            <nav>
+                <div class="d-flex align-items-center crm-pagination" style="gap: 6px;">
+                    <a class="pagination-pill @(Model.Page <= 1 ? "disabled" : "")" href="@Model.PageUrl(1)">&laquo;</a>
+                    <a class="pagination-pill @(Model.Page <= 1 ? "disabled" : "")" href="@Model.PageUrl(Math.Max(1, Model.Page - 1))">&#8249;</a>
+                    @for (var p = 1; p <= Model.TotalPages; p++)
+                    {
+                        if (p == Model.Page)
+                        {
+                            <a class="pagination-pill active" href="#">@p</a>
+                        }
+                        else
+                        {
+                            <a class="pagination-pill" href="@Model.PageUrl(p)">@p</a>
+                        }
+                    }
+                    <span class="pagination-ellipsis" aria-hidden="true">…</span>
+                    <a class="pagination-pill @(Model.Page >= Model.TotalPages ? "disabled" : "")" href="@Model.PageUrl(Math.Min(Model.TotalPages, Model.Page + 1))">&#8250;</a>
+                    <a class="pagination-pill @(Model.Page >= Model.TotalPages ? "disabled" : "")" href="@Model.PageUrl(Model.TotalPages)">&raquo;</a>
+                </div>
+            </nav>
+        }
+        else if (Model.TotalCount > 0)
+        {
+            <small class="text-muted">
+                Showing @Model.TotalCount record@(Model.TotalCount == 1 ? "" : "s")
+            </small>
+        }
+    </div>
+</div>

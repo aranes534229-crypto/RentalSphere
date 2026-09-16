@@ -17,6 +17,9 @@ public interface IEquipmentItemRepository
     Task<List<EquipmentItem>> ListAvailableByEquipmentAsync(int equipmentId);
     Task<List<EquipmentItem>> ListReservedByEquipmentAsync(int equipmentId);
     Task<List<EquipmentItem>> ListAllAvailableAsync();
+    Task<List<EquipmentItem>> ListAllAvailableWithCategoryAsync();
+    Task<List<EquipmentItem>> ListFreeForRangeAsync(int equipmentId, DateTime start, DateTime end, int? excludeReservationId = null);
+    Task<List<EquipmentItem>> ListByIdsAsync(IEnumerable<int> ids);
     Task<List<string>> ListSerialNumbersAsync(int equipmentId);
     Task<bool> SerialNumberExistsAsync(string serialNumber, int? excludeItemId = null);
     Task AddAsync(EquipmentItem item);
@@ -151,11 +154,54 @@ public class EquipmentItemRepository : IEquipmentItemRepository
             .OrderBy(i => i.ItemID)
             .ToListAsync();
 
+    public async Task<List<EquipmentItem>> ListFreeForRangeAsync(
+        int equipmentId, DateTime start, DateTime end, int? excludeReservationId = null)
+    {
+        // Items of this equipment that are physically bookable AND not currently
+        // pinned to a Confirmed/CheckedOut reservation overlapping [start, end).
+        // Half-open on the end: a reservation ending on `start` is a drop-off day
+        // and does NOT pin a unit for the next renter.
+        //
+        // Per-item status is filtered for physical states only (InMaintenance,
+        // Retired). The Reserved/CheckedOut/Available triplet is driven by the
+        // reservation table, not the per-item status — the status field can lag
+        // the reservation table by an arbitrary amount of time, so we can't
+        // trust it for "is this unit free right now".
+        var heldItemIds = await _db.ReservationItems
+            .Where(ri => ri.EquipmentID == equipmentId
+                      && ri.AssignedItemID != null
+                      && (ri.Reservation.Status == ReservationManagement.Models.ReservationStatus.Confirmed
+                       || ri.Reservation.Status == ReservationManagement.Models.ReservationStatus.CheckedOut)
+                      && (excludeReservationId == null || ri.ReservationID != excludeReservationId.Value)
+                      && ri.Reservation.RentalStartDate.Date < end.Date
+                      && ri.Reservation.RentalEndDate.Date > start.Date)
+            .Select(ri => ri.AssignedItemID!.Value)
+            .Distinct()
+            .ToListAsync();
+
+        return await _db.EquipmentItems
+            .Where(i => i.EquipmentID == equipmentId
+                     && i.AvailabilityStatus != AvailabilityStatus.InMaintenance
+                     && i.AvailabilityStatus != AvailabilityStatus.Retired
+                     && !heldItemIds.Contains(i.ItemID))
+            .OrderBy(i => i.ItemID)
+            .ToListAsync();
+    }
+
     public async Task<List<EquipmentItem>> ListAllAvailableAsync() =>
         await _db.EquipmentItems
             .Include(i => i.Equipment)
             .Where(i => i.AvailabilityStatus == AvailabilityStatus.Available)
             .OrderBy(i => i.Equipment.Name).ThenBy(i => i.SerialNumber)
+            .ToListAsync();
+
+    public async Task<List<EquipmentItem>> ListAllAvailableWithCategoryAsync() =>
+        await _db.EquipmentItems
+            .Include(i => i.Equipment).ThenInclude(e => e.Category)
+            .Where(i => i.AvailabilityStatus == AvailabilityStatus.Available)
+            .OrderBy(i => i.Equipment.Category!.Name)
+            .ThenBy(i => i.Equipment.Name)
+            .ThenBy(i => i.SerialNumber)
             .ToListAsync();
 
     public async Task<List<string>> ListSerialNumbersAsync(int equipmentId) =>
@@ -169,6 +215,19 @@ public class EquipmentItemRepository : IEquipmentItemRepository
             .Where(i => i.EquipmentID == equipmentId && i.AvailabilityStatus == AvailabilityStatus.Reserved)
             .OrderBy(i => i.ItemID)
             .ToListAsync();
+
+    /// <summary>
+    /// Loads EquipmentItems by primary key with default tracking, so the
+    /// caller can mutate properties and have EF persist them on the next
+    /// SaveChanges. Used by callers that need to flip AvailabilityStatus as
+    /// part of a larger transaction (e.g. RentalTransactionService.ReturnAsync).
+    /// </summary>
+    public async Task<List<EquipmentItem>> ListByIdsAsync(IEnumerable<int> ids)
+    {
+        var idList = ids as IList<int> ?? ids.ToList();
+        if (idList.Count == 0) return new List<EquipmentItem>();
+        return await _db.EquipmentItems.Where(i => idList.Contains(i.ItemID)).ToListAsync();
+    }
 
     public Task<bool> SerialNumberExistsAsync(string serialNumber, int? excludeItemId = null)
     {

@@ -20,9 +20,13 @@ public interface IReservationService
     Task<List<ReservationListItemDto>> ListAsync(string? search = null, string? statusFilter = null);
     Task<(List<ReservationListItemDto> Items, int TotalCount)> ListPagedAsync(
         string? search, string? statusFilter, string? sort, int skip, int take);
-    Task<List<ReservationListItemDto>> ListMineAsync();
-    Task<(List<ReservationListItemDto> Items, int TotalCount)> ListMinePagedAsync(int skip, int take);
+    Task<List<ReservationListItemDto>> ListMineAsync(string? statusFilter = null);
+    Task<(List<ReservationListItemDto> Items, int TotalCount)> ListMinePagedAsync(
+        string? statusFilter, int skip, int take);
+    Task<int> CountMineByStatusAsync(string? statusFilter);
     Task<ReservationDetailsDto> GetDetailsAsync(int id);
+    Task<int> CountPendingAsync(int? customerId = null);
+    Task<int> CountPendingForCurrentUserAsync();
     Task<AvailabilityResultDto> CheckAvailabilityAsync(
         DateTime start, DateTime end, List<ReservationItemInputDto> items, int? excludeReservationId = null);
     Task<int> CreateAsync(ReservationCreateDto dto, string actorUserId);
@@ -97,14 +101,26 @@ public class ReservationService : IReservationService
         return (page, total);
     }
 
-    public async Task<List<ReservationListItemDto>> ListMineAsync()
+    public async Task<List<ReservationListItemDto>> ListMineAsync(string? statusFilter = null)
     {
         // Non-paged callers get everything.
-        var (items, _) = await ListMinePagedAsync(0, int.MaxValue);
+        var (items, _) = await ListMinePagedAsync(statusFilter, 0, int.MaxValue);
         return items;
     }
 
-    public async Task<(List<ReservationListItemDto> Items, int TotalCount)> ListMinePagedAsync(int skip, int take)
+    public async Task<int> CountMineByStatusAsync(string? statusFilter)
+    {
+        if (!_current.IsCustomerScoped)
+            throw new ForbiddenException("My reservations is a customer-only view.");
+
+        var customer = await _customers.GetByUserIdAsync(_current.UserId!);
+        if (customer is null) return 0;
+
+        return await _repo.CountByCustomerAsync(customer.CustomerID, statusFilter);
+    }
+
+    public async Task<(List<ReservationListItemDto> Items, int TotalCount)> ListMinePagedAsync(
+        string? statusFilter, int skip, int take)
     {
         if (!_current.IsCustomerScoped)
             throw new ForbiddenException("My reservations is a customer-only view.");
@@ -113,9 +129,43 @@ public class ReservationService : IReservationService
         var customer = await _customers.GetByUserIdAsync(_current.UserId!);
         if (customer is null) return (new List<ReservationListItemDto>(), 0);
 
-        var total = await _repo.CountByCustomerAsync(customer.CustomerID);
-        var rows = await _repo.ListByCustomerPagedAsync(customer.CustomerID, skip, take);
+        var total = await _repo.CountByCustomerAsync(customer.CustomerID, statusFilter);
+        var rows = await _repo.ListByCustomerPagedAsync(customer.CustomerID, skip, take, statusFilter);
         return (rows.Select(MapList).ToList(), total);
+    }
+
+    public async Task<int> CountPendingAsync(int? customerId = null)
+    {
+        // Staff/Admin get a global Pending count; passing a customerId scopes
+        // the count to that customer's Pending reservations only. The badge
+        // intentionally clears as soon as a reservation transitions out of
+        // Pending (Confirmed, Cancelled, CheckedOut, Completed, or Expired) —
+        // confirmed reservations are no longer "awaiting action" and don't
+        // need to pulse on the sidebar.
+        if (customerId.HasValue)
+        {
+            return await _repo.CountPendingForCustomerAsync(customerId.Value);
+        }
+        if (!_current.IsAdmin && !_current.IsStaff) return 0;
+        return await _repo.CountByStatusAsync(ReservationStatus.Pending);
+    }
+
+    /// <summary>
+    /// Role-aware count used by the sidebar ViewComponent. Resolves the
+    /// current user to a Customer when in customer scope and forwards the
+    /// id; returns the global Pending count for staff. No-op for anonymous
+    /// or other roles.
+    /// </summary>
+    public async Task<int> CountPendingForCurrentUserAsync()
+    {
+        if (_current.IsCustomerScoped)
+        {
+            var customer = await _customers.GetByUserIdAsync(_current.UserId!);
+            if (customer is null) return 0;
+            return await CountPendingAsync(customer.CustomerID);
+        }
+        if (!_current.IsAdmin && !_current.IsStaff) return 0;
+        return await CountPendingAsync();
     }
 
     public async Task<ReservationDetailsDto> GetDetailsAsync(int id)
@@ -178,14 +228,18 @@ public class ReservationService : IReservationService
             var totalStock = eq.StockQuantity > 0 ? eq.StockQuantity : await _items
                 .CountAsyncByEquipment(line.EquipmentID, AvailabilityStatus.Available);
 
+            // Half-open overlap: an existing reservation [existing.Start, existing.End)
+            // blocks a new reservation [start, end) iff their day-ranges share a day.
+            // Day-granular: a drop-off on `start` is a free day for the next renter,
+            // even if the stored RentalEndDate has a non-zero time component.
             var conflictedRows = await _db.ReservationItems
                 .Where(ri => ri.EquipmentID == line.EquipmentID
                              && (ri.Reservation.Status == ReservationStatus.Pending
                                  || ri.Reservation.Status == ReservationStatus.Confirmed
                                  || ri.Reservation.Status == ReservationStatus.CheckedOut)
                              && (excludeReservationId == null || ri.ReservationID != excludeReservationId.Value)
-                             && ri.Reservation.RentalStartDate < end
-                             && ri.Reservation.RentalEndDate > start)
+                             && ri.Reservation.RentalStartDate.Date < end.Date
+                             && ri.Reservation.RentalEndDate.Date > start.Date)
                 .SumAsync(ri => (int?)ri.Quantity) ?? 0;
 
             // Only count overlapping Pending/Confirmed reservations. Cancelled and
@@ -310,14 +364,18 @@ public class ReservationService : IReservationService
             throw new InvalidOperationException(firstShort.Reason ?? "Equipment unavailable; cannot confirm.");
         }
 
-        // Pin concrete items to each line. We pull available items across all equipment,
-        // then assign serially. If a single equipment requires more units than exist,
+        // Pin concrete items to each line. We pull items that are physically
+        // bookable AND not currently pinned to a Confirmed/CheckedOut reservation
+        // overlapping [start, end) half-open — the reservation table is the
+        // source of truth for "is this unit free right now", not the per-item
+        // status flag. If a single equipment requires more units than exist,
         // we surface the failure from the availability check above.
         var assignedMap = new Dictionary<int, List<int>>(); // equipmentId → list of item ids
         foreach (var line in r.Items)
         {
             var freeItems = await _items
-                .ListAvailableByEquipmentAsync(line.EquipmentID);
+                .ListFreeForRangeAsync(line.EquipmentID, r.RentalStartDate, r.RentalEndDate,
+                    excludeReservationId: id);
             var picked = freeItems.Take(line.Quantity).Select(i => i.ItemID).ToList();
             if (picked.Count < line.Quantity)
                 throw new InvalidOperationException(
@@ -334,7 +392,10 @@ public class ReservationService : IReservationService
             line.AssignedItemID = picked.First();
         }
 
-        // Flip each picked item to Reserved via the existing service (which syncs StockQuantity).
+        // Flip each picked item to Reserved for the EquipmentItems list view. The
+        // per-item status no longer mutates StockQuantity — that's a permanent
+        // inventory total and reservations hold units via the reservation table,
+        // not by mutating the parent count.
         var allAssigned = assignedMap.Values.SelectMany(ids => ids).Distinct().ToList();
         foreach (var itemId in allAssigned)
         {

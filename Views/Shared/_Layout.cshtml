@@ -8,80 +8,190 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - RentalSphere</title>
+    <link rel="icon" type="image/png" href="~/images/logo.png" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @* ponytail: apply persisted theme before <body> renders so dark-mode
+       users don't see a light flash on reload. Default to "light" so
+       Bootstrap 5.3's data-bs-theme CSS variables kick in for every
+       component (footer, modal, tables, btn, card, navbar, etc.). *@
+    <script>
+        (function () {
+            try {
+                var t = window.localStorage.getItem('rentalsphere.theme');
+                document.documentElement.setAttribute('data-bs-theme', t === 'dark' ? 'dark' : 'light');
+            } catch (_) {
+                document.documentElement.setAttribute('data-bs-theme', 'light');
+            }
+        })();
+    </script>
 </head>
 <body class="d-flex flex-column min-vh-100">
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom">
-            <div class="container-fluid">
-                <a class="navbar-brand fw-semibold" asp-controller="Home" asp-action="Index">
-                    <i class="bi bi-stars"></i> RentalSphere
-                </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNav"
-                        aria-controls="topNav" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="topNav">
-                    <ul class="navbar-nav me-auto"></ul>
-                    <ul class="navbar-nav">
-                        @if (SignInManager.IsSignedIn(User))
-                        {
-                            var currentUser = await UserManager.GetUserAsync(User);
-                            var role = currentUser is null
-                                ? "User"
-                                : (User.IsInRole(RoleNames.Admin) ? "Admin"
-                                    : User.IsInRole(RoleNames.Staff) ? "Staff"
-                                    : User.IsInRole(RoleNames.Customer) ? "Customer"
-                                    : "User");
-                            var roleBadge = role switch
-                            {
-                                "Admin" => "bg-danger",
-                                "Staff" => "bg-primary",
-                                "Customer" => "bg-success",
-                                _ => "bg-secondary"
-                            };
+    @*
+        App shell layout:
+          [ sidebar column (brand + sidebar) ] [ main column (header + content) ]
 
-                            <li class="nav-item d-flex align-items-center me-3 text-light">
-                                <i class="bi bi-person-circle me-2"></i>
-                                <span>@(currentUser?.FirstName ?? "User") @(currentUser?.LastName ?? "")</span>
-                                <span class="badge @roleBadge ms-2">@role</span>
-                            </li>
-                            <li class="nav-item">
-                                <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-outline-light btn-sm">
-                                        <i class="bi bi-box-arrow-right"></i> Logout
-                                    </button>
-                                </form>
-                            </li>
-                        }
-                        else
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Account" asp-action="Login">Login</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Account" asp-action="Register">Register</a>
-                            </li>
-                        }
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header>
-
-    <div class="d-flex flex-grow-1">
+        The brand lives at the very top of the sidebar column so it
+        spans the same width as the sidebar (240px expanded / 70px
+        collapsed). The top header sits to the right of the brand,
+        above the main content. In dark mode the brand and sidebar
+        are dark slate; the top header re-skins to a darker tone
+        so the whole shell reads as one cohesive dark surface.
+    *@
+    <div class="app-shell d-flex flex-grow-1">
         @if (SignInManager.IsSignedIn(User))
         {
-            <aside style="width: 240px; flex: 0 0 240px;">
-                @await Html.PartialAsync("_Sidebar")
-            </aside>
+            <div class="app-shell-sidebar">
+                @* ponytail: the inner wrapper carries the rounded card
+                   geometry (border-radius, border, shadow, overflow:hidden
+                   to clip the brand/active/footer to the rounded shape).
+                   The outer column has overflow:visible so the collapsed
+                   flyout pop-out can extend past the right edge without
+                   being clipped. *@
+                <div class="app-shell-sidebar-inner d-flex flex-column">
+                    <a class="app-shell-brand" asp-controller="Home" asp-action="Index" title="Home">
+                        <img src="~/images/logo.png" alt="RentalSphere" class="app-shell-brand-logo" />
+                        <span class="app-shell-brand-text">RentalSphere</span>
+                    </a>
+                    <button type="button" id="sidebarToggle" class="sidebar-collapse-btn"
+                            aria-label="Toggle navigation" aria-expanded="true" aria-controls="sidebarNav">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+                    @await Html.PartialAsync("_Sidebar")
+                </div>
+            </div>
+            <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
         }
-        <main class="flex-grow-1 p-4">
-            @RenderBody()
-        </main>
+
+        <div class="app-shell-main flex-grow-1 d-flex flex-column min-w-0">
+            @if (SignInManager.IsSignedIn(User))
+            {
+                <header>
+                    <nav class="app-header">
+                        <div class="app-header-inner">
+                            @* ----- Left: mobile drawer toggle + search (sits beside the
+                               sidebar boundary, no border, no background) ----- *@
+                            <div class="app-header-left d-flex align-items-center gap-3 flex-grow-1">
+                                <button type="button" id="sidebarToggleMobile" class="sidebar-mobile-toggle"
+                                        aria-label="Open navigation" aria-controls="sidebarNav">
+                                    <i class="bi bi-list"></i>
+                                </button>
+                                <form class="app-header-search" role="search" action="@Url.Action("Index", "Equipment")" method="get">
+                                    <i class="bi bi-search app-header-search-icon" aria-hidden="true"></i>
+                                    <input type="text" name="search" class="app-header-search-input"
+                                           placeholder="Type to search..."
+                                           aria-label="Type to search" />
+                                </form>
+                            </div>
+
+                            @* ----- Right: theme toggle, bell, chat, user menu ----- *@
+                            <div class="app-header-actions d-flex align-items-center">
+                                @{
+                                    var currentUser = await UserManager.GetUserAsync(User);
+                                    var role = currentUser is null
+                                        ? "User"
+                                        : (User.IsInRole(RoleNames.Admin) ? "Admin"
+                                            : User.IsInRole(RoleNames.Staff) ? "Staff"
+                                            : User.IsInRole(RoleNames.Customer) ? "Customer"
+                                            : "User");
+                                    var roleBadge = role switch
+                                    {
+                                        "Admin" => "bg-danger",
+                                        "Staff" => "bg-primary",
+                                        "Customer" => "bg-success",
+                                        _ => "bg-secondary"
+                                    };
+                                }
+
+                                @* 1. Theme switcher (pill toggle) *@
+                                <button type="button" id="themeToggle" class="app-theme-toggle"
+                                        aria-label="Toggle color theme" aria-pressed="false" title="Toggle color theme">
+                                    <span class="app-theme-toggle-track">
+                                        <span class="app-theme-toggle-thumb">
+                                            <i class="bi bi-moon-stars" id="themeIconLight" aria-hidden="true"></i>
+                                            <i class="bi bi-sun d-none" id="themeIconDark" aria-hidden="true"></i>
+                                        </span>
+                                    </span>
+                                </button>
+
+                                @* 2. Notification bell (red dot when unread CRM items) *@
+                                <div class="dropdown">
+                                    <button type="button" class="app-icon-btn position-relative"
+                                            data-bs-toggle="dropdown" aria-expanded="false"
+                                            aria-label="Notifications" title="Notifications">
+                                        <i class="bi bi-bell"></i>
+                                        <span class="app-icon-dot d-none" id="notificationDot" aria-hidden="true"></span>
+                                    </button>
+                                    <div class="dropdown-menu dropdown-menu-end app-notifications">
+                                        <h6 class="dropdown-header">Notifications</h6>
+                                        <div class="app-notifications-empty text-muted small px-3 py-3 text-center">
+                                            <i class="bi bi-bell-slash d-block mb-1" style="font-size: 1.25rem;"></i>
+                                            You're all caught up.
+                                        </div>
+                                        <div class="dropdown-divider"></div>
+                                        <a class="dropdown-item small text-center" asp-controller="CustomerCrm" asp-action="Dashboard">
+                                            View CRM dashboard
+                                        </a>
+                                    </div>
+                                </div>
+
+                                @* 3. Chat / message icon (red dot, no dropdown yet) *@
+                                <button type="button" class="app-icon-btn position-relative"
+                                        aria-label="Messages" title="Messages">
+                                    <i class="bi bi-chat-dots"></i>
+                                    <span class="app-icon-dot d-none" id="chatDot" aria-hidden="true"></span>
+                                </button>
+
+                                @* 4. User info group: text on left, avatar on right, chevron *@
+                                <div class="dropdown">
+                                    <button type="button" class="app-user-toggle"
+                                            data-bs-toggle="dropdown" aria-expanded="false"
+                                            aria-label="Open user menu">
+                                        <span class="app-user-meta d-none d-md-inline text-end lh-sm">
+                                            <span class="d-block fw-semibold app-user-name">@(currentUser?.FirstName ?? "User") @(currentUser?.LastName ?? "")</span>
+                                            <span class="d-block small app-user-role">@role</span>
+                                        </span>
+                                        <span class="app-user-avatar">
+                                            <i class="bi bi-person-fill" aria-hidden="true"></i>
+                                        </span>
+                                        <i class="bi bi-chevron-down small app-user-chevron" aria-hidden="true"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end app-user-menu">
+                                        <li class="px-3 py-2">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="lh-sm flex-grow-1">
+                                                    <div class="fw-semibold">@(currentUser?.FirstName ?? "User") @(currentUser?.LastName ?? "")</div>
+                                                    <span class="badge @roleBadge">@role</span>
+                                                </div>
+                                                <span class="app-user-avatar">
+                                                    <i class="bi bi-person-fill" aria-hidden="true"></i>
+                                                </span>
+                                            </div>
+                                        </li>
+                                        <li><hr class="dropdown-divider" /></li>
+                                        <li>
+                                            <a class="dropdown-item" asp-controller="Customers" asp-action="MyProfile">
+                                                <i class="bi bi-person me-2"></i>My profile
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <button type="button" class="dropdown-item dropdown-item-danger"
+                                                    data-bs-toggle="modal" data-bs-target="#logoutModal">
+                                                <i class="bi bi-box-arrow-right me-2"></i>Sign out
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </nav>
+                </header>
+            }
+            <main class="flex-grow-1 p-4">
+                @RenderBody()
+            </main>
+        </div>
     </div>
 
     <footer class="border-top footer text-muted py-3 mt-auto">
@@ -89,6 +199,35 @@
             &copy; 2026 - RentalSphere - <a asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
+
+    <!--
+        Logout confirmation modal. Triggered by the sidebar's Sign Out
+        button (data-bs-toggle="modal" data-bs-target="#logoutModal").
+        Confirming submits the sidebar's logout form via site.js, which
+        carries the antiforgery token to the POST /Account/Logout
+        action.
+    -->
+    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="logoutModalLabel">
+                        <i class="bi bi-exclamation-circle text-warning me-2"></i>Confirm Sign Out
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to sign out of RentalSphere? Any unsaved changes will be lost.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmLogoutBtn">
+                        <i class="bi bi-box-arrow-right"></i> Sign Out
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>

@@ -6,12 +6,13 @@ namespace RentalSphere.Modules.Billing.Repositories;
 
 public interface IBillingRepository
 {
-    Task<List<Invoice>> ListAsync(string? statusFilter = null, string? search = null);
+    Task<List<Invoice>> ListAsync(string? statusFilter = null, string? search = null, string? sort = null);
     Task<Invoice?> GetAsync(int id);
     Task<Invoice?> GetWithLinesAsync(int id);
     Task<Invoice?> GetByTransactionAsync(int rentalTransactionId);
     Task<InvoiceLine?> GetLineAsync(int invoiceLineId);
     Task<int> CountByMonthAsync(int year, int month);
+    Task<int> CountUnpaidOrPartialAsync();
     Task AddAsync(Invoice invoice);
     void Update(Invoice invoice);
     Task AddPaymentAsync(Payment payment);
@@ -23,7 +24,7 @@ public class BillingRepository : IBillingRepository
     private readonly ApplicationDbContext _db;
     public BillingRepository(ApplicationDbContext db) { _db = db; }
 
-    public async Task<List<Invoice>> ListAsync(string? statusFilter = null, string? search = null)
+    public async Task<List<Invoice>> ListAsync(string? statusFilter = null, string? search = null, string? sort = null)
     {
         var q = _db.Invoices
             .Include(i => i.Customer)
@@ -45,7 +46,22 @@ public class BillingRepository : IBillingRepository
                 i.InvoiceNumber.ToLower().Contains(s));
         }
 
-        return await q.OrderByDescending(i => i.InvoiceDate).ToListAsync();
+        q = sort?.ToLowerInvariant() switch
+        {
+            "number"        => q.OrderBy(i => i.InvoiceNumber),
+            "number_desc"   => q.OrderByDescending(i => i.InvoiceNumber),
+            "date"          => q.OrderBy(i => i.InvoiceDate),
+            "date_desc"     => q.OrderByDescending(i => i.InvoiceDate),
+            "customer"      => q.OrderBy(i => i.Customer!.LastName).ThenBy(i => i.Customer!.FirstName),
+            "customer_desc" => q.OrderByDescending(i => i.Customer!.LastName),
+            "total"         => q.OrderBy(i => i.TotalAmount),
+            "total_desc"    => q.OrderByDescending(i => i.TotalAmount),
+            "due"           => q.OrderBy(i => i.DueDate ?? DateTime.MaxValue),
+            "due_desc"      => q.OrderByDescending(i => i.DueDate ?? DateTime.MaxValue),
+            _               => q.OrderByDescending(i => i.InvoiceDate),
+        };
+
+        return await q.ToListAsync();
     }
 
     public Task<Invoice?> GetAsync(int id) =>
@@ -82,6 +98,10 @@ public class BillingRepository : IBillingRepository
             .Where(i => i.InvoiceDate >= start && i.InvoiceDate < end)
             .CountAsync();
     }
+
+    public Task<int> CountUnpaidOrPartialAsync() =>
+        _db.Invoices.CountAsync(i =>
+            i.Status == InvoiceStatus.Unpaid || i.Status == InvoiceStatus.PartiallyPaid);
 
     public async Task AddAsync(Invoice invoice) => await _db.Invoices.AddAsync(invoice);
     public void Update(Invoice invoice) => _db.Invoices.Update(invoice);

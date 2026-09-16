@@ -1,120 +1,228 @@
+@model RentalSphere.Modules.Dashboard.Models.HomeDashboardViewModel
+
 @using Microsoft.AspNetCore.Identity
 @inject SignInManager<RentalSphere.Identity.ApplicationUser> SignInManager
-@inject UserManager<RentalSphere.Identity.ApplicationUser> UserManager
 @{
     ViewData["Title"] = "Dashboard";
 }
 
 @if (!SignInManager.IsSignedIn(User))
 {
-    <div class="p-5 mb-4 bg-light rounded-3">
-        <div class="container-fluid py-4">
-            <h1 class="display-5 fw-bold">Welcome to RentalSphere</h1>
-            <p class="col-md-8 fs-5">ERP & CRM for event and party equipment rental businesses.</p>
-            <a asp-controller="Account" asp-action="Login" class="btn btn-primary btn-lg">Sign in</a>
-            <a asp-controller="Account" asp-action="Register" class="btn btn-outline-secondary btn-lg">Register</a>
+    <div class="dashboard-main-card mb-4">
+        <div class="card-body text-center py-5">
+            <img src="~/images/logo.png" alt="RentalSphere" class="mb-3" style="height: 48px;" />
+            <h1 class="h3 mb-1 fw-bold">Welcome to RentalSphere</h1>
+            <p class="text-muted mb-4 fs-6">ERP &amp; CRM for event and party equipment rental businesses.</p>
+            <div class="d-grid gap-2 d-sm-flex justify-content-center">
+                <a asp-controller="Account" asp-action="Login" class="btn btn-primary btn-lg px-4">Sign in</a>
+                <a asp-controller="Account" asp-action="Register" class="btn btn-outline-secondary btn-lg px-4">Register</a>
+            </div>
         </div>
     </div>
 }
 else
 {
-    var u = await UserManager.GetUserAsync(User);
-    var role = User.IsInRole(RoleNames.Admin) ? "Admin"
-             : User.IsInRole(RoleNames.Staff) ? "Staff"
-             : User.IsInRole(RoleNames.Customer) ? "Customer" : "User";
+    var isAdmin = User.IsInRole(RoleNames.Admin);
+    var isStaff = User.IsInRole(RoleNames.Staff);
+    var roleCardClass = isAdmin ? "dashboard-card-admin" : "dashboard-card-staff";
 
-    <div class="p-4 mb-4 bg-light rounded-3">
-        <h1 class="h3 mb-1">Hello, @(u?.FirstName ?? "there")!</h1>
-        <p class="text-muted mb-0">You are signed in as <span class="badge bg-secondary">@role</span>.</p>
+    @* ---- Staff/Admin dashboard ---- *@
+
+    @* 1. PAGE HEADER *@
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h1 class="h3 mb-0 fw-bold">Dashboard</h1>
+            <p class="text-muted mb-0">At-a-glance overview of revenue, rentals, invoices, and follow-ups.</p>
+        </div>
+        <span class="text-muted small">@DateTime.Today.ToString("dddd, MMMM d, yyyy")</span>
     </div>
 
-    @if ((User.IsInRole(RoleNames.Admin) || User.IsInRole(RoleNames.Staff)) && ViewBag.Kpi is RentalSphere.Modules.Dashboard.DashboardKpiViewModel kpi)
+    @if (Model is not null)
     {
+        @* 2. KPI ROW (4 cards with under-card badges) *@
         <div class="row g-3 mb-4">
-            <div class="col-md-3">
-                <div class="card h-100 border-success">
+            @foreach (var kpi in Model.Kpis)
+            {
+                <div class="col-6 col-md-3">
+                    <div class="dashboard-main-card @roleCardClass h-100">
+                        <div class="card-body">
+                            <div class="text-muted small text-uppercase fw-semibold">
+                                <i class="@kpi.Icon me-1"></i> @kpi.Title
+                            </div>
+                            <div class="display-6 fw-bold text-end">@Html.Raw(kpi.Value)</div>
+
+                            @if (kpi.BadgeLabel != null)
+                            {
+                                var badgeClass = kpi.BadgeTone switch
+                                {
+                                    "success" => "bg-success",
+                                    "warning" => "bg-warning",
+                                    "neutral" => "bg-secondary",
+                                    _ => "bg-secondary",
+                                };
+                                var textColor = kpi.BadgeTone switch
+                                {
+                                    "success" => "text-success",
+                                    "warning" => "text-warning",
+                                    "neutral" => "text-secondary",
+                                    _ => "text-secondary",
+                                };
+                                <div class="badge @badgeClass bg-opacity-10 @textColor small mt-2">@kpi.BadgeLabel</div>
+                            }
+                            else
+                            {
+                                <div class="badge bg-secondary bg-opacity-10 text-secondary small mt-2">No data yet</div>
+                            }
+
+                            @if (kpi.LinkController != null)
+                            {
+                                <a asp-controller="@kpi.LinkController" asp-action="@kpi.LinkAction" asp-route-query="@kpi.LinkQuery"
+                                   class="small text-decoration-none text-end d-block mt-2">@kpi.LinkLabel &rarr;</a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        @* 3. TWO-COLUMN SECTION: bar chart + recent activity *@
+        <div class="row g-4 mb-4">
+
+            @* LEFT: Rentals this week bar chart (inline SVG) *@
+            <div class="col-lg-6">
+                <div class="dashboard-main-card h-100">
                     <div class="card-body">
-                        <div class="text-muted small text-uppercase"><i class="bi bi-cash-coin"></i> Today's revenue</div>
-                        <div class="display-6 fw-bold">&#8369;@kpi.TodaysRevenue.ToString("N2")</div>
-                        <a asp-controller="Invoices" asp-action="Index" class="small text-decoration-none">View invoices &rarr;</a>
+                        <h5 class="card-title"><i class="bi bi-bar-chart-steps me-2"></i>Rentals this week</h5>
+                        <p class="card-text text-muted small mb-3">Mon–Sun (by checkout date)</p>
+
+                        <div class="dashboard-bar-chart">
+                            <svg viewBox="0 0 336 160" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" aria-label="Rentals this week bar chart">
+                                @* Y-axis gridlines + baseline *@
+                                <line x1="24" y1="144" x2="320" y2="144" stroke="currentColor" stroke-opacity="0.12" />
+                                @for (int i = 0; i <= 4; i++)
+                                {
+                                    var gy = 144 - (i * 28);
+                                    <line x1="24" y1="@gy" x2="320" y2="@gy" stroke="currentColor" stroke-opacity="0.06" />
+                                }
+
+                                @{
+                                    var maxCount = Math.Max(Model.RentalsThisWeek.Max(d => d.Count), 1);
+                                    var barWidth = 24;
+                                    var barGap = 16;
+                                    var startX = 40;
+                                    var baseY = 144;
+                                    var maxBarHeight = 112;
+                                    var barColor = "#2563eb"; // consistent blue accent for all roles — no state-based coloring
+                                }
+
+                                @for (int i = 0; i < 7; i++)
+                                {
+                                    var day = Model.RentalsThisWeek[i];
+                                    var barHeight = day.Count > 0
+                                        ? (int)(maxBarHeight * (day.Count / (double)maxCount))
+                                        : 0;
+                                    var bx = startX + (i * (barWidth + barGap));
+                                    var by = baseY - barHeight;
+                                    var dayLabelX = bx + barWidth / 2;
+                                    var countLabelY = by - 4;
+                                    var rectHeight = Math.Max(barHeight, 0);
+                                    <rect x="@bx" y="@by" width="@barWidth" height="@rectHeight"
+                                          fill="@barColor" opacity="0.85" rx="3" />
+                                    @Html.Raw($"<text x=\"{dayLabelX}\" y=\"156\" text-anchor=\"middle\" font-size=\"11\" fill=\"currentColor\" opacity=\"0.7\">{day.Day}</text>")
+                                    if (day.Count > 0)
+                                    {
+                                        @Html.Raw($"<text x=\"{dayLabelX}\" y=\"{countLabelY}\" text-anchor=\"middle\" font-size=\"10\" fill=\"currentColor\" font-weight=\"600\">{day.Count}</text>")
+                                    }
+                                    else
+                                    {
+                                        @Html.Raw($"<line x1=\"{bx}\" y1=\"144\" x2=\"{bx + barWidth}\" y2=\"144\" stroke=\"{barColor}\" stroke-width=\"1\" opacity=\"0.3\" />")
+                                    }
+                                }
+                            </svg>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card h-100 border-primary">
+
+            @* RIGHT: Recent activity list *@
+            <div class="col-lg-6">
+                <div class="dashboard-main-card h-100">
                     <div class="card-body">
-                        <div class="text-muted small text-uppercase"><i class="bi bi-arrow-left-right"></i> Active rentals</div>
-                        <div class="display-6 fw-bold">@kpi.ActiveRentals</div>
-                        <a asp-controller="RentalTransactions" asp-action="Index" class="small text-decoration-none">View transactions &rarr;</a>
+                        <h5 class="card-title"><i class="bi bi-clock-history me-2"></i>Recent activity</h5>
+
+                        @if (Model.HasActivity)
+                        {
+                            <ul class="list-group list-group-flush">
+                                @foreach (var act in Model.RecentActivities)
+                                {
+                                    var circleClass = act.BadgeTone switch
+                                    {
+                                        "primary" => "bg-primary",
+                                        "success" => "bg-success",
+                                        "warning" => "bg-warning",
+                                        _ => "bg-secondary",
+                                    };
+                                    // Per-tone icon color — tuned per circle background for guaranteed contrast
+                                    // in both light and dark mode (Bootstrap bg-* utilities here are not theme-inverted).
+                                    var iconClass = act.BadgeTone switch
+                                    {
+                                        "primary" => "on-primary",
+                                        "success" => "on-success",
+                                        "warning" => "on-warning",
+                                        _ => "on-secondary",
+                                    };
+                                    <li class="list-group-item dashboard-activity-item border-0 py-2 px-0">
+                                        <span class="d-inline-flex align-items-center justify-content-center rounded-circle @circleClass me-2" style="width: 2rem; height: 2rem;">
+                                            <i class="@act.Icon dashboard-activity-icon @iconClass" style="font-size: 1rem;"></i>
+                                        </span>
+                                        <span class="d-inline-block">@Html.Raw(act.Label)</span>
+                                        <span class="text-muted small ms-auto d-inline-block">@act.RelativeTime</span>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <div class="text-center text-muted py-4">
+                                <i class="bi bi-info-circle" style="font-size: 1.5rem;"></i>
+                                <p class="mb-0 mt-2">No recent activity yet.</p>
+                            </div>
+                        }
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card h-100 border-warning">
-                    <div class="card-body">
-                        <div class="text-muted small text-uppercase"><i class="bi bi-receipt"></i> Open invoices</div>
-                        <div class="display-6 fw-bold">@kpi.OpenInvoices</div>
-                        <a asp-controller="Invoices" asp-action="Index" class="small text-decoration-none">Manage billing &rarr;</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card h-100 border-danger">
-                    <div class="card-body">
-                        <div class="text-muted small text-uppercase"><i class="bi bi-bell"></i> Overdue follow-ups</div>
-                        <div class="display-6 fw-bold">@kpi.OverdueFollowUps</div>
-                        <a asp-controller="CustomerCrm" asp-action="FollowUps" class="small text-decoration-none">Open queue &rarr;</a>
-                    </div>
-                </div>
+
+        </div>
+
+        @* 4. QUICK-ACTION ROW (exactly 4 buttons) — below chart + activity *@
+        <div class="mb-4">
+            <div class="dashboard-quick-actions">
+                @foreach (var qa in Model.QuickActions)
+                {
+                    <a asp-controller="@qa.Controller" asp-action="@qa.Action" asp-route-query="@qa.QueryString"
+                       class="dashboard-quick-action">
+                        <i class="@qa.Icon"></i> @qa.Label
+                    </a>
+                }
             </div>
         </div>
     }
-
-    <div class="row g-3">
-        @if (User.IsInRole(RoleNames.Admin) || User.IsInRole(RoleNames.Staff))
-        {
-            <div class="col-md-4">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h5 class="card-title"><i class="bi bi-box-seam"></i> Equipment</h5>
-                        <p class="card-text text-muted">Manage the equipment catalog and individual items.</p>
-                        <a asp-controller="Equipment" asp-action="Index" class="btn btn-sm btn-primary">Open</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h5 class="card-title"><i class="bi bi-tags"></i> Categories</h5>
-                        <p class="card-text text-muted">Group equipment by category.</p>
-                        <a asp-controller="Categories" asp-action="Index" class="btn btn-sm btn-primary">Open</a>
-                    </div>
-                </div>
-            </div>
-        }
-        @if (User.IsInRole(RoleNames.Admin))
-        {
-            <div class="col-md-4">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h5 class="card-title"><i class="bi bi-people-fill"></i> Accounts &amp; Roles</h5>
-                        <p class="card-text text-muted">Manage users, roles, and deactivation.</p>
-                        <a asp-controller="AccountsAdmin" asp-action="Index" class="btn btn-sm btn-danger">Open</a>
-                    </div>
-                </div>
-            </div>
-        }
+    else
+    {
+        @* Customer / anonymous — show their existing cards *@
         @if (User.IsInRole(RoleNames.Customer))
         {
-            <div class="col-md-4">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h5 class="card-title"><i class="bi bi-box-seam"></i> Equipment catalog</h5>
-                        <p class="card-text text-muted">Browse the catalog of equipment types available to rent.</p>
-                        <a asp-controller="Equipment" asp-action="Index" class="btn btn-sm btn-success">Browse</a>
+            <div class="row g-3">
+                <div class="col-12 col-md-6">
+                    <div class="dashboard-main-card dashboard-card-customer h-100">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="bi bi-box-seam"></i> Equipment catalog</h5>
+                            <p class="card-text">Browse the catalog of equipment types available to rent.</p>
+                            <a asp-controller="Equipment" asp-action="Index" class="btn btn-sm btn-success">Browse</a>
+                        </div>
                     </div>
                 </div>
             </div>
         }
-    </div>
+    }
 }

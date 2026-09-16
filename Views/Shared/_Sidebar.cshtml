@@ -1,175 +1,279 @@
 @*
-    Role-aware sidebar. Items appear only when the current user is in the matching role.
-    Modules marked deferred in the plan have no controller yet, so they are commented out
-    and will be uncommented as those modules ship in subsequent phases.
+    Role-aware sidebar with dropdown groups.
+
+    Structure
+    ---------
+    - .sidebar-nav holds a scrollable body (.sidebar-body) and a
+      footer (.sidebar-footer) with the Sign Out button. The
+      brand strip and the round collapse button (#sidebarToggle)
+      are siblings in the layout, not in this partial — see
+      _Layout.cshtml. The aside is rendered inside the
+      .app-shell-sidebar column (the floating dark card).
+    - Each module group (Equipment, People, Operations, ...) is rendered as
+      a <li class="nav-item-dropdown"> whose <button class="nav-group-toggle">
+      carries the parent icon + label + chevron, and whose
+      <ul class="nav-dropdown-menu"> holds the child links. Toggling the
+      button flips .expanded on the <li>, which the CSS uses to rotate the
+      chevron and reveal the submenu.
+    - When the sidebar is in icon-only mode (.collapsed on desktop, or the
+      medium-width default), the dropdown transforms into a floating pop-out
+      that appears to the right of the parent on hover/focus/click.
+    - .link-text wraps every label so the collapsed state can hide them.
 *@
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<RentalSphere.Identity.ApplicationUser> SignInManager
 @{
     var isAdmin = User.IsInRole(RoleNames.Admin);
     var isStaff = User.IsInRole(RoleNames.Staff);
     var isCustomer = User.IsInRole(RoleNames.Customer);
     var isEmployee = isAdmin || isStaff;
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
 }
 
-<nav class="sidebar bg-light border-end p-3" style="min-height: calc(100vh - 56px);">
-    <ul class="nav flex-column">
+<aside class="sidebar-nav" id="sidebarNav">
+    <nav class="sidebar-body">
+        <ul class="nav flex-column sidebar-sections">
 
-        <li class="nav-item">
-            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")"
-               asp-controller="Home" asp-action="Index">
-                <i class="bi bi-speedometer2"></i> Dashboard
-            </a>
-        </li>
+            @* ----- Dashboard (no submenu) ----- *@
+            <li class="nav-item">
+                <a class="nav-link @(currentController == "Home" ? "active" : "")"
+                   asp-controller="Home" asp-action="Index" title="Dashboard">
+                    <i class="bi bi-speedometer2"></i>
+                    <span class="link-text">Dashboard</span>
+                </a>
+            </li>
 
-        @* ============ Equipment Management ============ *@
-        @if (isAdmin || isStaff || isCustomer)
-        {
-            <li class="nav-item mt-2 text-uppercase text-muted small">Equipment</li>
-
+            @* ----- Equipment (Catalog, Categories, Units) ----- *@
             @if (isAdmin || isStaff || isCustomer)
             {
-                <li class="nav-item">
-                    <a class="nav-link" asp-controller="Equipment" asp-action="Index">
-                        <i class="bi bi-box-seam"></i> Equipment catalog
-                    </a>
+                <li class="nav-item-dropdown">
+                    <button type="button" class="nav-group-toggle"
+                            aria-expanded="false" aria-controls="submenu-equipment">
+                        <i class="bi bi-box-seam"></i>
+                        <span class="link-text">Equipment</span>
+                        <i class="bi bi-chevron-right nav-group-chevron"></i>
+                    </button>
+                    <ul class="nav-dropdown-menu collapse" id="submenu-equipment">
+                        <li class="nav-item">
+                            <a class="nav-link @(currentController == "Equipment" && currentAction == "Index" ? "active" : "")"
+                               asp-controller="Equipment" asp-action="Index" title="Equipment catalog">
+                                <i class="bi bi-box-seam"></i>
+                                <span class="link-text">Equipment catalog</span>
+                            </a>
+                        </li>
+                        @if (isAdmin || isStaff)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link @(currentController == "Categories" ? "active" : "")"
+                                   asp-controller="Categories" asp-action="Index" title="Categories">
+                                    <i class="bi bi-tags"></i>
+                                    <span class="link-text">Categories</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link @(currentController == "EquipmentItems" ? "active" : "")"
+                                   asp-controller="EquipmentItems" asp-action="Index" title="Equipment units">
+                                    <i class="bi bi-upc-scan"></i>
+                                    <span class="link-text">Equipment units</span>
+                                </a>
+                            </li>
+                        }
+                    </ul>
                 </li>
             }
+
+            @* ----- Administration (Admin only) ----- *@
+            @if (isAdmin)
+            {
+                <li class="nav-item-dropdown">
+                    <button type="button" class="nav-group-toggle"
+                            aria-expanded="false" aria-controls="submenu-admin">
+                        <i class="bi bi-shield-lock"></i>
+                        <span class="link-text">Administration</span>
+                        <i class="bi bi-chevron-right nav-group-chevron"></i>
+                    </button>
+                    <ul class="nav-dropdown-menu collapse" id="submenu-admin">
+                        <li class="nav-item">
+                            <a class="nav-link @(currentController == "AccountsAdmin" ? "active" : "")"
+                               asp-controller="AccountsAdmin" asp-action="Index" title="Accounts &amp; Roles">
+                                <i class="bi bi-people-fill"></i>
+                                <span class="link-text">Accounts &amp; Roles</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(currentController == "AuditLog" ? "active" : "")"
+                               asp-controller="AuditLog" asp-action="Index" title="Audit Log">
+                                <i class="bi bi-journal-text"></i>
+                                <span class="link-text">Audit Log</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            }
+
+            @* ----- People (Admin/Staff) ----- *@
+            @if (isAdmin || isStaff)
+            {
+                <li class="nav-item-dropdown">
+                    <button type="button" class="nav-group-toggle"
+                            aria-expanded="false" aria-controls="submenu-people">
+                        <i class="bi bi-people"></i>
+                        <span class="link-text">People</span>
+                        <i class="bi bi-chevron-right nav-group-chevron"></i>
+                    </button>
+                    <ul class="nav-dropdown-menu collapse" id="submenu-people">
+                        <li class="nav-item">
+                            <a class="nav-link @(currentController == "Customers" && currentAction != "MyProfile" ? "active" : "")"
+                               asp-controller="Customers" asp-action="Index" title="Customers">
+                                <i class="bi bi-people"></i>
+                                <span class="link-text">Customers</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center @(currentController == "Reservations" && currentAction != "MyReservations" ? "active" : "")"
+                               asp-controller="Reservations" asp-action="Index" title="Reservations">
+                                <i class="bi bi-calendar-check"></i>
+                                <span class="link-text">Reservations</span>
+                                @await Component.InvokeAsync("ReservationPendingBadge")
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            }
+
+            @* ----- My Account (Customer) ----- *@
+            @if (isCustomer)
+            {
+                <li class="nav-item-dropdown">
+                    <button type="button" class="nav-group-toggle"
+                            aria-expanded="false" aria-controls="submenu-account">
+                        <i class="bi bi-person-circle"></i>
+                        <span class="link-text">My Account</span>
+                        <i class="bi bi-chevron-right nav-group-chevron"></i>
+                    </button>
+                    <ul class="nav-dropdown-menu collapse" id="submenu-account">
+                        <li class="nav-item">
+                            <a class="nav-link @(currentController == "Customers" && currentAction == "MyProfile" ? "active" : "")"
+                               asp-controller="Customers" asp-action="MyProfile" title="My Profile">
+                                <i class="bi bi-person-circle"></i>
+                                <span class="link-text">My Profile</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center @(currentController == "Reservations" && currentAction == "MyReservations" ? "active" : "")"
+                               asp-controller="Reservations" asp-action="MyReservations" title="My Reservations">
+                                <i class="bi bi-calendar-event"></i>
+                                <span class="link-text">My Reservations</span>
+                                @await Component.InvokeAsync("ReservationPendingBadge")
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center @(currentController == "RentalTransactions" ? "active" : "")"
+                               asp-controller="RentalTransactions" asp-action="Index" title="My Rentals">
+                                <i class="bi bi-box-arrow-up"></i>
+                                <span class="link-text">My Rentals</span>
+                                @await Component.InvokeAsync("RentalTransactionOverdueBadge")
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            }
+
+            @* ----- Operations (Admin/Staff) ----- *@
+            @if (isAdmin || isStaff)
+            {
+                <li class="nav-item-dropdown">
+                    <button type="button" class="nav-group-toggle"
+                            aria-expanded="false" aria-controls="submenu-operations">
+                        <i class="bi bi-grid-3x3-gap"></i>
+                        <span class="link-text">Operations</span>
+                        <i class="bi bi-chevron-right nav-group-chevron"></i>
+                    </button>
+                    <ul class="nav-dropdown-menu collapse" id="submenu-operations">
+                        <li class="nav-item">
+                            <a class="nav-link @(currentController == "Availability" ? "active" : "")"
+                               asp-controller="Availability" asp-action="Index" title="Availability">
+                                <i class="bi bi-calendar3"></i>
+                                <span class="link-text">Availability</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center @(currentController == "RentalTransactions" ? "active" : "")"
+                               asp-controller="RentalTransactions" asp-action="Index" title="Rental Transactions">
+                                <i class="bi bi-box-seam"></i>
+                                <span class="link-text">Rental Transactions</span>
+                                @await Component.InvokeAsync("RentalTransactionOverdueBadge")
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center @(currentController == "Maintenance" ? "active" : "")"
+                               asp-controller="Maintenance" asp-action="Index" title="Maintenance">
+                                <i class="bi bi-tools"></i>
+                                <span class="link-text">Maintenance</span>
+                                @await Component.InvokeAsync("MaintenanceInProgressBadge")
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center @(currentController == "Invoices" ? "active" : "")"
+                               asp-controller="Invoices" asp-action="Index" title="Billing">
+                                <i class="bi bi-receipt"></i>
+                                <span class="link-text">Billing</span>
+                                @await Component.InvokeAsync("BillingUnpaidBadge")
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center @(currentController == "DamagePenalties" ? "active" : "")"
+                               asp-controller="DamagePenalties" asp-action="Index" title="Damage &amp; Penalty">
+                                <i class="bi bi-exclamation-octagon"></i>
+                                <span class="link-text">Damage &amp; Penalty</span>
+                                @await Component.InvokeAsync("DamagePenaltyPendingBadge")
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            }
+
+            @*
+                ============ Deferred modules ============
+            *@
+
+            @* ----- CRM (Admin/Staff) ----- *@
             @if (isAdmin || isStaff)
             {
                 <li class="nav-item">
-                    <a class="nav-link" asp-controller="Categories" asp-action="Index">
-                        <i class="bi bi-tags"></i> Categories
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" asp-controller="EquipmentItems" asp-action="Index">
-                        <i class="bi bi-upc-scan"></i> Equipment units
+                    <a class="nav-link d-flex align-items-center @(currentController == "CustomerCrm" && currentAction == "Dashboard" ? "active" : "")"
+                       asp-controller="CustomerCrm" asp-action="Dashboard" title="CRM">
+                        <i class="bi bi-journal-text"></i>
+                        <span class="link-text">CRM</span>
+                        @await Component.InvokeAsync("CrmUnreadBadge")
                     </a>
                 </li>
             }
-        }
 
-        @* ============ User & Role Management (Admin only) ============ *@
-        @if (isAdmin)
-        {
-            <li class="nav-item mt-2 text-uppercase text-muted small">Administration</li>
-            <li class="nav-item">
-                <a class="nav-link" asp-controller="AccountsAdmin" asp-action="Index">
-                    <i class="bi bi-people-fill"></i> Accounts &amp; Roles
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" asp-controller="AuditLog" asp-action="Index">
-                    <i class="bi bi-journal-text"></i> Audit Log
-                </a>
-            </li>
-        }
-
-        @* ============ Customer & Reservation Management ============ *@
-        @if (isAdmin || isStaff)
-        {
-            <li class="nav-item mt-2 text-uppercase text-muted small">People</li>
-            <li class="nav-item">
-                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Customers" ? "active" : "")"
-                   asp-controller="Customers" asp-action="Index">
-                    <i class="bi bi-people"></i> Customers
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Reservations" ? "active" : "")"
-                   asp-controller="Reservations" asp-action="Index">
-                    <i class="bi bi-calendar-check"></i> Reservations
-                </a>
-            </li>
-        }
-
-        @if (isCustomer)
-        {
-            <li class="nav-item mt-2 text-uppercase text-muted small">My Account</li>
-            <li class="nav-item">
-                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Customers" && ViewContext.RouteData.Values["action"]?.ToString() == "MyProfile" ? "active" : "")"
-                   asp-controller="Customers" asp-action="MyProfile">
-                    <i class="bi bi-person-circle"></i> My Profile
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Reservations" && ViewContext.RouteData.Values["action"]?.ToString() == "MyReservations" ? "active" : "")"
-                   asp-controller="Reservations" asp-action="MyReservations">
-                    <i class="bi bi-calendar-event"></i> My Reservations
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "RentalTransactions" ? "active" : "")"
-                   asp-controller="RentalTransactions" asp-action="Index">
-                    <i class="bi bi-box-arrow-up"></i> My Rentals
-                </a>
-            </li>
-        }
-
-        @if (isAdmin || isStaff)
-        {
-            <li class="nav-item mt-2 text-uppercase text-muted small">Operations</li>
-            <li class="nav-item">
-                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Availability" ? "active" : "")"
-                   asp-controller="Availability" asp-action="Index">
-                    <i class="bi bi-calendar3"></i> Availability
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "RentalTransactions" ? "active" : "")"
-                   asp-controller="RentalTransactions" asp-action="Index">
-                    <i class="bi bi-box-seam"></i> Rental Transactions
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Maintenance" ? "active" : "")"
-                   asp-controller="Maintenance" asp-action="Index">
-                    <i class="bi bi-tools"></i> Maintenance
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Invoices" ? "active" : "")"
-                   asp-controller="Invoices" asp-action="Index">
-                    <i class="bi bi-receipt"></i> Billing
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "DamagePenalties" ? "active" : "")"
-                   asp-controller="DamagePenalties" asp-action="Index">
-                    <i class="bi bi-exclamation-octagon"></i> Damage &amp; Penalty
-                </a>
-            </li>
-        }
-
-        @*
-            ============ Deferred modules ============
-
-            @if (isCustomer)
+            @* ----- Insights (Admin/Staff) — single child, kept as a flat link ----- *@
+            @if (isAdmin || isStaff)
             {
-                <li class="nav-item"><a class="nav-link" asp-controller="MyInvoices" asp-action="Index">My Invoices</a></li>
+                <li class="nav-item">
+                    <a class="nav-link @(currentController == "Reports" ? "active" : "")"
+                       asp-controller="Reports" asp-action="Index" title="Reports">
+                        <i class="bi bi-bar-chart"></i>
+                        <span class="link-text">Reports</span>
+                    </a>
+                </li>
             }
-        *@
 
-        @if (isAdmin || isStaff)
-        {
-            <li class="nav-item mt-2">
-                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "CustomerCrm" && ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")"
-                   asp-controller="CustomerCrm" asp-action="Dashboard">
-                    <i class="bi bi-journal-text"></i> CRM
-                    @await Component.InvokeAsync("CrmUnreadBadge")
-                </a>
-            </li>
-        }
+        </ul>
+    </nav>
 
-        @if (isAdmin || isStaff)
-        {
-            <li class="nav-item mt-2 text-uppercase text-muted small">Insights</li>
-            <li class="nav-item">
-                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Reports" ? "active" : "")"
-                   asp-controller="Reports" asp-action="Index">
-                    <i class="bi bi-bar-chart"></i> Reports
-                </a>
-            </li>
-        }
-
-    </ul>
-</nav>
+    <div class="sidebar-footer">
+        <form id="logoutForm" asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+            @Html.AntiForgeryToken()
+            <button type="button" class="sidebar-logout-btn" title="Sign out"
+                    data-bs-toggle="modal" data-bs-target="#logoutModal">
+                <i class="bi bi-box-arrow-right"></i>
+                <span class="link-text">Sign out</span>
+            </button>
+        </form>
+    </div>
+</aside>

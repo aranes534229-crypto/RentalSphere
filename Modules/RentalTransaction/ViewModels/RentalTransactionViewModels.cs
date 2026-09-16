@@ -29,6 +29,7 @@ public class RentalTransactionIndexViewModel
         new SelectListItem("Active", nameof(RentalTransactionStatus.Active)),
         new SelectListItem("Returned", nameof(RentalTransactionStatus.Returned)),
         new SelectListItem("Cancelled", nameof(RentalTransactionStatus.Cancelled)),
+        new SelectListItem("Overdue", "Overdue"),
     };
 }
 
@@ -53,4 +54,28 @@ public class RentalTransactionReturnViewModel
 {
     public RentalTransactionDetailsDto Transaction { get; set; } = new();
     public RentalTransactionReturnDto Form { get; set; } = new();
+
+    /// <summary>
+    /// One row per transaction line. Pinned lines show the existing serial
+    /// (read-only); unpinned lines carry a candidate list and an editable
+    /// unit selector. Always populated so the operator can see exactly
+    /// which unit will be moved to InMaintenance per line.
+    /// </summary>
+    public List<DamageAssignmentRow> AllLines { get; set; } = new();
+}
+
+public class DamageAssignmentRow
+{
+    public int RentalTransactionItemID { get; set; }
+    public int EquipmentID { get; set; }
+    public string EquipmentName { get; set; } = string.Empty;
+
+    /// <summary>True when the line already has a pinned <c>EquipmentItemID</c> at checkout.</summary>
+    public bool IsPinned { get; set; }
+
+    /// <summary>Serial of the currently pinned unit, or null if unpinned.</summary>
+    public string? PinnedSerialNumber { get; set; }
+
+    /// <summary>Candidate units of <c>EquipmentID</c> the operator may pick from when unpinned.</summary>
+    public List<RentalSphere.Modules.Equipment.Services.EquipmentItemLookupDto> Candidates { get; set; } = new();
 }

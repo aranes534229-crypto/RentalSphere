@@ -197,12 +197,10 @@ public class EquipmentItemService : IEquipmentItemService
         if (serialChanged && await _items.SerialNumberExistsAsync(newSerial, dto.ItemID))
             throw new InvalidOperationException($"Serial number '{newSerial}' is already in use.");
 
-        var oldStatus = item.AvailabilityStatus;
-
         var oldValues = new
         {
             item.SerialNumber,
-            Status = oldStatus.ToString(),
+            Status = item.AvailabilityStatus.ToString(),
             item.Location,
         };
 
@@ -215,14 +213,12 @@ public class EquipmentItemService : IEquipmentItemService
 
         _items.Update(item);
 
-        // If status crossed the Available boundary, sync parent.
-        if (statusChanged)
-        {
-            var eq = await _equipment.GetAsync(item.EquipmentID)
-                ?? throw new NotFoundException($"Parent equipment {item.EquipmentID} not found.");
-            var delta = StatusAvailableDelta(oldStatus, newStatus);
-            if (delta != 0) AdjustStock(eq, delta);
-        }
+        // ponytail: per-item status transitions between existing units (Available,
+        // Reserved, CheckedOut, InMaintenance, Retired) do NOT change StockQuantity.
+        // StockQuantity represents the total inventory the business owns; it only
+        // changes when an EquipmentItem row is added (CreateAsync) or removed
+        // (DeleteAsync). Availability for a given day is computed by the calendar
+        // from the reservation table, not by mutating this field on each transition.
 
         await _items.SaveChangesAsync();
 
@@ -264,8 +260,9 @@ public class EquipmentItemService : IEquipmentItemService
 
     public async Task ChangeStatusAsync(int id, string newStatus, string actorUserId)
     {
-        // Convenience for future modules (Maintenance, etc.) — single-status transition
-        // with the same StockQuantity sync as Update.
+        // Convenience for future modules (Maintenance, etc.) — single-status
+        // transition. Does NOT touch StockQuantity: this is a state change on
+        // an existing unit, not an inventory-count change. See UpdateAsync.
         if (!_current.IsAdmin && !_current.IsStaff)
             throw new ForbiddenException("Only Admin or Staff can change item status.");
 
@@ -277,11 +274,6 @@ public class EquipmentItemService : IEquipmentItemService
         item.AvailabilityStatus = target;
         item.LastStatusChange = DateTime.UtcNow;
         _items.Update(item);
-
-        var eq = await _equipment.GetAsync(item.EquipmentID)
-            ?? throw new NotFoundException($"Parent equipment {item.EquipmentID} not found.");
-        var delta = StatusAvailableDelta(oldStatus, target);
-        if (delta != 0) AdjustStock(eq, delta);
 
         await _items.SaveChangesAsync();
 
@@ -314,15 +306,11 @@ public class EquipmentItemService : IEquipmentItemService
         _               => AvailabilityStatus.Available,
     };
 
-    /// <summary>+1 if moving INTO Available, -1 if moving OUT of Available, 0 otherwise.</summary>
-    private static int StatusAvailableDelta(AvailabilityStatus from, AvailabilityStatus to) =>
-        (from == AvailabilityStatus.Available, to == AvailabilityStatus.Available) switch
-        {
-            (false, true)  => +1,
-            (true,  false) => -1,
-            _              => 0,
-        };
-
+    /// <summary>
+    /// Mutates EquipmentCatalog.StockQuantity. Only valid from CreateAsync (new
+    /// unit) and DeleteAsync (unit removed). Per-item status transitions no
+    /// longer call this — StockQuantity is a permanent inventory total.
+    /// </summary>
     private void AdjustStock(EquipmentCatalog eq, int delta)
     {
         eq.StockQuantity = Math.Max(0, eq.StockQuantity + delta);

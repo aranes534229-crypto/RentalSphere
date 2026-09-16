@@ -1,6 +1,34 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace RentalSphere.Identity.Models.ViewModels;
+
+/// <summary>
+/// Paged index for the Accounts & Roles list. Mirrors RentalTransactionIndexViewModel
+/// so the two admin list views share one visual pattern (card, filter form, pagination pills).
+/// </summary>
+public class AccountsAdminIndexViewModel
+{
+    public List<UserListItemViewModel> Items { get; set; } = new();
+    public string? Search { get; set; }
+    public int Page { get; set; } = 1;
+    public int PageSize { get; set; } = 20;
+    public int TotalCount { get; set; }
+    public int TotalPages => PageSize <= 0 ? 1 : (int)Math.Ceiling((double)TotalCount / PageSize);
+
+    /// <summary>Builds the query string for a pagination link, preserving search + page size.</summary>
+    public string PageUrl(int page) =>
+        $"?search={Search}&page={page}&pageSize={PageSize}";
+
+    /// <summary>Page-size options shared by the "Show:" dropdown.</summary>
+    public List<SelectListItem> PageSizes { get; } = new()
+    {
+        new SelectListItem("5", "5"),
+        new SelectListItem("10", "10"),
+        new SelectListItem("20", "20"),
+        new SelectListItem("50", "50"),
+    };
+}
 
 public class UserListItemViewModel
 {

@@ -1,0 +1,15 @@
+@model string
+@{
+    // Unified CRM status — handles both customer active/inactive and
+    // follow-up lifecycle states. No badge — plain inline text.
+    var cls = Model switch
+    {
+        "Active"    => "text-success",
+        "Inactive"  => "text-muted",
+        "Pending"   => "text-warning",
+        "Done"      => "text-success",
+        "Cancelled" => "text-muted",
+        _           => "text-muted"
+    };
+}
+<span class="@cls">@Model</span>

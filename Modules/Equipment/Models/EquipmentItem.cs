@@ -1,8 +1,10 @@
 namespace RentalSphere.Modules.Equipment.Models;
 
 /// <summary>
-/// Lifecycle status of one rentable unit. Source of truth for availability across date
-/// ranges. Equipment.StockQuantity is denormalized from the count of items in "Available".
+/// Lifecycle status of one rentable unit. Equipment.StockQuantity is the
+/// permanent total of units the business owns; it does NOT change when items
+/// transition between Available / Reserved / CheckedOut / InMaintenance /
+/// Retired. Per-day availability is computed from the reservation table.
 /// </summary>
 public enum AvailabilityStatus
 {

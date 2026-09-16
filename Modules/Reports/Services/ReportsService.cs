@@ -54,8 +54,24 @@ public class ReportsService : IReportsService
         bundle.TotalOutstanding = bundle.OutstandingBalances.Sum(o => o.Outstanding);
         bundle.LateReturnCount = bundle.LateReturns.Count;
         bundle.TotalDamageAmount = bundle.DamageTrends.Sum(d => d.DamageAmount);
+        bundle.TotalMaintenanceExpenses = await MaintenanceExpensesAsync(s, e);
+        bundle.NetRevenue = bundle.TotalRevenue - bundle.TotalMaintenanceExpenses;
 
         return bundle;
+    }
+
+    // ---- 5. Maintenance expenses (sum of Cost for closed records in window) ----
+    private async Task<decimal> MaintenanceExpensesAsync(DateTime start, DateTime end)
+    {
+        // Bucket by the day the record was closed (EndedAt) — that is when the
+        // expense was realized. Records that are still InProgress or were never
+        // closed are excluded (their Cost is an estimate, not an actual expense).
+        return await _db.MaintenanceRecords
+            .Where(m => m.Status == Maintenance.Models.MaintenanceStatus.Completed
+                     && m.EndedAt != null
+                     && m.EndedAt!.Value.Date >= start
+                     && m.EndedAt!.Value.Date < end.AddDays(1))
+            .SumAsync(m => (decimal?)m.Cost) ?? 0m;
     }
 
     // ---- 1. Revenue by period ----
@@ -113,11 +129,11 @@ public class ReportsService : IReportsService
             .Select(g => new { EquipmentID = g.Key, Count = g.Count() })
             .ToDictionaryAsync(x => x.EquipmentID, x => x.Count);
 
-        // Reserved unit-days from confirmed/pending reservations intersecting the window.
+        // Reserved unit-days from confirmed/checked-out reservations intersecting the
+        // window. Pending requests do NOT hold stock — staff must approve first.
         var reservations = await _db.ReservationItems
             .Where(ri => equipmentIds.Contains(ri.EquipmentID)
-                      && (ri.Reservation.Status == ReservationManagement.Models.ReservationStatus.Pending
-                       || ri.Reservation.Status == ReservationManagement.Models.ReservationStatus.Confirmed
+                      && (ri.Reservation.Status == ReservationManagement.Models.ReservationStatus.Confirmed
                        || ri.Reservation.Status == ReservationManagement.Models.ReservationStatus.CheckedOut)
                       && ri.Reservation.RentalStartDate < end.AddDays(1)
                       && ri.Reservation.RentalEndDate > start)

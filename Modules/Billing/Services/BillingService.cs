@@ -26,7 +26,8 @@ public record BillingOptions(
 public interface IBillingService
 {
     Task<int> GenerateForReturnAsync(int rentalTransactionId, string actorUserId);
-    Task<List<InvoiceListItemDto>> ListAsync(string? statusFilter = null, string? search = null);
+    Task<List<InvoiceListItemDto>> ListAsync(string? statusFilter = null, string? search = null, string? sort = null);
+    Task<int> CountUnpaidOrPartialAsync();
     Task<(List<InvoiceListItemDto> Items, int TotalCount)> ListPagedAsync(
         string? statusFilter, string? search, string? sort, int skip, int take);
     Task<InvoiceDetailsDto?> GetDetailsAsync(int id);
@@ -114,30 +115,50 @@ public class BillingService : IBillingService
             });
         }
 
-        // Damage hook: if the Return was flagged, seed a pending DamagePenalty + zero-amount line.
+        // Damage hook: consume the pending DamagePenalty rows that
+        // ReturnAsync already seeded (one per pinned unit) and reference
+        // each on a zero-amount invoice line. Do NOT create new penalty
+        // rows here — that would double-seed after the rental-return path
+        // already attached them to the same DbContext. If no pending rows
+        // exist for a flagged return, fall back to a single transaction-
+        // level penalty so an invoice can still be generated for legacy
+        // returns created before the return-path seed.
         if (tx.FlaggedForDamage)
         {
-            var penalty = new DPEntity
-            {
-                RentalTransactionID = tx.RentalTransactionID,
-                PenaltyType = DamagePenaltyType.Damage,
-                Description = "Damage flagged at return — assess amount to finalize.",
-                Amount = 0m,
-                Status = DamagePenaltyStatus.Pending,
-                ReportedByUserId = _current.UserId,
-            };
-            await _damageRepo.AddAsync(penalty);
-            await _damageRepo.SaveChangesAsync();
+            var pending = await _damageRepo.ListByTransactionAsync(rentalTransactionId);
+            var pendingForInvoice = pending.Where(p => p.Status == DamagePenaltyStatus.Pending).ToList();
 
-            lines.Add(new InvoiceLine
+            if (pendingForInvoice.Count == 0)
             {
-                LineType = InvoiceLineType.DamagePenalty,
-                Description = "Damage assessment (pending)",
-                Quantity = 1,
-                UnitAmount = 0m,
-                LineTotal = 0m,
-                ReferenceId = penalty.DamagePenaltyID,
-            });
+                // Legacy fallback: no per-unit pending rows were seeded at
+                // return time (e.g. old return predates this fix). Create a
+                // single transaction-level penalty.
+                var fallback = new DPEntity
+                {
+                    RentalTransactionID = tx.RentalTransactionID,
+                    PenaltyType = DamagePenaltyType.Damage,
+                    Description = "Damage flagged at return — assess amount to finalize.",
+                    Amount = 0m,
+                    Status = DamagePenaltyStatus.Pending,
+                    ReportedByUserId = _current.UserId,
+                };
+                await _damageRepo.AddAsync(fallback);
+                await _damageRepo.SaveChangesAsync();
+                pendingForInvoice.Add(fallback);
+            }
+
+            foreach (var penalty in pendingForInvoice)
+            {
+                lines.Add(new InvoiceLine
+                {
+                    LineType = InvoiceLineType.DamagePenalty,
+                    Description = "Damage assessment (pending)",
+                    Quantity = 1,
+                    UnitAmount = 0m,
+                    LineTotal = 0m,
+                    ReferenceId = penalty.DamagePenaltyID,
+                });
+            }
         }
 
         var subTotal = lines.Sum(l => l.LineTotal);
@@ -177,12 +198,12 @@ public class BillingService : IBillingService
         return invoice.InvoiceID;
     }
 
-    public async Task<List<InvoiceListItemDto>> ListAsync(string? statusFilter = null, string? search = null)
+    public async Task<List<InvoiceListItemDto>> ListAsync(string? statusFilter = null, string? search = null, string? sort = null)
     {
         if (!_current.IsAdmin && !_current.IsStaff)
             throw new ForbiddenException("Only Admin or Staff can list invoices.");
 
-        var rows = await _repo.ListAsync(statusFilter, search);
+        var rows = await _repo.ListAsync(statusFilter, search, sort);
         return rows.Select(MapList).ToList();
     }
 
@@ -192,27 +213,16 @@ public class BillingService : IBillingService
         if (!_current.IsAdmin && !_current.IsStaff)
             throw new ForbiddenException("Only Admin or Staff can list invoices.");
 
-        var all = await _repo.ListAsync(statusFilter, search);
+        var all = await _repo.ListAsync(statusFilter, search, sort);
         var total = all.Count;
-
-        var sorted = sort?.ToLowerInvariant() switch
-        {
-            "number" or "number_desc" => sort == "number_desc"
-                ? all.OrderByDescending(i => i.InvoiceNumber).ToList()
-                : all.OrderBy(i => i.InvoiceNumber).ToList(),
-            "date" => all.OrderBy(i => i.InvoiceDate).ToList(),
-            "date_desc" => all.OrderByDescending(i => i.InvoiceDate).ToList(),
-            "customer" => all.OrderBy(i => i.Customer?.LastName ?? "").ThenBy(i => i.Customer?.FirstName ?? "").ToList(),
-            "customer_desc" => all.OrderByDescending(i => i.Customer?.LastName ?? "").ToList(),
-            "total" => all.OrderBy(i => i.TotalAmount).ToList(),
-            "total_desc" => all.OrderByDescending(i => i.TotalAmount).ToList(),
-            "due" => all.OrderBy(i => i.DueDate ?? DateTime.MaxValue).ToList(),
-            "due_desc" => all.OrderByDescending(i => i.DueDate ?? DateTime.MaxValue).ToList(),
-            _ => all.OrderByDescending(i => i.InvoiceDate).ToList(),
-        };
-
-        var page = sorted.Skip(skip).Take(take).Select(MapList).ToList();
+        var page = all.Skip(skip).Take(take).Select(MapList).ToList();
         return (page, total);
+    }
+
+    public async Task<int> CountUnpaidOrPartialAsync()
+    {
+        if (!_current.IsAdmin && !_current.IsStaff) return 0;
+        return await _repo.CountUnpaidOrPartialAsync();
     }
 
     public async Task<InvoiceDetailsDto?> GetDetailsAsync(int id)

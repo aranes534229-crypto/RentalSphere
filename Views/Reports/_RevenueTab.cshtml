@@ -1,12 +1,44 @@
 @model RentalSphere.Modules.Reports.DTOs.ReportsBundleDto
 
 <h4>Revenue by period (@Model.Granularity)</h4>
+
+@{
+    var maxRev = Model.Revenue.Any() ? Model.Revenue.Max(r => r.Revenue) : 0m;
+    var chartHeight = 100;
+    var barWidth = 32;
+    var barGap = 12;
+    var chartWidth = (Model.Revenue.Count * (barWidth + barGap)) + barGap + 40;
+}
+
 @if (!Model.Revenue.Any())
 {
     <div class="alert alert-info">No revenue recorded in this window.</div>
 }
 else
 {
+    <!-- Revenue trend chart (inline SVG, no JS library) -->
+    <div class="mb-3">
+        <svg height="@(chartHeight + 30)" width="100%" viewBox="0 0 @chartWidth @(chartHeight + 30)"
+             xmlns="http://www.w3.org/2000/svg" overflow="visible" preserveAspectRatio="xMidYMid meet">
+            <text x="0" y="12" font-size="11" fill="var(--bs-secondary-color)" font-weight="600">Revenue trend</text>
+            @for (int i = 0; i < Model.Revenue.Count; i++)
+            {
+                var r = Model.Revenue[i];
+                var barHeight = maxRev > 0 ? (r.Revenue / maxRev) * chartHeight : 0;
+                var x = barGap + (i * (barWidth + barGap));
+                var y = 20 + (chartHeight - barHeight);
+                <g>
+                    <rect x="@x" y="@y" width="@barWidth" height="@barHeight"
+                          fill="var(--bs-primary)" rx="2" ry="2" />
+                    <text x="@(x + barWidth / 2)" y="@(chartHeight + 35)" text-anchor="middle"
+                          font-size="9" fill="var(--bs-secondary-color)">
+                        @r.Period
+                    </text>
+                </g>
+            }
+        </svg>
+    </div>
+
     <div class="table-responsive">
         <table class="table table-sm table-hover align-middle">
             <thead class="table-light">
@@ -27,7 +59,7 @@ else
                         <td class="text-end">₱@r.Revenue.ToString("N2")</td>
                     </tr>
                 }
-                <tr class="table-success fw-bold">
+                <tr class="table-light fw-bold">
                     <td>Total</td>
                     <td class="text-end">@Model.Revenue.Sum(r => r.InvoiceCount)</td>
                     <td class="text-end">@Model.Revenue.Sum(r => r.RentalTransactionCount)</td>

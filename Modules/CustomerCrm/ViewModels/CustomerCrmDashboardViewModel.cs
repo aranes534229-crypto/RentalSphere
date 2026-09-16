@@ -29,4 +29,31 @@ public class CustomerCrmDashboardViewModel
 
     /// <summary>Combined CRM activity (unread notes + pending follow-ups) for the global bell.</summary>
     public int TotalUnreadCrmItems { get; set; }
+
+    // Paging / sorting — mirrors MaintenanceIndexViewModel so the dashboard
+    // shares one visual language with the other module landing pages.
+    public int Page { get; set; } = 1;
+    public int PageSize { get; set; } = 20;
+    public int TotalCount { get; set; }
+    public int TotalPages => PageSize <= 0 ? 1 : (int)Math.Ceiling((double)TotalCount / PageSize);
+    public string? Sort { get; set; }
+
+    /// <summary>URL for a sortable column header link.</summary>
+    public string SortUrl(string column)
+    {
+        // Toggle: ascending <-> descending. Default to 'asc' (no suffix) on first click.
+        string next;
+        if (string.Equals(Sort, column, StringComparison.OrdinalIgnoreCase))
+            next = column + "_desc";
+        else if (string.Equals(Sort, column + "_desc", StringComparison.OrdinalIgnoreCase))
+            next = column; // back to asc — but keep the column token
+        else
+            next = column;
+
+        return $"?search={Search ?? ""}&sort={next}&page=1&pageSize={PageSize}";
+    }
+
+    /// <summary>URL for a pagination pill.</summary>
+    public string PageUrl(int page) =>
+        $"?search={Search ?? ""}&sort={Sort ?? ""}&page={page}&pageSize={PageSize}";
 }

@@ -19,10 +19,10 @@ public class EquipmentIndexViewModel
     public List<SelectListItem> Categories { get; set; } = new();
 
     public string SortUrl(string column) =>
-        $"?search={Search}&categoryId={CategoryFilter}&sort={ToggleSort(column)}&page={Page}&pageSize={PageSize}";
+        $"?search={Uri.EscapeDataString(Search ?? "")}&categoryId={CategoryFilter}&sort={ToggleSort(column)}&page={Page}&pageSize={PageSize}";
 
     public string PageUrl(int page) =>
-        $"?search={Search}&categoryId={CategoryFilter}&sort={Sort}&page={page}&pageSize={PageSize}";
+        $"?search={Uri.EscapeDataString(Search ?? "")}&categoryId={CategoryFilter}&sort={Sort}&page={page}&pageSize={PageSize}";
 
     private string ToggleSort(string column)
     {
@@ -71,7 +71,7 @@ public class CategoryIndexViewModel
     public int TotalPages => PageSize <= 0 ? 1 : (int)Math.Ceiling((double)TotalCount / PageSize);
 
     public string PageUrl(int page) =>
-        $"?search={Search}&page={page}&pageSize={PageSize}";
+        $"?search={Uri.EscapeDataString(Search ?? "")}&page={page}&pageSize={PageSize}";
 }
 
 public class CategoryListItemDto

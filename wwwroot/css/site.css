@@ -12,13 +12,1556 @@ html {
   box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
 
+/* ------------------------------------------------------------
+   Consistent outlined pagination
+   ------------------------------------------------------------
+   Bootstrap 5's defaults render .page-link without a border,
+   so Prev/Next/page-numbers look like floating text while
+   .active gets a filled blue box — two different button styles
+   in the same component. Override to give every .page-link
+   the same bordered/outlined shape, and let .active fill in
+   and .disabled grey out, so all three states share one
+   consistent geometry.
+
+   Scoped under .pagination so other modules that use Bootstrap
+   pagination untouched aren't affected. If a non-equipment
+   module wants the same look, just add .pagination-consistent
+   to its <ul>.
+   ------------------------------------------------------------ */
+.pagination .page-link {
+  border: 1px solid #dee2e6;
+  background-color: #fff;
+  color: #0d6efd;
+  padding: 0.35rem 0.7rem;
+  min-height: 31px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.2;
+}
+
+.pagination .page-link:hover,
+.pagination .page-link:focus {
+  background-color: #e9ecef;
+  color: #0a58ca;
+  border-color: #dee2e6;
+  box-shadow: none;
+}
+
+.pagination .page-item.active .page-link {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+  color: #fff;
+}
+
+.pagination .page-item.active .page-link:hover,
+.pagination .page-item.active .page-link:focus {
+  background-color: #0a58ca;
+  border-color: #0a58ca;
+  color: #fff;
+}
+
+.pagination .page-item.disabled .page-link,
+.pagination .page-item.disabled .page-link:hover {
+  background-color: #f8f9fa;
+  border-color: #dee2e6;
+  color: #adb5bd;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Remove the doubled border where two .page-link edges meet,
+   so the row reads as one connected strip of buttons. */
+.pagination .page-item + .page-item .page-link {
+  border-left: 0;
+}
+
+/* Brand imagery: the top-navbar .brand-logo sits next to the
+   RentalSphere wordmark. object-fit:contain keeps the original
+   PNG's aspect ratio inside the locked 36px box. */
+.brand-logo,
+.navbar-brand img {
+  height: 36px;
+  width: 36px;
+  object-fit: contain;
+  vertical-align: middle;
+}
+
+.brand-logo {
+  display: inline-block;
+}
+
+/* ============================================================
+   App header (top navbar)
+   ------------------------------------------------------------
+   Light surface, sits directly above the content. Search field
+   on the left beside the sidebar boundary (borderless, just an
+   icon + placeholder). Theme pill, bell, chat, and user-info
+   group (text | avatar | chevron) anchored to the right.
+
+   Pairs with a dark sidebar brand strip above for a high-
+   contrast SaaS-shell look. The body below inverts under
+   [data-bs-theme="dark"]; the header stays light in dark mode
+   so the search field remains readable.
+   ============================================================ */
+.app-header {
+  position: relative;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 0.4rem 0.75rem;
+  margin: 12px 16px 0 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+  z-index: 1040;
+}
+
+.app-header .container-fluid,
+.app-header-inner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  width: 100%;
+}
+
+/* ----- Left zone: mobile toggle + borderless search ----- */
+.app-header-left {
+  min-width: 0;
+}
+
+.app-header-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 0 1 360px;
+  min-width: 0;
+  background-color: transparent;
+  border: 0;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  transition: background-color 0.15s ease;
+}
+
+.app-header-search:focus-within {
+  background-color: #f1f5f9;
+}
+
+.app-header-search-icon {
+  color: #475569;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.app-header-search-input {
+  border: 0;
+  outline: 0;
+  background: transparent;
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.25rem 0;
+  font-size: 0.9rem;
+  color: #1f2937;
+  box-shadow: none;
+}
+
+.app-header-search-input::placeholder {
+  color: #94a3b8;
+}
+
+/* ----- Right zone: theme pill, bell, chat, user info ----- */
+.app-header-actions {
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+/* Theme pill toggle. A track with a circular thumb that holds
+   the moon/sun icon. Pressed = dark mode active. */
+.app-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  background: transparent;
+  border: 0;
+  padding: 0.25rem 0.4rem;
+  cursor: pointer;
+  border-radius: 999px;
+  transition: background-color 0.15s ease;
+}
+
+.app-theme-toggle:hover,
+.app-theme-toggle:focus-visible {
+  background-color: #f1f5f9;
+  outline: none;
+}
+
+.app-theme-toggle-track {
+  position: relative;
+  width: 44px;
+  height: 22px;
+  background-color: #cbd5e1;
+  border-radius: 999px;
+  transition: background-color 0.2s ease;
+}
+
+.app-theme-toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  color: #475569;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease, color 0.2s ease, background-color 0.2s ease;
+}
+
+.app-theme-toggle[aria-pressed="true"] .app-theme-toggle-track {
+  background-color: #3b82f6;
+}
+
+.app-theme-toggle[aria-pressed="true"] .app-theme-toggle-thumb {
+  transform: translateX(22px);
+  color: #f59e0b;
+}
+
+/* Icon buttons (bell, chat). Circular, transparent, hover
+   greys out. The .app-icon-dot inside is the red unread dot. */
+.app-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  background-color: transparent;
+  color: #475569;
+  font-size: 1.1rem;
+  position: relative;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+
+.app-icon-btn:hover,
+.app-icon-btn:focus-visible {
+  background-color: #f1f5f9;
+  color: #0d6efd;
+  border-color: #e2e8f0;
+  outline: none;
+}
+
+.app-icon-btn:active {
+  transform: scale(0.96);
+}
+
+.app-icon-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background-color: #ef4444;
+  box-shadow: 0 0 0 2px #ffffff;
+}
+
+/* ----- Notifications dropdown ----- */
+.app-notifications {
+  min-width: 280px;
+  padding: 0;
+  z-index: 1050; /* sit above the floating header card */
+}
+
+.app-notifications .dropdown-header {
+  font-weight: 600;
+  color: #1f2937;
+  padding: 0.6rem 0.9rem;
+  border-bottom: 1px solid #f1f5f9;
+  margin: 0;
+}
+
+.app-notifications-empty {
+  background-color: #f8fafc;
+}
+
+/* ----- User info group: text | avatar | chevron ----- */
+.app-user-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.25rem 0.5rem 0.25rem 0.75rem;
+  color: #1f2937;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.app-user-toggle:hover,
+.app-user-toggle:focus-visible,
+.app-user-toggle[aria-expanded="true"] {
+  background-color: #f1f5f9;
+  border-color: #e2e8f0;
+  outline: none;
+}
+
+.app-user-meta {
+  line-height: 1.15;
+  max-width: 160px;
+}
+
+.app-user-name {
+  font-size: 0.85rem;
+  color: #1f2937;
+}
+
+.app-user-role {
+  color: #94a3b8;
+  font-size: 0.72rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.app-user-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #e0e7ff;
+  color: #4338ca;
+  font-size: 1.05rem;
+  flex-shrink: 0;
+}
+
+.app-user-chevron {
+  color: #94a3b8;
+  margin-left: 0.1rem;
+}
+
+.app-user-menu {
+  min-width: 240px;
+  padding: 0;
+  /* ponytail: z-index 1050 keeps the user dropdown above the floating
+     header card (1040) and on par with Bootstrap modals, so it never
+     disappears behind the header surface or other sticky UI. */
+  z-index: 1050;
+}
+
+.app-user-menu .dropdown-item {
+  padding: 0.5rem 1rem;
+}
+
+/* ponytail: dedicated class for the sign-out item so the red hover
+   state stays consistent in both light and dark themes. Without
+   this, Bootstrap's default .dropdown-item:hover would gray the
+   text out and the danger color would not stand out. */
+.app-user-menu .dropdown-item.dropdown-item-danger {
+  color: #dc2626;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.app-user-menu .dropdown-item.dropdown-item-danger:hover,
+.app-user-menu .dropdown-item.dropdown-item-danger:focus-visible {
+  background-color: #fef2f2;
+  color: #b91c1c;
+}
+
+[data-bs-theme="dark"] .app-user-menu .dropdown-item.dropdown-item-danger {
+  color: #f87171;
+}
+
+[data-bs-theme="dark"] .app-user-menu .dropdown-item.dropdown-item-danger:hover,
+[data-bs-theme="dark"] .app-user-menu .dropdown-item.dropdown-item-danger:focus-visible {
+  background-color: rgba(220, 38, 38, 0.15);
+  color: #fca5a5;
+}
+
+/* ----- App shell: layout containers ----- */
+/* ponytail: every container in the shell chain explicitly opts in
+   to overflow:visible so header dropdowns and sidebar flyouts can
+   extend past their parent box without being clipped. The default
+   in flex/grid items is overflow:visible too, but stating it
+   removes any ambiguity if a child rule accidentally tightens it. */
+.app-shell,
+.app-shell-main,
+.app-shell-sidebar {
+  overflow: visible;
+}
+
+/* ----- App shell: sidebar column (outer) ----- */
+/* ponytail: the outer column is a positioning context that
+   carries the CSS variables, the 12px offset margin, and the
+   z-index needed to lift the column above the main content.
+   The rounded card geometry (border-radius, border, shadow,
+   overflow:hidden) lives on the inner wrapper
+   (.app-shell-sidebar-inner) so the brand, active menu
+   indicator, and footer are clipped to the rounded shape. */
+.app-shell-sidebar {
+  width: 240px;
+  flex: 0 0 240px;
+  display: flex;
+  flex-direction: column;
+  --sidebar-bg: #ffffff;
+  --sidebar-text: #334155;
+  --sidebar-text-muted: #64748b;
+  --sidebar-border: #e2e8f0;
+  --sidebar-divider: #e2e8f0;
+  --sidebar-accent: #0d6efd;
+  --sidebar-accent-soft: rgba(13, 110, 253, 0.08);
+  --sidebar-hover-bg: #f1f5f9;
+  --sidebar-active-bg: #0d6efd;
+  --sidebar-active-text: #ffffff;
+  --sidebar-collapse-btn-bg: #ffffff;
+  --sidebar-collapse-btn-text: #475569;
+  --sidebar-collapse-btn-border: #cbd5e1;
+  --sidebar-collapse-btn-hover-bg: #f1f5f9;
+  background-color: transparent;
+  color: var(--sidebar-text);
+  margin: 12px 0 12px 12px;
+  position: relative;
+  overflow: visible;
+  transition: width 0.3s ease, flex-basis 0.3s ease;
+}
+
+/* ----- App shell: sidebar inner card (floating card geometry) ----- */
+.app-shell-sidebar-inner {
+  /* ponytail: no margin here — the outer column carries the
+     12px offset from screen edges. This wrapper fills the
+     column and carries the rounded card geometry. */
+  background-color: var(--sidebar-bg);
+  border: 1px solid var(--sidebar-border);
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  /* ponytail: overflow is visible (not set, defaults to
+     visible) so the collapsed-mode flyout pop-out can
+     extend past the right edge of the card. The brand's
+     own border-top-left/right-radius: 16px handles the
+     top-corner rounding without needing overflow:hidden. */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.app-shell-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.95rem 1rem;
+  text-decoration: none;
+  color: var(--sidebar-text);
+  border-bottom: 1px solid var(--sidebar-divider);
+  /* ponytail: background is transparent so the brand blends
+     with the inner card's background. The top corners are
+     explicitly rounded to 16px to match the inner card's
+     border-radius, ensuring no square corners show at the
+     top of the logo section. The inner card's overflow:hidden
+     would clip these anyway, but setting them explicitly
+     documents the contract. */
+  background-color: transparent;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  flex-shrink: 0;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.app-shell-brand:hover,
+.app-shell-brand:focus-visible {
+  background-color: var(--sidebar-hover-bg);
+  color: var(--sidebar-accent);
+  outline: none;
+}
+
+.app-shell-brand-logo {
+  height: 30px;
+  width: 30px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.app-shell-brand-text {
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+  color: var(--sidebar-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* In collapsed mode the brand text hides, leaving just the
+   logo centered. The column itself collapses to 70px. */
+.app-shell-sidebar.collapsed {
+  width: 70px;
+  flex-basis: 70px;
+  /* ponytail: z-index 1060 lifts the entire column above the
+     main content area (z-index 0) and the top header card
+     (z-index 1040) so the flyout pop-out that extends past
+     the right edge of the column paints on top of everything
+     else. Without this, the flyout would be hidden behind the
+     main content. */
+  z-index: 1060;
+  /* ponytail: overflow stays visible (inherited from base)
+     so the flyout can extend past the right edge. */
+}
+
+.app-shell-sidebar.collapsed .app-shell-brand-text {
+  display: none;
+}
+
+.app-shell-sidebar.collapsed .app-shell-brand {
+  justify-content: center;
+  padding: 0.95rem 0; /* zero horizontal padding in collapsed mode */
+  gap: 0;
+}
+
+/* ============================================================
+   Dark theme — full-app inversion
+   ------------------------------------------------------------
+   Triggered by [data-bs-theme="dark"] on <html> (set by the
+   theme toggle in site.js). Bootstrap 5.3 already re-themes
+   its own components (footer, btn, modal, table, navbar) via
+   CSS variables, so this block only handles the things Bootstrap
+   doesn't reach: page background, hero banner, custom cards,
+   the sidebar, the (light) header, and a few utility text/
+   background classes (.bg-light, .text-muted, .card).
+   ============================================================ */
+[data-bs-theme="dark"] {
+  --app-body-bg: #0f172a;
+  --app-surface-bg: #1e293b;
+  --app-surface-border: #334155;
+  --app-text: #e2e8f0;
+  --app-text-muted: #94a3b8;
+  --app-heading: #f8fafc;
+}
+
+[data-bs-theme="dark"] body {
+  background-color: var(--app-body-bg);
+  color: var(--app-text);
+}
+
+[data-bs-theme="dark"] h1,
+[data-bs-theme="dark"] h2,
+[data-bs-theme="dark"] h3,
+[data-bs-theme="dark"] h4,
+[data-bs-theme="dark"] h5,
+[data-bs-theme="dark"] h6 {
+  color: var(--app-heading);
+}
+
+[data-bs-theme="dark"] .text-muted {
+  color: var(--app-text-muted) !important;
+}
+
+[data-bs-theme="dark"] main {
+  background-color: var(--app-body-bg);
+  color: var(--app-text);
+}
+
+/* ----- App header (light by design — re-skin only the bits the
+   light styles assume) ----- */
+[data-bs-theme="dark"] .app-header {
+  background-color: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.35), 0 2px 4px -2px rgba(0, 0, 0, 0.25);
+}
+
+[data-bs-theme="dark"] .app-header-search:focus-within {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+[data-bs-theme="dark"] .app-header-search-input {
+  color: #f1f5f9;
+}
+
+[data-bs-theme="dark"] .app-header-search-icon {
+  color: #64748b;
+}
+
+[data-bs-theme="dark"] .app-theme-toggle:hover,
+[data-bs-theme="dark"] .app-theme-toggle:focus-visible {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+[data-bs-theme="dark"] .app-theme-toggle-track {
+  background-color: #475569;
+}
+
+[data-bs-theme="dark"] .app-icon-btn {
+  color: #cbd5e1;
+}
+
+[data-bs-theme="dark"] .app-icon-btn:hover,
+[data-bs-theme="dark"] .app-icon-btn:focus-visible {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #f1f5f9;
+  border-color: #334155;
+}
+
+[data-bs-theme="dark"] .app-icon-dot {
+  box-shadow: 0 0 0 2px #1e293b;
+}
+
+[data-bs-theme="dark"] .app-user-toggle {
+  color: #f1f5f9;
+}
+
+[data-bs-theme="dark"] .app-user-toggle:hover,
+[data-bs-theme="dark"] .app-user-toggle:focus-visible,
+[data-bs-theme="dark"] .app-user-toggle[aria-expanded="true"] {
+  background-color: rgba(255, 255, 255, 0.06);
+  border-color: #334155;
+}
+
+[data-bs-theme="dark"] .app-user-name {
+  color: #f1f5f9;
+}
+
+[data-bs-theme="dark"] .app-user-role {
+  color: #64748b;
+}
+
+[data-bs-theme="dark"] .app-user-chevron {
+  color: #64748b;
+}
+
+[data-bs-theme="dark"] .app-user-avatar {
+  background-color: #312e81;
+  color: #c7d2fe;
+}
+
+[data-bs-theme="dark"] .app-notifications .dropdown-header {
+  color: #f1f5f9;
+  border-bottom-color: #334155;
+}
+
+[data-bs-theme="dark"] .app-notifications-empty {
+  background-color: #0f172a;
+  color: #94a3b8 !important;
+}
+
+/* Bootstrap .bg-light is the dashboard hero and a few other
+   surfaces — it does not auto-invert. Override to a dark slate. */
+[data-bs-theme="dark"] .bg-light {
+  background-color: var(--app-surface-bg) !important;
+  color: var(--app-text) !important;
+  border-color: var(--app-surface-border) !important;
+}
+
+[data-bs-theme="dark"] .bg-white {
+  background-color: var(--app-surface-bg) !important;
+  color: var(--app-text) !important;
+}
+
+/* ----- Sidebar (column + nav) ----- */
+/* ponytail: dark mode flips the sidebar's CSS variables to a
+   slate-800 surface with light text. The base rule above
+   already declared --sidebar-bg, --sidebar-text, etc. — this
+   block just rebinds them. */
+[data-bs-theme="dark"] .app-shell-sidebar {
+  --sidebar-bg: #1e293b;
+  --sidebar-text: #f1f5f9;
+  --sidebar-text-muted: #94a3b8;
+  --sidebar-border: rgba(255, 255, 255, 0.06);
+  --sidebar-divider: rgba(255, 255, 255, 0.06);
+  --sidebar-accent: #60a5fa;
+  --sidebar-accent-soft: rgba(59, 130, 246, 0.15);
+  --sidebar-hover-bg: rgba(255, 255, 255, 0.06);
+  --sidebar-active-bg: rgba(59, 130, 246, 0.18);
+  --sidebar-active-text: #60a5fa;
+  --sidebar-collapse-btn-bg: #0f172a;
+  --sidebar-collapse-btn-text: #cbd5e1;
+  --sidebar-collapse-btn-border: rgba(255, 255, 255, 0.12);
+  --sidebar-collapse-btn-hover-bg: #334155;
+}
+
+[data-bs-theme="dark"] .app-shell-sidebar-inner {
+  border-color: var(--sidebar-border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+/* ponytail: .app-shell-brand, .app-shell-brand:hover, the
+   nav-link rules, and the active state are all driven by
+   the CSS variables on .app-shell-sidebar. Dark mode only
+   needs to rebind the variables above — descendants inherit
+   automatically. The collapse button picks up its colors
+   from --sidebar-collapse-btn-* the same way. */
+
+[data-bs-theme="dark"] .sidebar-nav .nav-link i,
+[data-bs-theme="dark"] .sidebar-nav .nav-group-toggle i {
+  color: inherit;
+}
+
+/* ----- Collapsed-mode flyout popover: dark mode overrides ----- */
+/* ponytail: the base rules above use hardcoded light-mode
+   colors with !important so they win over the .app-shell-sidebar
+   CSS variables. The dark-mode overrides below also use
+   !important for the same reason, so the popover surface
+   flips to dark slate and the links read in light text. */
+[data-bs-theme="dark"] .sidebar-nav.collapsed .nav-item-dropdown > .nav-dropdown-menu,
+[data-bs-theme="dark"] .sidebar-nav.collapsed .nav-item-dropdown > .dropdown-menu {
+  background-color: #1e293b !important;
+  color: #f1f5f9;
+  border-color: #334155;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+[data-bs-theme="dark"] .sidebar-nav.collapsed .nav-item-dropdown.show > .nav-dropdown-menu {
+  background-color: #1e293b !important;
+  border-color: #334155;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+}
+
+[data-bs-theme="dark"] .sidebar-nav.collapsed .nav-dropdown-menu .link-text {
+  color: #f1f5f9 !important;
+}
+
+[data-bs-theme="dark"] .sidebar-nav.collapsed .nav-dropdown-menu .nav-link {
+  color: #cbd5e1 !important;
+}
+
+[data-bs-theme="dark"] .sidebar-nav.collapsed .nav-dropdown-menu .nav-link:hover {
+  background-color: #334155 !important;
+  color: #f1f5f9 !important;
+}
+
+[data-bs-theme="dark"] .sidebar-nav.collapsed .nav-dropdown-menu .nav-link.active {
+  background-color: #3b82f6 !important;
+  color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] .sidebar-nav.collapsed .nav-dropdown-menu .nav-link.active .link-text {
+  color: #ffffff !important;
+}
+
+/* ----- Cards (dashboard KPIs, module cards) ----- */
+[data-bs-theme="dark"] .card {
+  background-color: var(--app-surface-bg);
+  border-color: var(--app-surface-border);
+  color: var(--app-text);
+}
+
+[data-bs-theme="dark"] .card .card-title {
+  color: var(--app-heading);
+}
+
+[data-bs-theme="dark"] .card .card-text {
+  color: var(--app-text-muted);
+}
+
+[data-bs-theme="dark"] .card .text-muted {
+  color: var(--app-text-muted) !important;
+}
+
+/* ----- Tables (catalog list, transactions, etc.) ----- */
+[data-bs-theme="dark"] .table {
+  --bs-table-color: var(--app-text);
+  --bs-table-bg: var(--app-surface-bg);
+  --bs-table-border-color: var(--app-surface-border);
+  --bs-table-striped-bg: rgba(255, 255, 255, 0.02);
+  --bs-table-striped-color: var(--app-text);
+  --bs-table-hover-bg: rgba(255, 255, 255, 0.04);
+  --bs-table-hover-color: var(--app-text);
+  color: var(--app-text);
+}
+
+[data-bs-theme="dark"] .table > :not(caption) > * > * {
+  background-color: transparent;
+  color: var(--app-text);
+}
+
+/* ----- Form controls ----- */
+[data-bs-theme="dark"] .form-control,
+[data-bs-theme="dark"] .form-select {
+  background-color: #0f172a;
+  border-color: var(--app-surface-border);
+  color: var(--app-text);
+}
+
+[data-bs-theme="dark"] .form-control::placeholder {
+  color: var(--app-text-muted);
+}
+
+[data-bs-theme="dark"] .form-control:focus,
+[data-bs-theme="dark"] .form-select:focus {
+  background-color: #0f172a;
+  border-color: #3b82f6;
+  color: var(--app-text);
+  box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.18);
+}
+
+[data-bs-theme="dark"] .input-group-text {
+  background-color: #0f172a;
+  border-color: var(--app-surface-border);
+  color: var(--app-text-muted);
+}
+
+/* ----- Footer ----- */
+[data-bs-theme="dark"] .footer {
+  background-color: var(--app-body-bg);
+  color: var(--app-text-muted);
+  border-top-color: var(--app-surface-border) !important;
+}
+
+[data-bs-theme="dark"] .footer a {
+  color: #60a5fa;
+}
+
+/* ----- Pagination (consistent outlined style) ----- */
+[data-bs-theme="dark"] .pagination .page-link {
+  background-color: var(--app-surface-bg);
+  border-color: var(--app-surface-border);
+  color: #cbd5e1;
+}
+
+[data-bs-theme="dark"] .pagination .page-link:hover,
+[data-bs-theme="dark"] .pagination .page-link:focus {
+  background-color: #0f172a;
+  color: #f1f5f9;
+  border-color: var(--app-surface-border);
+}
+
+[data-bs-theme="dark"] .pagination .page-item.active .page-link {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+  color: #ffffff;
+}
+
+[data-bs-theme="dark"] .pagination .page-item.disabled .page-link,
+[data-bs-theme="dark"] .pagination .page-item.disabled .page-link:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+  border-color: var(--app-surface-border);
+  color: #475569;
+}
+
+/* ----- Equipment name link (used in the catalog table) ----- */
+[data-bs-theme="dark"] a.equipment-name-link {
+  color: #e2e8f0;
+}
+
+[data-bs-theme="dark"] a.equipment-name-link:hover,
+[data-bs-theme="dark"] a.equipment-name-link:focus {
+  color: #60a5fa;
+}
+
+/* ----- Hero banner tweaks (Hello, [name]! block) ----- */
+[data-bs-theme="dark"] .p-5.mb-4.bg-light.rounded-3,
+[data-bs-theme="dark"] .p-4.mb-4.bg-light.rounded-3 {
+  background-color: var(--app-surface-bg) !important;
+  color: var(--app-text) !important;
+  border: 1px solid var(--app-surface-border);
+}
+
+[data-bs-theme="dark"] .p-5.mb-4.bg-light.rounded-3 h1,
+[data-bs-theme="dark"] .p-4.mb-4.bg-light.rounded-3 h1 {
+  color: var(--app-heading);
+}
+
+.tracking-tight {
+  letter-spacing: -0.01em;
+}
+
+/* Catalog item links (table view): dark by default, blue on hover,
+   no underline. Keeps the table from looking like raw HTML. */
+a.equipment-name-link {
+  color: #1f2937;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+a.equipment-name-link:hover,
+a.equipment-name-link:focus {
+  color: #0d6efd;
+  text-decoration: underline;
+}
+
+/* ============================================================
+   Equipment Catalog — Staff modern floating-card redesign
+   ------------------------------------------------------------
+   The staff catalog now uses the same floating-card shell as
+   the app header/sidebar: 20px radius, soft border, subtle
+   shadow, and a surface background that flips with the theme.
+   Table header is transparent/soft; rows get generous padding
+   and a whisper-thin border; hover is a soft neutral tint.
+   ============================================================ */
+
+/* Main floating card container wrapping the table + footer */
+.equipment-main-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  padding: 24px;
+  overflow: visible;
+}
+
+/* Header row: title on the left, Add button on the right (matches EquipmentUnits) */
+.equipment-main-card h2 {
+  font-weight: 700;
+  color: #1e293b;
+}
+
+/* Transparent table header — no dark solid fill */
+.equipment-table-header th {
+  background-color: transparent;
+  color: #1e293b;
+  font-weight: 600;
+  border-bottom: 1px solid #f1f5f9;
+  padding: 12px 12px;
+}
+
+/* Rows: generous padding + thin border-bottom + soft hover */
+.equipment-table tbody td {
+  padding: 16px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+.equipment-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+.equipment-header-link {
+  color: #0f172a;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.equipment-header-link:hover,
+.equipment-header-link:focus {
+  color: #0d6efd;
+  text-decoration: underline;
+}
+
+/* Dark mode: header links must stay light-on-dark card */
+[data-bs-theme="dark"] .equipment-header-link {
+  color: #e2e8f0;
+}
+[data-bs-theme="dark"] .equipment-header-link:hover,
+[data-bs-theme="dark"] .equipment-header-link:focus {
+  color: #60a5fa;
+}
+
+/* Status pill badges — rounded outline (Available: light green fill, subtle border) */
+.equipment-table .badge {
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: 1px solid #bbf7d0;
+  background-color: #f0fdf4;
+  color: #ffffff;
+}
+.equipment-table .badge.bg-warning.text-dark {
+  background-color: #fffbeb;
+  color: #92400e;
+  border-color: #fcd34d;
+}
+.equipment-table .badge.bg-danger {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border-color: #f87171;
+}
+.equipment-table .badge.bg-secondary {
+  background-color: #e2e8f0;
+  color: #475569;
+  border-color: #94a3b8;
+}
+.equipment-table .bg-dark {
+  background-color: #334155 !important;
+  color: #f8fafc !important;
+  border-color: #475569 !important;
+}
+
+/* Dark mode: status badges need light text on the dark card */
+[data-bs-theme="dark"] .equipment-table .badge {
+  background-color: #145a32;
+  color: #dcfce7;
+  border-color: #4ade80;
+}
+[data-bs-theme="dark"] .equipment-table .badge.bg-warning.text-dark {
+  background-color: #78350f;
+  color: #fef3c7;
+  border-color: #fbbf24;
+}
+[data-bs-theme="dark"] .equipment-table .badge.bg-danger {
+  background-color: #7f1d1d;
+  color: #fecaca;
+  border-color: #f87171;
+}
+[data-bs-theme="dark"] .equipment-table .badge.bg-secondary {
+  background-color: #334155;
+  color: #cbd5e1;
+  border-color: #475569;
+}
+
+/* Pagination footer: Show dropdown left, page buttons right */
+.equipment-main-card .card-footer {
+  background-color: transparent;
+  border-top: 1px solid #e2e8f0;
+  padding: 16px 0 0 0;
+}
+.equipment-main-card .card-footer .pagination {
+  margin: 0;
+}
+
+/* Action button styling: borderless 3-dot icon */
+.equipment-action-btn {
+  color: #64748b;
+  transition: color 0.15s ease;
+}
+.equipment-action-btn:hover,
+.equipment-action-btn:focus {
+  color: #0d6efd;
+  background-color: transparent;
+}
+
+/* Dropdown menu (popout) styling */
+.equipment-popout {
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  padding: 4px 0;
+}
+.equipment-popout .dropdown-item {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  color: #334155;
+}
+.equipment-popout .dropdown-item:hover,
+.equipment-popout .dropdown-item:focus {
+  background-color: #f8fafc;
+  color: #0d6efd;
+}
+.equipment-popout .dropdown-item.text-danger {
+  color: #dc2626;
+}
+.equipment-popout .dropdown-item.text-danger:hover,
+.equipment-popout .dropdown-item.text-danger:focus {
+  background-color: #fef2f2;
+  color: #b91c1c;
+}
+[data-bs-theme="dark"] .equipment-popout {
+  background-color: #1e293b;
+  border-color: #334155;
+}
+[data-bs-theme="dark"] .equipment-popout .dropdown-item {
+  color: #f1f5f9;
+}
+[data-bs-theme="dark"] .equipment-popout .dropdown-item:hover,
+[data-bs-theme="dark"] .equipment-popout .dropdown-item:focus {
+  background-color: rgba(255,255,255,0.06);
+  color: #f1f5f9;
+}
+[data-bs-theme="dark"] .equipment-popout .dropdown-item.text-danger {
+  color: #f87171;
+}
+[data-bs-theme="dark"] .equipment-popout .dropdown-item.text-danger:hover,
+[data-bs-theme="dark"] .equipment-popout .dropdown-item.text-danger:focus {
+  background-color: rgba(220,38,38,0.15);
+  color: #fca5a5;
+}
+
+/* Dark mode: table header text must be light-on-dark card */
+.equipment-table-header th {
+  color: #1e293b;
+}
+/* ---- Dark mode overrides ---- */
+[data-bs-theme="dark"] .equipment-main-card {
+  background-color: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.35);
+}
+[data-bs-theme="dark"] .equipment-main-card h2 {
+  color: #f8fafc;
+}
+[data-bs-theme="dark"] .equipment-table-header th {
+  color: #f8fafc;
+  border-bottom-color: #334155;
+}
+[data-bs-theme="dark"] .equipment-table tbody td {
+  color: #e2e8f0;
+  border-bottom-color: #334155;
+}
+[data-bs-theme="dark"] .equipment-table tbody tr:hover {
+  background-color: #334155;
+}
+[data-bs-theme="dark"] .equipment-main-card .card-footer {
+  border-top-color: #334155;
+}
+[data-bs-theme="dark"] .card-footer.mt-3.bg-white {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+/* Equipment filter form — search bar + category select.
+   Float the inputs themselves: same slate border + shadow as the
+   table card so the controls feel like they sit on the surface.
+   No wrapping panel — just shadow on the inputs. */
+.equipment-filter-form {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+}
+.equipment-filter-control {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background-color: #ffffff;
+  color: #1e293b;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
+}
+.equipment-filter-control:focus {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04),
+              0 0 0 0.2rem rgba(13, 110, 253, 0.12);
+}
+
+/* Pagination pills — table footer + customer card-footer, matched. */
+.equipment-pagination {
+  flex-wrap: wrap;
+}
+.pagination-pill {
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #1e293b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  box-shadow: 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.pagination-pill:hover,
+.pagination-pill:focus {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+.pagination-pill.active {
+  background: #0f172a;
+  border-color: #0f172a;
+  color: #ffffff;
+}
+.pagination-pill.active:hover,
+.pagination-pill.active:focus {
+  background: #1e293b;
+}
+.pagination-pill.disabled {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  color: #94a3b8;
+  cursor: default;
+}
+.pagination-ellipsis {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+/* ---- Dark mode ---- */
+[data-bs-theme="dark"] .equipment-filter-form {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+}
+[data-bs-theme="dark"] .equipment-filter-control {
+  background-color: #0f172a;
+  border-color: #334155;
+  color: #f1f5f9;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.35);
+}
+[data-bs-theme="dark"] .equipment-filter-control:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.35),
+              0 0 0 0.2rem rgba(59, 130, 246, 0.22);
+}
+[data-bs-theme="dark"] .pagination-pill {
+  background: #0f172a;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+[data-bs-theme="dark"] .pagination-pill:hover,
+[data-bs-theme="dark"] .pagination-pill:focus {
+  background: #1e293b;
+  border-color: #475569;
+  color: #f8fafc;
+}
+[data-bs-theme="dark"] .pagination-pill.active {
+  background: #38bdfa;
+  border-color: #38bdfa;
+  color: #0f172a;
+}
+[data-bs-theme="dark"] .pagination-pill.active:hover,
+[data-bs-theme="dark"] .pagination-pill.active:focus {
+  background: #7dd3fe;
+}
+[data-bs-theme="dark"] .pagination-pill.disabled {
+  background: #1e293b;
+  border-color: #334155;
+  color: #64748b;
+}
+[data-bs-theme="dark"] .pagination-ellipsis {
+  color: #64748b;
+}
+
+/* Add Equipment button — matches the table card theme:
+   charcoal background, slate border, rounded, soft hover tint. */
+.equipment-add-btn {
+  background-color: #0f172a;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  color: #f8fafc;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.equipment-add-btn:hover,
+.equipment-add-btn:focus {
+  background-color: #1e293b;
+  border-color: #cbd5e1;
+  color: #f8fafc;
+}
+[data-bs-theme="dark"] .equipment-add-btn {
+  background-color: #0f172a;
+  color: #f8fafc;
+  border-color: #334155;
+}
+[data-bs-theme="dark"] .equipment-add-btn:hover,
+[data-bs-theme="dark"] .equipment-add-btn:focus {
+  background-color: #1e293b;
+  border-color: #475569;
+  color: #f8fafc;
+}
+
+/* ============================================================
+   Reservation Management — staff/admin index
+   ------------------------------------------------------------
+   Mirrors the Equipment catalog floating-card theme so the two
+   modules share one visual language. The reservation-* classes
+   are the reservation counterpart of the equipment-* classes
+   declared above; keep values in sync with that theme.
+   ============================================================ */
+.reservation-add-btn {
+  background-color: #0f172a;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  color: #f8fafc;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.reservation-add-btn:hover,
+.reservation-add-btn:focus {
+  background-color: #1e293b;
+  border-color: #cbd5e1;
+  color: #f8fafc;
+}
+[data-bs-theme="dark"] .reservation-add-btn {
+  background-color: #0f172a;
+  color: #f8fafc;
+  border-color: #334155;
+}
+[data-bs-theme="dark"] .reservation-add-btn:hover,
+[data-bs-theme="dark"] .reservation-add-btn:focus {
+  background-color: #1e293b;
+  border-color: #475569;
+  color: #f8fafc;
+}
+
+.reservation-filter-form {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+}
+.reservation-filter-control {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background-color: #ffffff;
+  color: #1e293b;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
+}
+.reservation-filter-control:focus {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04),
+              0 0 0 0.2rem rgba(13, 110, 253, 0.12);
+}
+[data-bs-theme="dark"] .reservation-filter-form {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+}
+[data-bs-theme="dark"] .reservation-filter-control {
+  background-color: #0f172a;
+  border-color: #334155;
+  color: #f1f5f9;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.35);
+}
+[data-bs-theme="dark"] .reservation-filter-control:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.35),
+              0 0 0 0.2rem rgba(59, 130, 246, 0.22);
+}
+
+.reservation-main-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  padding: 24px;
+  overflow: visible;
+}
+.reservation-main-card h2 {
+  font-weight: 700;
+  color: #1e293b;
+}
+.reservation-table-header th {
+  background-color: transparent;
+  color: #1e293b;
+  font-weight: 600;
+  border-bottom: 1px solid #f1f5f9;
+  padding: 12px 12px;
+}
+.reservation-table tbody td {
+  padding: 16px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+.reservation-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+.reservation-table .badge {
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: 1px solid #bbf7d0;
+  background-color: #f0fdf4;
+  color: #ffffff;
+}
+.reservation-table .badge.bg-warning.text-dark {
+  background-color: #fffbeb;
+  color: #92400e;
+  border-color: #fcd34d;
+}
+.reservation-table .badge.bg-danger {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border-color: #f87171;
+}
+.reservation-table .badge.bg-secondary {
+  background-color: #e2e8f0;
+  color: #475569;
+  border-color: #94a3b8;
+}
+.reservation-table .bg-dark {
+  background-color: #334155 !important;
+  color: #f8fafc !important;
+  border-color: #475569 !important;
+}
+.reservation-header-link {
+  color: #0f172a;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.reservation-header-link:hover,
+.reservation-header-link:focus {
+  color: #0d6efd;
+  text-decoration: underline;
+}
+a.reservation-name-link {
+  color: #1f2937;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+a.reservation-name-link:hover,
+a.reservation-name-link:focus {
+  color: #0d6efd;
+  text-decoration: underline;
+}
+.reservation-action-btn {
+  color: #64748b;
+  transition: color 0.15s ease;
+}
+.reservation-action-btn:hover,
+.reservation-action-btn:focus {
+  color: #0d6efd;
+  background-color: transparent;
+}
+.reservation-popout {
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  padding: 4px 0;
+}
+.reservation-popout .dropdown-item {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  color: #334155;
+}
+.reservation-popout .dropdown-item:hover,
+.reservation-popout .dropdown-item:focus {
+  background-color: #f8fafc;
+  color: #0d6efd;
+}
+.reservation-pagination {
+  flex-wrap: wrap;
+}
+.reservation-main-card .card-footer {
+  background-color: transparent;
+  border-top: 1px solid #e2e8f0;
+  padding: 16px 0 0 0;
+}
+.reservation-main-card .card-footer .pagination {
+  margin: 0;
+}
+/* ---- Dark mode: reservation mirrors the Equipment dark overrides ---- */
+[data-bs-theme="dark"] .reservation-add-btn {
+  background-color: #0f172a;
+  color: #f8fafc;
+  border-color: #334155;
+}
+[data-bs-theme="dark"] .reservation-add-btn:hover,
+[data-bs-theme="dark"] .reservation-add-btn:focus {
+  background-color: #1e293b;
+  border-color: #475569;
+  color: #f8fafc;
+}
+[data-bs-theme="dark"] .reservation-main-card {
+  background-color: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.35);
+}
+[data-bs-theme="dark"] .reservation-main-card h2 {
+  color: #f8fafc;
+}
+[data-bs-theme="dark"] .reservation-table-header th {
+  color: #f8fafc;
+  border-bottom-color: #334155;
+}
+[data-bs-theme="dark"] .reservation-table tbody td {
+  color: #e2e8f0;
+  border-bottom-color: #334155;
+}
+[data-bs-theme="dark"] .reservation-table tbody tr:hover {
+  background-color: #334155;
+}
+[data-bs-theme="dark"] .reservation-table .badge {
+  background-color: #145a32;
+  color: #dcfce7;
+  border-color: #4ade80;
+}
+[data-bs-theme="dark"] .reservation-table .badge.bg-warning.text-dark {
+  background-color: #78350f;
+  color: #fef3c7;
+  border-color: #fbbf24;
+}
+[data-bs-theme="dark"] .reservation-table .badge.bg-danger {
+  background-color: #7f1d1d;
+  color: #fecaca;
+  border-color: #f87171;
+}
+[data-bs-theme="dark"] .reservation-table .badge.bg-secondary {
+  background-color: #334155;
+  color: #cbd5e1;
+  border-color: #475569;
+}
+[data-bs-theme="dark"] .reservation-header-link {
+  color: #e2e8f0;
+}
+[data-bs-theme="dark"] .reservation-header-link:hover,
+[data-bs-theme="dark"] .reservation-header-link:focus {
+  color: #60a5fa;
+}
+[data-bs-theme="dark"] a.reservation-name-link {
+  color: #e2e8f0;
+}
+[data-bs-theme="dark"] a.reservation-name-link:hover,
+[data-bs-theme="dark"] a.reservation-name-link:focus {
+  color: #60a5fa;
+}
+[data-bs-theme="dark"] .reservation-popout {
+  background-color: #1e293b;
+  border-color: #334155;
+}
+[data-bs-theme="dark"] .reservation-popout .dropdown-item {
+  color: #f1f5f9;
+}
+[data-bs-theme="dark"] .reservation-popout .dropdown-item:hover,
+[data-bs-theme="dark"] .reservation-popout .dropdown-item:focus {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #f1f5f9;
+}
+[data-bs-theme="dark"] .reservation-pagination {
+  flex-wrap: wrap;
+}
+[data-bs-theme="dark"] .reservation-main-card .card-footer {
+  border-top-color: #334155;
+}
+[data-bs-theme="dark"] .pagination-pill {
+  background: #0f172a;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+[data-bs-theme="dark"] .pagination-pill:hover,
+[data-bs-theme="dark"] .pagination-pill:focus {
+  background: #1e293b;
+  border-color: #475569;
+  color: #f8fafc;
+}
+[data-bs-theme="dark"] .pagination-pill.active {
+  background: #38bdfa;
+  border-color: #38bdfa;
+  color: #0f172a;
+}
+[data-bs-theme="dark"] .pagination-pill.active:hover,
+[data-bs-theme="dark"] .pagination-pill.active:focus {
+  background: #7dd3fe;
+}
+[data-bs-theme="dark"] .pagination-pill.disabled {
+  background: #1e293b;
+  border-color: #334155;
+  color: #64748b;
+}
+[data-bs-theme="dark"] .pagination-ellipsis {
+  color: #64748b;
+}
+
 html {
   position: relative;
   min-height: 100%;
 }
 
 body {
-  margin-bottom: 60px;
+  margin: 0;
 }
 
 .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
@@ -28,4 +1571,2648 @@ body {
 
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
+}
+
+/* Pulsing glow for sidebar notification badges. Applied to .badge-glow on
+   any bg-danger pill — the same red used by Reservations pending, Rental
+   Transactions overdue, and CRM unread. The animation cycles the box-shadow
+   so the badge looks alive without changing its size or layout. */
+@keyframes badgeGlow {
+  0%   { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
+  70%  { box-shadow: 0 0 0 8px rgba(220, 53, 69, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+}
+
+.badge-glow {
+  animation: badgeGlow 1.8s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .badge-glow {
+    animation: none;
+  }
+}
+
+/* ============================================================
+   Rental Transactions Management — staff/admin index + customer view
+   ------------------------------------------------------------
+   Mirrors the Reservation theme so the two modules share one
+   visual language. The rental-transaction-* classes are the
+   Rental Transactions counterpart of the reservation-* classes
+   declared above; keep values in sync with that theme.
+   ============================================================ */
+.rental-transaction-add-btn {
+  background-color: #0f172a;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  color: #f8fafc;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.rental-transaction-add-btn:hover,
+.rental-transaction-add-btn:focus {
+  background-color: #1e293b;
+  border-color: #cbd5e1;
+  color: #f8fafc;
+}
+[data-bs-theme="dark"] .rental-transaction-add-btn {
+  background-color: #0f172a;
+  color: #f8fafc;
+  border-color: #334155;
+}
+[data-bs-theme="dark"] .rental-transaction-add-btn:hover,
+[data-bs-theme="dark"] .rental-transaction-add-btn:focus {
+  background-color: #1e293b;
+  border-color: #475569;
+  color: #f8fafc;
+}
+
+.rental-transaction-filter-form {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+}
+.rental-transaction-filter-control {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background-color: #ffffff;
+  color: #1e293b;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
+}
+.rental-transaction-filter-control:focus {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04),
+              0 0 0 0.2rem rgba(13, 110, 253, 0.12);
+}
+[data-bs-theme="dark"] .rental-transaction-filter-form {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+}
+[data-bs-theme="dark"] .rental-transaction-filter-control {
+  background-color: #0f172a;
+  border-color: #334155;
+  color: #f1f5f9;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.35);
+}
+[data-bs-theme="dark"] .rental-transaction-filter-control:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.35),
+              0 0 0 0.2rem rgba(59, 130, 246, 0.22);
+}
+
+.rental-transaction-main-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  padding: 24px;
+  overflow: visible;
+}
+.rental-transaction-main-card h2 {
+  font-weight: 700;
+  color: #1e293b;
+}
+.rental-transaction-table-header th {
+  background-color: transparent;
+  color: #1e293b;
+  font-weight: 600;
+  border-bottom: 1px solid #f1f5f9;
+  padding: 12px 12px;
+}
+.rental-transaction-table tbody td {
+  padding: 16px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+.rental-transaction-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+.rental-transaction-table .badge {
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: 1px solid #bbf7d0;
+  background-color: #f0fdf4;
+  color: #ffffff;
+}
+.rental-transaction-table .badge.bg-warning.text-dark {
+  background-color: #fffbeb;
+  color: #92400e;
+  border-color: #fcd34d;
+}
+.rental-transaction-table .badge.bg-danger {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border-color: #f87171;
+}
+.rental-transaction-table .badge.bg-secondary {
+  background-color: #e2e8f0;
+  color: #475569;
+  border-color: #94a3b8;
+}
+.rental-transaction-table .bg-dark {
+  background-color: #334155 !important;
+  color: #f8fafc !important;
+  border-color: #475569 !important;
+}
+.rental-transaction-header-link {
+  color: #0f172a;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.rental-transaction-header-link:hover,
+.rental-transaction-header-link:focus {
+  color: #0d6efd;
+  text-decoration: underline;
+}
+a.rental-transaction-name-link {
+  color: #1f2937;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+a.rental-transaction-name-link:hover,
+a.rental-transaction-name-link:focus {
+  color: #0d6efd;
+  text-decoration: underline;
+}
+.rental-transaction-action-btn {
+  color: #64748b;
+  transition: color 0.15s ease;
+}
+.rental-transaction-action-btn:hover,
+.rental-transaction-action-btn:focus {
+  color: #0d6efd;
+  background-color: transparent;
+}
+.rental-transaction-popout {
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  padding: 4px 0;
+}
+.rental-transaction-popout .dropdown-item {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  color: #334155;
+}
+.rental-transaction-popout .dropdown-item:hover,
+.rental-transaction-popout .dropdown-item:focus {
+  background-color: #f8fafc;
+  color: #0d6efd;
+}
+.rental-transaction-pagination {
+  flex-wrap: wrap;
+}
+.rental-transaction-main-card .card-footer {
+  background-color: transparent;
+  border-top: 1px solid #e2e8f0;
+  padding: 16px 0 0 0;
+}
+.rental-transaction-main-card .card-footer .pagination {
+  margin: 0;
+}
+/* ---- Dark mode: rental transactions mirrors the Reservation dark overrides ---- */
+[data-bs-theme="dark"] .rental-transaction-add-btn {
+  background-color: #0f172a;
+  color: #f8fafc;
+  border-color: #334155;
+}
+[data-bs-theme="dark"] .rental-transaction-add-btn:hover,
+[data-bs-theme="dark"] .rental-transaction-add-btn:focus {
+  background-color: #1e293b;
+  border-color: #475569;
+  color: #f8fafc;
+}
+[data-bs-theme="dark"] .rental-transaction-main-card {
+  background-color: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.35);
+}
+[data-bs-theme="dark"] .rental-transaction-main-card h2 {
+  color: #f8fafc;
+}
+[data-bs-theme="dark"] .rental-transaction-table-header th {
+  color: #f8fafc;
+  border-bottom-color: #334155;
+}
+[data-bs-theme="dark"] .rental-transaction-table tbody td {
+  color: #e2e8f0;
+  border-bottom-color: #334155;
+}
+[data-bs-theme="dark"] .rental-transaction-table tbody tr:hover {
+  background-color: #334155;
+}
+[data-bs-theme="dark"] .rental-transaction-table .badge {
+  background-color: #145a32;
+  color: #dcfce7;
+  border-color: #4ade80;
+}
+[data-bs-theme="dark"] .rental-transaction-table .badge.bg-warning.text-dark {
+  background-color: #78350f;
+  color: #fef3c7;
+  border-color: #fbbf24;
+}
+[data-bs-theme="dark"] .rental-transaction-table .badge.bg-danger {
+  background-color: #7f1d1d;
+  color: #fecaca;
+  border-color: #f87171;
+}
+[data-bs-theme="dark"] .rental-transaction-table .badge.bg-secondary {
+  background-color: #334155;
+  color: #cbd5e1;
+  border-color: #475569;
+}
+[data-bs-theme="dark"] .rental-transaction-header-link {
+  color: #e2e8f0;
+}
+[data-bs-theme="dark"] .rental-transaction-header-link:hover,
+[data-bs-theme="dark"] .rental-transaction-header-link:focus {
+  color: #60a5fa;
+}
+[data-bs-theme="dark"] a.rental-transaction-name-link {
+  color: #e2e8f0;
+}
+[data-bs-theme="dark"] a.rental-transaction-name-link:hover,
+[data-bs-theme="dark"] a.rental-transaction-name-link:focus {
+  color: #60a5fa;
+}
+[data-bs-theme="dark"] .rental-transaction-popout {
+  background-color: #1e293b;
+  border-color: #334155;
+}
+[data-bs-theme="dark"] .rental-transaction-popout .dropdown-item {
+  color: #f1f5f9;
+}
+[data-bs-theme="dark"] .rental-transaction-popout .dropdown-item:hover,
+[data-bs-theme="dark"] .rental-transaction-popout .dropdown-item:focus {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #f1f5f9;
+}
+[data-bs-theme="dark"] .rental-transaction-pagination {
+  flex-wrap: wrap;
+}
+[data-bs-theme="dark"] .rental-transaction-main-card .card-footer {
+  border-top-color: #334155;
+}
+
+/* ============================================================
+   Accounts & Roles Management — admin-only user list
+   ------------------------------------------------------------
+   Mirrors the Rental Transaction theme so the user-management
+   grid shares one visual language with the module dashboards.
+   The accounts-admin-* classes are the Accounts & Roles counterpart
+   of the rental-transaction-* classes.
+   ============================================================ */
+.accounts-admin-add-btn {
+  background-color: #0f172a;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  color: #f8fafc;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.accounts-admin-add-btn:hover,
+.accounts-admin-add-btn:focus {
+  background-color: #1e293b;
+  border-color: #cbd5e1;
+  color: #f8fafc;
+}
+[data-bs-theme="dark"] .accounts-admin-add-btn {
+  background-color: #0f172a;
+  color: #f8fafc;
+  border-color: #334155;
+}
+[data-bs-theme="dark"] .accounts-admin-add-btn:hover,
+[data-bs-theme="dark"] .accounts-admin-add-btn:focus {
+  background-color: #1e293b;
+  border-color: #475569;
+  color: #f8fafc;
+}
+
+.accounts-admin-filter-form {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+}
+.accounts-admin-filter-control {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background-color: #ffffff;
+  color: #1e293b;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
+}
+.accounts-admin-filter-control:focus {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04),
+              0 0 0 0.2rem rgba(13, 110, 253, 0.12);
+}
+[data-bs-theme="dark"] .accounts-admin-filter-form {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+}
+[data-bs-theme="dark"] .accounts-admin-filter-control {
+  background-color: #0f172a;
+  border-color: #334155;
+  color: #f1f5f9;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.35);
+}
+[data-bs-theme="dark"] .accounts-admin-filter-control:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.35),
+              0 0 0 0.2rem rgba(59, 130, 246, 0.22);
+}
+
+.accounts-admin-main-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  padding: 24px;
+  overflow: visible;
+}
+.accounts-admin-main-card h2 {
+  font-weight: 700;
+  color: #1e293b;
+}
+.accounts-admin-table-header th {
+  background-color: transparent;
+  color: #1e293b;
+  font-weight: 600;
+  border-bottom: 1px solid #f1f5f9;
+  padding: 12px 12px;
+}
+.accounts-admin-table tbody td {
+  padding: 16px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+.accounts-admin-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+.accounts-admin-table .badge {
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.accounts-admin-table .badge.bg-success {
+  background-color: #dcfce7;
+  color: #166534;
+  border-color: #86efac;
+}
+.accounts-admin-table .badge.bg-secondary {
+  background-color: #e2e8f0;
+  color: #475569;
+  border-color: #94a3b8;
+}
+.accounts-admin-header-link {
+  color: #0f172a;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.accounts-admin-header-link:hover,
+.accounts-admin-header-link:focus {
+  color: #0d6efd;
+  text-decoration: underline;
+}
+a.accounts-admin-name-link {
+  color: #1f2937;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+a.accounts-admin-name-link:hover,
+a.accounts-admin-name-link:focus {
+  color: #0d6efd;
+  text-decoration: underline;
+}
+.accounts-admin-pagination {
+  flex-wrap: wrap;
+}
+.accounts-admin-main-card .card-footer {
+  background-color: transparent;
+  border-top: 1px solid #e2e8f0;
+  padding: 16px 0 0 0;
+}
+.accounts-admin-main-card .card-footer .pagination {
+  margin: 0;
+}
+/* ---- Dark mode: accounts-admin mirrors the Rental Transaction dark overrides ---- */
+[data-bs-theme="dark"] .accounts-admin-add-btn {
+  background-color: #0f172a;
+  color: #f8fafc;
+  border-color: #334155;
+}
+[data-bs-theme="dark"] .accounts-admin-add-btn:hover,
+[data-bs-theme="dark"] .accounts-admin-add-btn:focus {
+  background-color: #1e293b;
+  border-color: #475569;
+  color: #f8fafc;
+}
+[data-bs-theme="dark"] .accounts-admin-main-card {
+  background-color: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.35);
+}
+[data-bs-theme="dark"] .accounts-admin-main-card h2 {
+  color: #f8fafc;
+}
+[data-bs-theme="dark"] .accounts-admin-table-header th {
+  color: #f8fafc;
+  border-bottom-color: #334155;
+}
+[data-bs-theme="dark"] .accounts-admin-table tbody td {
+  color: #e2e8f0;
+  border-bottom-color: #334155;
+}
+[data-bs-theme="dark"] .accounts-admin-table tbody tr:hover {
+  background-color: #334155;
+}
+[data-bs-theme="dark"] .accounts-admin-table .badge.bg-success {
+  background-color: #145a32;
+  color: #dcfce7;
+  border-color: #4ade80;
+}
+[data-bs-theme="dark"] .accounts-admin-table .badge.bg-secondary {
+  background-color: #334155;
+  color: #cbd5e1;
+  border-color: #475569;
+}
+[data-bs-theme="dark"] .accounts-admin-header-link {
+  color: #e2e8f0;
+}
+[data-bs-theme="dark"] .accounts-admin-header-link:hover,
+[data-bs-theme="dark"] .accounts-admin-header-link:focus {
+  color: #60a5fa;
+}
+[data-bs-theme="dark"] a.accounts-admin-name-link {
+  color: #e2e8f0;
+}
+[data-bs-theme="dark"] a.accounts-admin-name-link:hover,
+[data-bs-theme="dark"] a.accounts-admin-name-link:focus {
+  color: #60a5fa;
+}
+[data-bs-theme="dark"] .accounts-admin-pagination {
+  flex-wrap: wrap;
+}
+[data-bs-theme="dark"] .accounts-admin-main-card .card-footer {
+  border-top-color: #334155;
+}
+
+/* ============================================================
+   Audit Log Management — admin-only audit trail viewer
+   ------------------------------------------------------------
+   Mirrors the Rental Transaction / Accounts & Roles theme so the
+   admin list views share one visual language.
+   ============================================================ */
+.audit-log-add-btn {
+  background-color: #0f172a;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  color: #f8fafc;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.audit-log-add-btn:hover,
+.audit-log-add-btn:focus {
+  background-color: #1e293b;
+  border-color: #cbd5e1;
+  color: #f8fafc;
+}
+[data-bs-theme="dark"] .audit-log-add-btn {
+  background-color: #0f172a;
+  color: #f8fafc;
+  border-color: #334155;
+}
+[data-bs-theme="dark"] .audit-log-add-btn:hover,
+[data-bs-theme="dark"] .audit-log-add-btn:focus {
+  background-color: #1e293b;
+  border-color: #475569;
+  color: #f8fafc;
+}
+
+.audit-log-filter-form {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+}
+.audit-log-filter-control {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background-color: #ffffff;
+  color: #1e293b;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
+}
+.audit-log-filter-control:focus {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04),
+              0 0 0 0.2rem rgba(13, 110, 253, 0.12);
+}
+[data-bs-theme="dark"] .audit-log-filter-form {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+}
+[data-bs-theme="dark"] .audit-log-filter-control {
+  background-color: #0f172a;
+  border-color: #334155;
+  color: #f1f5f9;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.35);
+}
+[data-bs-theme="dark"] .audit-log-filter-control:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.35),
+              0 0 0 0.2rem rgba(59, 130, 246, 0.22);
+}
+
+.audit-log-main-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  padding: 24px;
+  overflow: visible;
+}
+.audit-log-main-card h2 {
+  font-weight: 700;
+  color: #1e293b;
+}
+.audit-log-table-header th {
+  background-color: transparent;
+  color: #1e293b;
+  font-weight: 600;
+  border-bottom: 1px solid #f1f5f9;
+  padding: 12px 12px;
+}
+.audit-log-table tbody td {
+  padding: 16px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+.audit-log-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+.audit-log-table .badge {
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.audit-log-header-link {
+  color: #0f172a;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.audit-log-header-link:hover,
+.audit-log-header-link:focus {
+  color: #0d6efd;
+  text-decoration: underline;
+}
+a.audit-log-name-link {
+  color: #1f2937;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+a.audit-log-name-link:hover,
+a.audit-log-name-link:focus {
+  color: #0d6efd;
+  text-decoration: underline;
+}
+.audit-log-pagination {
+  flex-wrap: wrap;
+}
+.audit-log-main-card .card-footer {
+  background-color: transparent;
+  border-top: 1px solid #e2e8f0;
+  padding: 16px 0 0 0;
+}
+.audit-log-main-card .card-footer .pagination {
+  margin: 0;
+}
+/* ---- Dark mode: audit-log mirrors the Rental Transaction dark overrides ---- */
+[data-bs-theme="dark"] .audit-log-add-btn {
+  background-color: #0f172a;
+  color: #f8fafc;
+  border-color: #334155;
+}
+[data-bs-theme="dark"] .audit-log-add-btn:hover,
+[data-bs-theme="dark"] .audit-log-add-btn:focus {
+  background-color: #1e293b;
+  border-color: #475569;
+  color: #f8fafc;
+}
+[data-bs-theme="dark"] .audit-log-main-card {
+  background-color: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.35);
+}
+[data-bs-theme="dark"] .audit-log-main-card h2 {
+  color: #f8fafc;
+}
+[data-bs-theme="dark"] .audit-log-table-header th {
+  color: #f8fafc;
+  border-bottom-color: #334155;
+}
+[data-bs-theme="dark"] .audit-log-table tbody td {
+  color: #e2e8f0;
+  border-bottom-color: #334155;
+}
+[data-bs-theme="dark"] .audit-log-table tbody tr:hover {
+  background-color: #334155;
+}
+[data-bs-theme="dark"] .audit-log-header-link {
+  color: #e2e8f0;
+}
+[data-bs-theme="dark"] .audit-log-header-link:hover,
+[data-bs-theme="dark"] .audit-log-header-link:focus {
+  color: #60a5fa;
+}
+[data-bs-theme="dark"] a.audit-log-name-link {
+  color: #e2e8f0;
+}
+[data-bs-theme="dark"] a.audit-log-name-link:hover,
+[data-bs-theme="dark"] a.audit-log-name-link:focus {
+  color: #60a5fa;
+}
+[data-bs-theme="dark"] .audit-log-pagination {
+  flex-wrap: wrap;
+}
+[data-bs-theme="dark"] .audit-log-main-card .card-footer {
+  border-top-color: #334155;
+}
+
+/* ============================================================
+   Billing Management — staff/admin invoices index
+/* ============================================================
+   Billing Management — staff/admin invoices index
+   ------------------------------------------------------------
+   Mirrors the Maintenance / Rental Transaction theme so the
+   invoices list shares one visual language with the other
+   module dashboards. The billing-* classes are the Billing
+   counterpart of the maintenance-* classes.
+   ============================================================ */
+
+.billing-add-btn {
+  background-color: #0f172a;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  color: #f8fafc;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.billing-add-btn:hover,
+.billing-add-btn:focus {
+  background-color: #1e293b;
+  border-color: #cbd5e1;
+  color: #f8fafc;
+}
+[data-bs-theme="dark"] .billing-add-btn {
+  background-color: #0f172a;
+  color: #f8fafc;
+  border-color: #334155;
+}
+[data-bs-theme="dark"] .billing-add-btn:hover,
+[data-bs-theme="dark"] .billing-add-btn:focus {
+  background-color: #1e293b;
+  border-color: #475569;
+  color: #f8fafc;
+}
+
+.billing-filter-form {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+}
+.billing-filter-control {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background-color: #ffffff;
+  color: #1e293b;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
+}
+.billing-filter-control:focus {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04),
+              0 0 0 0.2rem rgba(13, 110, 253, 0.12);
+}
+[data-bs-theme="dark"] .billing-filter-form {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+}
+[data-bs-theme="dark"] .billing-filter-control {
+  background-color: #0f172a;
+  border-color: #334155;
+  color: #f1f5f9;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.35);
+}
+[data-bs-theme="dark"] .billing-filter-control:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.35),
+              0 0 0 0.2rem rgba(59, 130, 246, 0.22);
+}
+
+.billing-main-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  overflow: visible;
+}
+.billing-main-card h2 {
+  font-weight: 700;
+  color: #1e293b;
+}
+.billing-table-header th {
+  background-color: transparent;
+  color: #1e293b;
+  font-weight: 600;
+  border-bottom: 1px solid #f1f5f9;
+  padding: 12px 12px;
+}
+.billing-table tbody td {
+  padding: 16px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+.billing-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+.billing-table .badge {
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: 1px solid #bbf7d0;
+  background-color: #f0fdf4;
+  color: #ffffff;
+}
+.billing-table .badge.bg-warning.text-dark {
+  background-color: #fffbeb;
+  color: #92400e;
+  border-color: #fcd34d;
+}
+.billing-table .badge.bg-danger {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border-color: #f87171;
+}
+.billing-table .badge.bg-secondary {
+  background-color: #e2e8f0;
+  color: #475569;
+  border-color: #94a3b8;
+}
+.billing-table .bg-dark {
+  background-color: #334155 !important;
+  color: #f8fafc !important;
+  border-color: #475569 !important;
+}
+.billing-header-link {
+  color: #0f172a;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.billing-header-link:hover,
+.billing-header-link:focus {
+  color: #0d6efd;
+  text-decoration: underline;
+}
+a.billing-name-link {
+  color: #1f2937;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+a.billing-name-link:hover,
+a.billing-name-link:focus {
+  color: #0d6efd;
+  text-decoration: underline;
+}
+.billing-action-btn {
+  color: #64748b;
+  transition: color 0.15s ease;
+}
+.billing-action-btn:hover,
+.billing-action-btn:focus {
+  color: #0d6efd;
+  background-color: transparent;
+}
+.billing-popout {
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  padding: 4px 0;
+}
+.billing-popout .dropdown-item {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  color: #334155;
+}
+.billing-popout .dropdown-item:hover,
+.billing-popout .dropdown-item:focus {
+  background-color: #f8fafc;
+  color: #0d6efd;
+}
+.billing-pagination {
+  flex-wrap: wrap;
+}
+.billing-main-card .card-footer {
+  background-color: transparent;
+  border-top: 1px solid #e2e8f0;
+  padding: 16px 0 0 0;
+}
+.billing-main-card .card-footer .pagination {
+  margin: 0;
+}
+
+/* ---- Dark mode: billing mirrors the Maintenance dark overrides ---- */
+[data-bs-theme="dark"] .billing-add-btn {
+  background-color: #0f172a;
+  color: #f8fafc;
+  border-color: #334155;
+}
+[data-bs-theme="dark"] .billing-add-btn:hover,
+[data-bs-theme="dark"] .billing-add-btn:focus {
+  background-color: #1e293b;
+  border-color: #475569;
+  color: #f8fafc;
+}
+[data-bs-theme="dark"] .billing-main-card {
+  background-color: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.35);
+}
+[data-bs-theme="dark"] .billing-main-card h2 {
+  color: #f8fafc;
+}
+[data-bs-theme="dark"] .billing-table-header th {
+  color: #f8fafc;
+  border-bottom-color: #334155;
+}
+[data-bs-theme="dark"] .billing-table tbody td {
+  color: #e2e8f0;
+  border-bottom-color: #334155;
+}
+[data-bs-theme="dark"] .billing-table tbody tr:hover {
+  background-color: #334155;
+}
+[data-bs-theme="dark"] .billing-table .badge {
+  background-color: #145a32;
+  color: #dcfce7;
+  border-color: #4ade80;
+}
+[data-bs-theme="dark"] .billing-table .badge.bg-warning.text-dark {
+  background-color: #78350f;
+  color: #fef3c7;
+  border-color: #fbbf24;
+}
+[data-bs-theme="dark"] .billing-table .badge.bg-danger {
+  background-color: #7f1d1d;
+  color: #fecaca;
+  border-color: #f87171;
+}
+[data-bs-theme="dark"] .billing-table .badge.bg-secondary {
+  background-color: #334155;
+  color: #cbd5eb;
+  border-color: #475569;
+}
+[data-bs-theme="dark"] .billing-header-link {
+  color: #e2e8f0;
+}
+[data-bs-theme="dark"] .billing-header-link:hover,
+[data-bs-theme="dark"] .billing-header-link:focus {
+  color: #60a5fa;
+}
+[data-bs-theme="dark"] a.billing-name-link {
+  color: #e2e8f0;
+}
+[data-bs-theme="dark"] a.billing-name-link:hover,
+a.billing-name-link:focus {
+  color: #60a5fa;
+}
+[data-bs-theme="dark"] .billing-popout {
+  background-color: #1e293b;
+  border-color: #334155;
+}
+[data-bs-theme="dark"] .billing-popout .dropdown-item {
+  color: #f1f5f9;
+}
+[data-bs-theme="dark"] .billing-popout .dropdown-item:hover,
+[data-bs-theme="dark"] .billing-popout .dropdown-item:focus {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #f1f5f9;
+}
+[data-bs-theme="dark"] .billing-pagination {
+  flex-wrap: wrap;
+}
+[data-bs-theme="dark"] .billing-main-card .card-footer {
+  border-top-color: #334155;
+}
+[data-bs-theme="dark"] .pagination-pill {
+  background: #0f172a;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+[data-bs-theme="dark"] .pagination-pill:hover,
+[data-bs-theme="dark"] .pagination-pill:focus {
+  background: #1e293b;
+  border-color: #475569;
+  color: #f8fafc;
+}
+[data-bs-theme="dark"] .pagination-pill.active {
+  background: #38bdfa;
+  border-color: #38bdfa;
+  color: #0f172a;
+}
+[data-bs-theme="dark"] .pagination-pill.active:hover,
+[data-bs-theme="dark"] .pagination-pill.active:focus {
+  background: #7dd3fe;
+}
+[data-bs-theme="dark"] .pagination-pill.disabled {
+  background: #1e293b;
+  border-color: #334155;
+  color: #64748b;
+}
+[data-bs-theme="dark"] .pagination-ellipsis {
+  color: #64748b;
+}
+
+/* ============================================================
+   Damage & Penalty Management — staff/admin index
+   ------------------------------------------------------------
+   Mirrors the Maintenance / Rental Transaction theme so the
+   damage-penalty list shares one visual language with the
+   other module dashboards. The damage-* classes are the
+   Damage & Penalty counterpart of the maintenance-* classes.
+   ============================================================ */
+.damage-add-btn {
+  background-color: #0f172a;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  color: #f8fafc;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.damage-add-btn:hover,
+.damage-add-btn:focus {
+  background-color: #1e293b;
+  border-color: #cbd5e1;
+  color: #f8fafc;
+}
+[data-bs-theme="dark"] .damage-add-btn {
+  background-color: #0f172a;
+  color: #f8fafc;
+  border-color: #334155;
+}
+[data-bs-theme="dark"] .damage-add-btn:hover,
+[data-bs-theme="dark"] .damage-add-btn:focus {
+  background-color: #1e293b;
+  border-color: #475569;
+  color: #f8fafc;
+}
+
+.damage-filter-form {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+}
+.damage-filter-control {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background-color: #ffffff;
+  color: #1e293b;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
+}
+.damage-filter-control:focus {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04),
+              0 0 0 0.2rem rgba(13, 110, 253, 0.12);
+}
+[data-bs-theme="dark"] .damage-filter-form {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+}
+[data-bs-theme="dark"] .damage-filter-control {
+  background-color: #0f172a;
+  border-color: #334155;
+  color: #f1f5f9;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.35);
+}
+[data-bs-theme="dark"] .damage-filter-control:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.35),
+              0 0 0 0.2rem rgba(59, 130, 246, 0.22);
+}
+
+.damage-main-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  overflow: visible;
+}
+.damage-main-card h2 {
+  font-weight: 700;
+  color: #1e293b;
+}
+.damage-table-header th {
+  background-color: transparent;
+  color: #1e293b;
+  font-weight: 600;
+  border-bottom: 1px solid #f1f5f9;
+  padding: 12px 12px;
+}
+.damage-table tbody td {
+  padding: 16px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+.damage-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+.damage-table .badge {
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: 1px solid #bbf7d0;
+  background-color: #f0fdf4;
+  color: #ffffff;
+}
+.damage-table .badge.bg-warning.text-dark {
+  background-color: #fffbeb;
+  color: #92400e;
+  border-color: #fcd34d;
+}
+.damage-table .badge.bg-danger {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border-color: #f87171;
+}
+.damage-table .badge.bg-secondary {
+  background-color: #e2e8f0;
+  color: #475569;
+  border-color: #94a3b8;
+}
+.damage-table .bg-dark {
+  background-color: #334155 !important;
+  color: #f8fafc !important;
+  border-color: #475569 !important;
+}
+.damage-header-link {
+  color: #0f172a;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.damage-header-link:hover,
+.damage-header-link:focus {
+  color: #0d6efd;
+  text-decoration: underline;
+}
+a.damage-name-link {
+  color: #1f2937;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+a.damage-name-link:hover,
+a.damage-name-link:focus {
+  color: #0d6efd;
+  text-decoration: underline;
+}
+.damage-action-btn {
+  color: #64748b;
+  transition: color 0.15s ease;
+}
+.damage-action-btn:hover,
+.damage-action-btn:focus {
+  color: #0d6efd;
+  background-color: transparent;
+}
+.damage-popout {
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  padding: 4px 0;
+}
+.damage-popout .dropdown-item {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  color: #334155;
+}
+.damage-popout .dropdown-item:hover,
+.damage-popout .dropdown-item:focus {
+  background-color: #f8fafc;
+  color: #0d6efd;
+}
+.damage-pagination {
+  flex-wrap: wrap;
+}
+.damage-main-card .card-footer {
+  background-color: transparent;
+  border-top: 1px solid #e2e8f0;
+  padding: 0 0 0 0;
+}
+
+/* ---- Dark mode: damage mirrors the Maintenance dark overrides ---- */
+[data-bs-theme="dark"] .damage-add-btn {
+  background-color: #0f172a;
+  color: #f8fafc;
+  border-color: #334155;
+}
+[data-bs-theme="dark"] .damage-add-btn:hover,
+[data-bs-theme="dark"] .damage-add-btn:focus {
+  background-color: #1e293b;
+  border-color: #475569;
+  color: #f8fafc;
+}
+[data-bs-theme="dark"] .damage-main-card {
+  background-color: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.35);
+}
+[data-bs-theme="dark"] .damage-main-card h2 {
+  color: #f8fafc;
+}
+[data-bs-theme="dark"] .damage-table-header th {
+  color: #f8fafc;
+  border-bottom-color: #334155;
+}
+[data-bs-theme="dark"] .damage-table tbody td {
+  color: #e2e8f0;
+  border-bottom-color: #334155;
+}
+[data-bs-theme="dark"] .damage-table tbody tr:hover {
+  background-color: #334155;
+}
+[data-bs-theme="dark"] .damage-table .badge {
+  background-color: #145a32;
+  color: #dcfce7;
+  border-color: #4ade80;
+}
+[data-bs-theme="dark"] .damage-table .badge.bg-warning.text-dark {
+  background-color: #78350f;
+  color: #fef3c7;
+  border-color: #fbbf24;
+}
+[data-bs-theme="dark"] .damage-table .badge.bg-danger {
+  background-color: #7f1d1d;
+  color: #fecaca;
+  border-color: #f87171;
+}
+[data-bs-theme="dark"] .damage-table .badge.bg-secondary {
+  background-color: #334155;
+  color: #cbd5e1;
+  border-color: #475569;
+}
+[data-bs-theme="dark"] .damage-header-link {
+  color: #e2e8f0;
+}
+[data-bs-theme="dark"] .damage-header-link:hover,
+[data-bs-theme="dark"] .damage-header-link:focus {
+  color: #60a5fa;
+}
+[data-bs-theme="dark"] a.damage-name-link {
+  color: #e2e8f0;
+}
+[data-bs-theme="dark"] a.damage-name-link:hover,
+a.damage-name-link:focus {
+  color: #60a5fa;
+}
+[data-bs-theme="dark"] .damage-popout {
+  background-color: #1e293b;
+  border-color: #334155;
+}
+[data-bs-theme="dark"] .damage-popout .dropdown-item {
+  color: #f1f5f9;
+}
+[data-bs-theme="dark"] .damage-popout .dropdown-item:hover,
+[data-bs-theme="dark"] .damage-popout .dropdown-item:focus {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #f1f5f9;
+}
+[data-bs-theme="dark"] .damage-pagination {
+  flex-wrap: wrap;
+}
+[data-bs-theme="dark"] .damage-main-card .card-footer {
+  border-top-color: #334155;
+}
+
+/* ============================================================
+   Maintenance Management — staff/admin index
+   ------------------------------------------------------------
+   Mirrors the Reservation theme so the two modules share one
+   visual language. The maintenance-* classes are the
+   Maintenance counterpart of the reservation-* classes
+   declared above; keep values in sync with that theme.
+   ============================================================ */
+.maintenance-add-btn {
+  background-color: #0f172a;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  color: #f8fafc;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.maintenance-add-btn:hover,
+.maintenance-add-btn:focus {
+  background-color: #1e293b;
+  border-color: #cbd5e1;
+  color: #f8fafc;
+}
+[data-bs-theme="dark"] .maintenance-add-btn {
+  background-color: #0f172a;
+  color: #f8fafc;
+  border-color: #334155;
+}
+[data-bs-theme="dark"] .maintenance-add-btn:hover,
+[data-bs-theme="dark"] .maintenance-add-btn:focus {
+  background-color: #1e293b;
+  border-color: #475569;
+  color: #f8fafc;
+}
+
+.maintenance-filter-form {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+}
+.maintenance-filter-control {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background-color: #ffffff;
+  color: #1e293b;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
+}
+.maintenance-filter-control:focus {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04),
+              0 0 0 0.2rem rgba(13, 110, 253, 0.12);
+}
+[data-bs-theme="dark"] .maintenance-filter-form {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+}
+[data-bs-theme="dark"] .maintenance-filter-control {
+  background-color: #0f172a;
+  border-color: #334155;
+  color: #f1f5f9;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.35);
+}
+[data-bs-theme="dark"] .maintenance-filter-control:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.35),
+              0 0 0 0.2rem rgba(59, 130, 246, 0.22);
+}
+
+.maintenance-main-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  padding: 24px;
+  overflow: visible;
+}
+.maintenance-main-card h2 {
+  font-weight: 700;
+  color: #1e293b;
+}
+.maintenance-table-header th {
+  background-color: transparent;
+  color: #1e293b;
+  font-weight: 600;
+  border-bottom: 1px solid #f1f5f9;
+  padding: 12px 12px;
+}
+.maintenance-table tbody td {
+  padding: 16px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+.maintenance-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+.maintenance-table .badge {
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: 1px solid #bbf7d0;
+  background-color: #f0fdf4;
+  color: #ffffff;
+}
+.maintenance-table .badge.bg-warning.text-dark {
+  background-color: #fffbeb;
+  color: #92400e;
+  border-color: #fcd34d;
+}
+.maintenance-table .badge.bg-danger {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border-color: #f87171;
+}
+.maintenance-table .badge.bg-secondary {
+  background-color: #e2e8f0;
+  color: #475569;
+  border-color: #94a3b8;
+}
+.maintenance-table .bg-dark {
+  background-color: #334155 !important;
+  color: #f8fafc !important;
+  border-color: #475569 !important;
+}
+.maintenance-header-link {
+  color: #0f172a;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.maintenance-header-link:hover,
+.maintenance-header-link:focus {
+  color: #0d6efd;
+  text-decoration: underline;
+}
+a.maintenance-name-link {
+  color: #1f2937;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+a.maintenance-name-link:hover,
+a.maintenance-name-link:focus {
+  color: #0d6efd;
+  text-decoration: underline;
+}
+.maintenance-action-btn {
+  color: #64748b;
+  transition: color 0.15s ease;
+}
+.maintenance-action-btn:hover,
+.maintenance-action-btn:focus {
+  color: #0d6efd;
+  background-color: transparent;
+}
+.maintenance-popout {
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  padding: 4px 0;
+}
+.maintenance-popout .dropdown-item {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  color: #334155;
+}
+.maintenance-popout .dropdown-item:hover,
+.maintenance-popout .dropdown-item:focus {
+  background-color: #f8fafc;
+  color: #0d6efd;
+}
+.maintenance-pagination {
+  flex-wrap: wrap;
+}
+.maintenance-main-card .card-footer {
+  background-color: transparent;
+  border-top: 1px solid #e2e8f0;
+  padding: 16px 0 0 0;
+}
+.maintenance-main-card .card-footer .pagination {
+  margin: 0;
+}
+/* ---- Dark mode: maintenance mirrors the Rental Transaction dark overrides ---- */
+[data-bs-theme="dark"] .maintenance-add-btn {
+  background-color: #0f172a;
+  color: #f8fafc;
+  border-color: #334155;
+}
+[data-bs-theme="dark"] .maintenance-add-btn:hover,
+[data-bs-theme="dark"] .maintenance-add-btn:focus {
+  background-color: #1e293b;
+  border-color: #475569;
+  color: #f8fafc;
+}
+[data-bs-theme="dark"] .maintenance-main-card {
+  background-color: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.35);
+}
+[data-bs-theme="dark"] .maintenance-main-card h2 {
+  color: #f8fafc;
+}
+[data-bs-theme="dark"] .maintenance-table-header th {
+  color: #f8fafc;
+  border-bottom-color: #334155;
+}
+[data-bs-theme="dark"] .maintenance-table tbody td {
+  color: #e2e8f0;
+  border-bottom-color: #334155;
+}
+[data-bs-theme="dark"] .maintenance-table tbody tr:hover {
+  background-color: #334155;
+}
+[data-bs-theme="dark"] .maintenance-table .badge {
+  background-color: #145a32;
+  color: #dcfce7;
+  border-color: #4ade80;
+}
+[data-bs-theme="dark"] .maintenance-table .badge.bg-warning.text-dark {
+  background-color: #78350f;
+  color: #fef3c7;
+  border-color: #fbbf24;
+}
+[data-bs-theme="dark"] .maintenance-table .badge.bg-danger {
+  background-color: #7f1d1d;
+  color: #fecaca;
+  border-color: #f87171;
+}
+[data-bs-theme="dark"] .maintenance-table .badge.bg-secondary {
+  background-color: #334155;
+  color: #cbd5e1;
+  border-color: #475569;
+}
+[data-bs-theme="dark"] .maintenance-header-link {
+  color: #e2e8f0;
+}
+[data-bs-theme="dark"] .maintenance-header-link:hover,
+[data-bs-theme="dark"] .maintenance-header-link:focus {
+  color: #60a5fa;
+}
+[data-bs-theme="dark"] a.maintenance-name-link {
+  color: #e2e8f0;
+}
+[data-bs-theme="dark"] a.maintenance-name-link:hover,
+a.maintenance-name-link:focus {
+  color: #60a5fa;
+}
+[data-bs-theme="dark"] .maintenance-popout {
+  background-color: #1e293b;
+  border-color: #334155;
+}
+[data-bs-theme="dark"] .maintenance-popout .dropdown-item {
+  color: #f1f5f9;
+}
+[data-bs-theme="dark"] .maintenance-popout .dropdown-item:hover,
+[data-bs-theme="dark"] .maintenance-popout .dropdown-item:focus {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #f1f5f9;
+}
+[data-bs-theme="dark"] .maintenance-pagination {
+  flex-wrap: wrap;
+}
+[data-bs-theme="dark"] .maintenance-main-card .card-footer {
+  border-top-color: #334155;
+}
+
+/* ============================================================
+   Customer CRM — staff/admin dashboard
+   ------------------------------------------------------------
+   Mirrors the Maintenance / Damage & Penalty theme so the CRM
+   dashboard shares one visual language with the other module
+   landing pages. The crm-* classes are the CRM counterpart of
+   the maintenance-* / damage-* classes.
+   ============================================================ */
+.crm-add-btn {
+  background-color: #0f172a;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  color: #f8fafc;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.crm-add-btn:hover,
+.crm-add-btn:focus {
+  background-color: #1e293b;
+  border-color: #cbd5e1;
+  color: #f8fafc;
+}
+[data-bs-theme="dark"] .crm-add-btn {
+  background-color: #0f172a;
+  color: #f8fafc;
+  border-color: #334155;
+}
+[data-bs-theme="dark"] .crm-add-btn:hover,
+[data-bs-theme="dark"] .crm-add-btn:focus {
+  background-color: #1e293b;
+  border-color: #475569;
+  color: #f8fafc;
+}
+
+.crm-filter-form {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+}
+.crm-filter-control {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background-color: #ffffff;
+  color: #1e293b;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
+}
+.crm-filter-control:focus {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04),
+              0 0 0 0.2rem rgba(13, 110, 253, 0.12);
+}
+[data-bs-theme="dark"] .crm-filter-form {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+}
+[data-bs-theme="dark"] .crm-filter-control {
+  background-color: #0f172a;
+  border-color: #334155;
+  color: #f1f5f9;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.35);
+}
+[data-bs-theme="dark"] .crm-filter-control:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.35),
+              0 0 0 0.2rem rgba(59, 130, 246, 0.22);
+}
+
+.crm-main-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  overflow: visible;
+}
+.crm-main-card h2 {
+  font-weight: 700;
+  color: #1e293b;
+}
+.crm-table-header th {
+  background-color: transparent;
+  color: #1e293b;
+  font-weight: 600;
+  border-bottom: 1px solid #f1f5f9;
+  padding: 12px 12px;
+}
+.crm-table tbody td {
+  padding: 16px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+.crm-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+.crm-table .badge,
+.crm-table-badge {
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: 1px solid #bbf7d0;
+  background-color: #f0fdf4;
+  color: #ffffff;
+}
+.crm-table .badge.bg-warning.text-dark,
+.crm-table-badge.bg-warning.text-dark {
+  background-color: #fffbeb;
+  color: #92400e;
+  border-color: #fcd34d;
+}
+.crm-table .badge.bg-danger,
+.crm-table-badge.bg-danger {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border-color: #f87171;
+}
+.crm-table .badge.bg-secondary,
+.crm-table-badge.bg-secondary {
+  background-color: #e2e8f0;
+  color: #475569;
+  border-color: #94a3b8;
+}
+.crm-table .bg-dark,
+.crm-table-badge.bg-dark {
+  background-color: #334155 !important;
+  color: #f8fafc !important;
+  border-color: #475569 !important;
+}
+.crm-header-link {
+  color: #0f172a;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.crm-header-link:hover,
+.crm-header-link:focus {
+  color: #0d6efd;
+  text-decoration: underline;
+}
+a.crm-name-link {
+  color: #1f2937;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+a.crm-name-link:hover,
+a.crm-name-link:focus {
+  color: #0d6efd;
+  text-decoration: underline;
+}
+.crm-action-btn {
+  color: #64748b;
+  transition: color 0.15s ease;
+}
+.crm-action-btn:hover,
+.crm-action-btn:focus {
+  color: #0d6efd;
+  background-color: transparent;
+}
+.crm-popout {
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  padding: 4px 0;
+}
+.crm-popout .dropdown-item {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  color: #334155;
+}
+.crm-popout .dropdown-item:hover,
+.crm-popout .dropdown-item:focus {
+  background-color: #f8fafc;
+  color: #0d6efd;
+}
+.crm-pagination {
+  flex-wrap: wrap;
+}
+.crm-main-card .card-footer {
+  background-color: transparent;
+  border-top: 1px solid #e2e8f0;
+  padding: 0 0 0 0;
+}
+.crm-main-card .card-footer .pagination {
+  margin: 0;
+}
+/* ---- Dark mode: crm mirrors the Maintenance dark overrides ---- */
+[data-bs-theme="dark"] .crm-add-btn {
+  background-color: #0f172a;
+  color: #f8fafc;
+  border-color: #334155;
+}
+[data-bs-theme="dark"] .crm-add-btn:hover,
+[data-bs-theme="dark"] .crm-add-btn:focus {
+  background-color: #1e293b;
+  border-color: #475569;
+  color: #f8fafc;
+}
+[data-bs-theme="dark"] .crm-main-card {
+  background-color: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.35);
+}
+[data-bs-theme="dark"] .crm-main-card h2 {
+  color: #f8fafc;
+}
+[data-bs-theme="dark"] .crm-table-header th {
+  color: #f8fafc;
+  border-bottom-color: #334155;
+}
+[data-bs-theme="dark"] .crm-table tbody td {
+  color: #e2e8f0;
+  border-bottom-color: #334155;
+}
+[data-bs-theme="dark"] .crm-table tbody tr:hover {
+  background-color: #334155;
+}
+[data-bs-theme="dark"] .crm-table .badge,
+[data-bs-theme="dark"] .crm-table-badge {
+  background-color: #145a32;
+  color: #dcfce7;
+  border-color: #4ade80;
+}
+[data-bs-theme="dark"] .crm-table .badge.bg-warning.text-dark,
+[data-bs-theme="dark"] .crm-table-badge.bg-warning.text-dark {
+  background-color: #78350f;
+  color: #fef3c7;
+  border-color: #fbbf24;
+}
+[data-bs-theme="dark"] .crm-table .badge.bg-danger,
+[data-bs-theme="dark"] .crm-table-badge.bg-danger {
+  background-color: #7f1d1d;
+  color: #fecaca;
+  border-color: #f87171;
+}
+[data-bs-theme="dark"] .crm-table .badge.bg-secondary,
+[data-bs-theme="dark"] .crm-table-badge.bg-secondary {
+  background-color: #334155;
+  color: #cbd5e1;
+  border-color: #475569;
+}
+[data-bs-theme="dark"] .crm-table .bg-dark,
+[data-bs-theme="dark"] .crm-table-badge.bg-dark {
+  background-color: #334155 !important;
+  color: #f8fafc !important;
+  border-color: #475569 !important;
+}
+[data-bs-theme="dark"] .crm-header-link {
+  color: #e2e8f0;
+}
+[data-bs-theme="dark"] .crm-header-link:hover,
+[data-bs-theme="dark"] .crm-header-link:focus {
+  color: #60a5fa;
+}
+[data-bs-theme="dark"] a.crm-name-link {
+  color: #e2e8f0;
+}
+[data-bs-theme="dark"] a.crm-name-link:hover,
+a.crm-name-link:focus {
+  color: #60a5fa;
+}
+[data-bs-theme="dark"] .crm-popout {
+  background-color: #1e293b;
+  border-color: #334155;
+}
+
+/* ============================================================
+   Home dashboard floating-card shell
+   ------------------------------------------------------------
+   Mirrors .equipment-main-card / .crm-main-card geometry so the
+   landing page reads as one system with the module landing
+   pages: 20px radius, soft border, subtle shadow, themed
+   surface that flips under [data-bs-theme="dark"].
+   ============================================================ */
+.dashboard-main-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+.dashboard-main-card .card-body {
+  padding: 1.5rem;
+}
+.dashboard-main-card .card-title {
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+}
+.dashboard-main-card .card-text {
+  color: #64748b;
+  margin-bottom: 0;
+}
+
+/* Role-tinted left accent via border-start-color on the card */
+.dashboard-card-admin { border-start: 4px solid #dc2626; }
+.dashboard-card-staff { border-start: 4px solid #2563eb; }
+.dashboard-card-customer { border-start: 4px solid #16a34a; }
+
+[data-bs-theme="dark"] .dashboard-main-card {
+  background-color: #0f172a;
+  border-color: #334155;
+}
+[data-bs-theme="dark"] .dashboard-main-card .card-title {
+  color: #f1f5f9;
+}
+[data-bs-theme="dark"] .dashboard-main-card .card-text {
+  color: #94a3b8;
+}
+
+/* Quick-actions strip on the home page */
+.dashboard-quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.dashboard-quick-action {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  border-radius: 14px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #0f172a;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.dashboard-quick-action:hover,
+.dashboard-quick-action:focus {
+  background-color: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #0d6efd;
+  text-decoration: none;
+}
+.dashboard-quick-action i {
+  font-size: 1.1rem;
+  color: #475569;
+}
+.dashboard-quick-action .action-count {
+  margin-left: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+[data-bs-theme="dark"] .dashboard-quick-actions {
+  background: transparent;
+}
+[data-bs-theme="dark"] .dashboard-quick-action {
+  background-color: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+[data-bs-theme="dark"] .dashboard-quick-action:hover,
+[data-bs-theme="dark"] .dashboard-quick-action:focus {
+  background-color: #334155;
+  border-color: #475569;
+  color: #60a5fa;
+}
+[data-bs-theme="dark"] .dashboard-quick-action i {
+  color: #94a3b8;
+}
+[data-bs-theme="dark"] .crm-popout .dropdown-item {
+  color: #f1f5f9;
+}
+[data-bs-theme="dark"] .crm-popout .dropdown-item:hover,
+[data-bs-theme="dark"] .crm-popout .dropdown-item:focus {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #f1f5f9;
+}
+[data-bs-theme="dark"] .crm-pagination {
+  flex-wrap: wrap;
+}
+[data-bs-theme="dark"] .crm-main-card .card-footer {
+  border-top-color: #334155;
+}
+
+/* ============================================================
+   Home dashboard: bar chart + activity list extras
+   ------------------------------------------------------------
+   Minimal additions — reuses the .dashboard-main-card shell
+   and Bootstrap badge system already defined above.
+   ============================================================ */
+
+.dashboard-bar-chart {
+  margin-top: 0.5rem;
+}
+
+.dashboard-bar-chart svg {
+  display: block;
+  max-width: 100%;
+}
+
+.dashboard-activity-item {
+  display: flex;
+  align-items: center;
+}
+
+.dashboard-activity-item i {
+  font-size: 1.1rem;
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+[data-bs-theme="dark"] .dashboard-activity-item i {
+  color: #94a3b8;
+}
+
+/* Activity icon colors — tuned per circle background for legibility.
+   Defined once here so light and dark mode both read the same palette
+   (the Bootstrap bg-secondary / bg-warning utilities used for the
+   circles are not theme-inverted in this stylesheet). */
+.dashboard-activity-icon.on-primary { color: #ffffff; }
+.dashboard-activity-icon.on-success { color: #ffffff; }
+.dashboard-activity-icon.on-warning { color: #212529; }
+.dashboard-activity-icon.on-secondary { color: #212529; }
+
+/* ============================================================
+   Modern collapsible sidebar with dropdown groups
+   ------------------------------------------------------------
+   The .sidebar-nav is the card rendered by _Sidebar.cshtml. It
+   has a header (brand), a body (scrollable list of groups), and
+   a footer (sign out button).
+
+   Three layouts:
+   - Expanded (default ≥1024px, or full when user toggles):
+     240px, labels visible, submenus expand inline below the
+     parent and the chevron rotates.
+   - Icon-only (.collapsed on desktop, or the 768–1024px
+     default): 70px, submenus pop out as floating menus to the
+     right of the parent on hover/focus.
+   - Mobile drawer (<768px): fixed off-canvas, opens via the
+     top-navbar hamburger.
+
+   The collapse button is a circular icon button positioned at
+   the top-right edge of the card, matching common SaaS shell
+   patterns.
+   ============================================================ */
+
+.sidebar-nav {
+  position: relative;
+  width: 100%;
+  flex: 1 1 auto;
+  background-color: transparent;
+  padding: 0.75rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  overflow: visible; /* let the collapse button hang off the edge */
+  min-height: 0;
+  /* ponytail: the sidebar is now an inner element of
+     .app-shell-sidebar (the column that also carries the brand).
+     Background, border, radius, and outer margin are handled by
+     the column. Width is fluid so the column drives it. */
+}
+
+.sidebar-body {
+  flex: 1 1 auto;
+  min-height: 0; /* Allow the scroll container to shrink below its content
+                    height so overflow-y: auto has a bounded scroll area. */
+  overflow: visible;
+  padding: 0 0.25rem;
+}
+
+.sidebar-footer {
+  flex-shrink: 0; /* Keep the Sign Out button pinned at the bottom of the
+                     sidebar card — it never shrinks or gets pushed out of
+                     view by a tall menu. */
+  padding: 0.5rem 0.25rem 0.25rem 0.25rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  margin-top: 0.5rem;
+}
+
+.sidebar-logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #495057;
+  font-size: 0.92rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.sidebar-logout-btn:hover,
+.sidebar-logout-btn:focus-visible {
+  background-color: rgba(220, 53, 69, 0.08);
+  color: #dc3545;
+  outline: none;
+}
+
+.sidebar-logout-btn i {
+  font-size: 1.1rem;
+  min-width: 1.25rem;
+  text-align: center;
+}
+
+/* ----- Circular collapse button at the top-right edge ----- */
+.sidebar-collapse-btn {
+  position: absolute;
+  top: 14px;
+  right: 10px; /* sits inside the rounded card edge */
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--sidebar-collapse-btn-border);
+  border-radius: 50%;
+  background: var(--sidebar-collapse-btn-bg);
+  color: var(--sidebar-collapse-btn-text);
+  font-size: 0.8rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  z-index: 2;
+  /* ponytail: the button sits inside the brand's vertical band
+     (top:14px + 26px = 40px from column top, brand is ~60px
+     tall) so it never overlaps the top header card to its
+     right. The right:10px keeps it within the rounded card
+     edge so overflow:hidden doesn't clip it. */
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.3s ease;
+}
+
+.sidebar-collapse-btn:hover,
+.sidebar-collapse-btn:focus-visible {
+  background-color: var(--sidebar-collapse-btn-hover-bg, #f1f5f9);
+  color: var(--sidebar-collapse-btn-text);
+  border-color: var(--sidebar-collapse-btn-border);
+  outline: none;
+}
+
+.sidebar-collapse-btn:active {
+  transform: scale(0.94);
+}
+
+.sidebar-collapse-btn i {
+  transition: transform 0.3s ease;
+}
+
+/* ponytail: the .collapsed class is applied to BOTH the aside
+   (.sidebar-nav) and the outer column (.app-shell-sidebar) by
+   site.js, so the rotate selector needs to match either. Using
+   the column selector because the button is a direct child of
+   the column, not the aside. */
+.app-shell-sidebar.collapsed .sidebar-collapse-btn i {
+  transform: rotate(180deg);
+}
+
+/* ----- Collapsed-mode layout overrides ----- */
+/* In collapsed mode the column is only 70px wide; the brand and
+   the toggle button share a narrow vertical band. To prevent
+   the button from squishing into the logo icon, switch the
+   button from absolute (right-edge) to relative-flow, centered
+   directly below the brand. */
+.app-shell-sidebar.collapsed .sidebar-collapse-btn {
+  position: relative;
+  top: auto;
+  right: auto;
+  margin: 0.5rem auto 0.75rem auto;
+  display: flex;
+}
+
+/* ----- Section list + flat links ----- */
+.sidebar-sections {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  /* ponytail: scroll moved from .sidebar-body to here so the flyout
+     menus (absolute-positioned children of .sidebar-nav > .sidebar-body)
+     aren't clipped by an overflow-y:auto scroll container. The W3C spec
+     forces overflow-x to match overflow-y when overflow-y != visible,
+     so .sidebar-body's overflow-x: visible was silently computed to
+     auto — clipping the badge pills. .sidebar-sections is the scroll layer
+     and .sidebar-body is now overflow: visible, letting the flyout pop
+     out unclipped. */
+  overflow-y: auto;
+  overflow-x: visible;
+  min-height: 0;
+}
+
+.sidebar-nav .nav-link,
+.sidebar-nav .nav-group-toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.5rem 0.75rem;
+  margin: 0.1rem 0;
+  border-radius: 10px;
+  color: var(--sidebar-text);
+  font-size: 0.92rem;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  width: 100%;
+  background: transparent;
+  border: 0;
+  text-align: left;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.sidebar-nav .nav-link i,
+.sidebar-nav .nav-group-toggle i {
+  font-size: 1.1rem;
+  min-width: 1.25rem;
+  text-align: center;
+  color: inherit;
+}
+
+.sidebar-nav .nav-link:hover,
+.sidebar-nav .nav-group-toggle:hover {
+  background-color: var(--sidebar-hover-bg);
+  color: var(--sidebar-accent);
+}
+
+.sidebar-nav .nav-link.active {
+  background-color: var(--sidebar-active-bg);
+  color: var(--sidebar-active-text);
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(13, 110, 253, 0.25);
+}
+
+.sidebar-nav .nav-link.active i {
+  color: #ffffff;
+}
+
+/* Chevron on the right of group toggles. Rotates 90° when its
+   parent .nav-item-dropdown is .show — works for both modes:
+   - Expanded: the inline submenu gets .show; site.js also
+     updates aria-expanded on the toggle, so the second
+     selector fires.
+   - Collapsed: the parent <li> gets .show so the popout
+     flyout opens; the first selector fires. */
+.nav-group-chevron {
+  margin-left: auto;
+  font-size: 0.75rem !important;
+  display: inline-block;
+  transform: rotate(0deg);
+  transition: transform 0.25s ease-in-out;
+}
+
+.nav-item-dropdown.show > .nav-group-toggle .nav-group-chevron,
+.nav-group-toggle[aria-expanded="true"] .nav-group-chevron {
+  transform: rotate(90deg);
+}
+
+/* ----- Submenu (inline in expanded state) ----- */
+.sidebar-nav .nav-dropdown-menu {
+  list-style: none;
+  padding: 0.25rem 0 0.25rem 0;
+  margin: 0;
+}
+
+.sidebar-nav .nav-dropdown-menu .nav-link {
+  padding-left: 2.25rem;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+/* The Bootstrap .collapse class sets display:none by default.
+   .collapse.show reveals it inline. Nothing to override. */
+
+/* ----- Collapsed (icon-only) state ----- */
+/* ponytail: width is driven by .app-shell-sidebar.collapsed on the
+   outer column. The aside retains position: relative and visible
+   overflow so the flyout pop-outs still anchor correctly. */
+.sidebar-nav.collapsed {
+  overflow: visible !important;
+  position: relative;
+}
+
+.sidebar-nav.collapsed .sidebar-body {
+  overflow: visible !important;
+  position: relative;
+}
+
+/* In collapsed (icon-only) mode, badges are repositioned to sit
+   at the left edge of the nav link (next to the icon) so they
+   never extend past the 70px sidebar column and force a
+   horizontal scrollbar. The right:2px absolute positioning from
+   the base rule would push badges ~18px past the right edge. */
+.sidebar-nav.collapsed .nav-link .badge {
+  position: absolute;
+  left: 2px;
+  top: 2px;
+  right: auto;
+  font-size: 0.6rem;
+  padding: 0.15rem 0.35rem;
+  line-height: 1;
+  box-shadow: 0 0 0 2px #ffffff;
+}
+
+.sidebar-nav.collapsed .link-text {
+  display: none !important;
+}
+
+.sidebar-nav.collapsed .nav-link,
+.sidebar-nav.collapsed .nav-group-toggle {
+  justify-content: center;
+  padding: 0.5rem 0;
+  gap: 0;
+}
+
+/* Hide the inline dropdown menu in icon-only mode — we show it as a
+   floating pop-out instead (see below). */
+.sidebar-nav.collapsed .nav-dropdown-menu {
+  display: none !important;
+}
+
+/* Floating flyout card for icon-only mode. Anchors to its parent
+   .nav-item-dropdown and is revealed on hover, focus-within, or
+   click (the .show class is added by site.js so touch / keyboard
+   users without a working hover can still open it). */
+.sidebar-nav.collapsed .nav-item-dropdown {
+  position: relative;
+}
+
+.sidebar-nav.collapsed .nav-item-dropdown > .nav-dropdown-menu,
+.sidebar-nav.collapsed .nav-item-dropdown > .dropdown-menu {
+  display: none;
+  position: absolute !important;
+  left: 100% !important;
+  top: 0;
+  margin-left: 10px;
+  min-width: 180px;
+  background-color: #ffffff !important;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 8px 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  z-index: 1050 !important;
+  list-style: none;
+  float: none !important;
+  inset: auto !important;
+  transition: opacity 0.15s ease;
+}
+
+/* Reveal the flyout: only when the parent has .show (set by the
+   click handler in site.js). Hover and focus-within are intentionally
+   NOT triggers — the user wanted click-only opening so the popout
+   behaves like a true flyout menu. */
+.sidebar-nav.collapsed .nav-item-dropdown.show > .nav-dropdown-menu {
+  display: flex !important;
+  flex-direction: column;
+  position: absolute !important;
+  left: calc(100% + 8px) !important;
+  top: 0 !important;
+  transform: none !important;
+  min-width: 260px;
+  width: max-content;
+  max-width: 400px;
+  padding: 6px;
+  box-sizing: border-box;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  z-index: 1050 !important;
+}
+
+/* Override the collapse text-hiding rule so labels inside the
+   flyout stay visible. The sidebar's `.link-text` is hidden
+   everywhere when collapsed, but inside the popout we want
+   the labels to read out as a normal vertical menu. The
+   white-space/lh/reset below is part of the icon-grid spec:
+   every label has the same baseline because every icon is
+   forced to a fixed 20px column. */
+.sidebar-nav.collapsed .nav-dropdown-menu .link-text {
+  display: inline-block !important;
+  color: #334155 !important;
+  font-weight: 500;
+  white-space: nowrap !important;
+  line-height: 1 !important;
+  margin: 0 !important;
+}
+
+/* Link rows inside the popout: strict flex alignment so every
+   row has its icon and text in the same horizontal position
+   regardless of which icon glyph or label length is used. */
+.sidebar-nav.collapsed .nav-dropdown-menu .nav-link {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 12px !important;
+  padding: 10px 14px !important;
+  width: max-content !important;
+  min-width: 100% !important;
+  border-radius: 8px !important;
+  text-align: left !important;
+  text-decoration: none;
+  color: #334155 !important;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+/* Standardized icon column: every icon (i or svg) is locked
+   to a 20px-wide flexed column. Icons can never push text
+   to a different baseline because the column is fixed. */
+.sidebar-nav.collapsed .nav-dropdown-menu .nav-link i,
+.sidebar-nav.collapsed .nav-dropdown-menu .nav-link svg {
+  width: 20px !important;
+  min-width: 20px;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 1.1rem !important;
+  flex-shrink: 0 !important;
+  color: inherit;
+}
+
+.sidebar-nav.collapsed .nav-dropdown-menu .nav-link:hover {
+  background-color: #f1f5f9;
+  color: #2563eb !important;
+}
+
+.sidebar-nav.collapsed .nav-dropdown-menu .nav-link.active {
+  background-color: #2563eb;
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+.sidebar-nav.collapsed .nav-dropdown-menu .nav-link.active .link-text {
+  color: #ffffff !important;
+}
+
+.sidebar-nav.collapsed .nav-item-dropdown > .nav-dropdown-menu .nav-link .badge {
+  position: static;
+  font-size: 0.75em;
+  padding: 0.25em 0.5em;
+  line-height: 1;
+  box-shadow: none;
+  overflow: visible;
+  white-space: nowrap;
+}
+
+/* ----- Footer: sign-out button in collapsed mode centers its icon ----- */
+.sidebar-nav.collapsed .sidebar-logout-btn {
+  justify-content: center;
+  padding: 0.5rem 0;
+  gap: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-nav { transition: none; }
+  .sidebar-collapse-btn,
+  .sidebar-collapse-btn i,
+  .nav-group-chevron,
+  .sidebar-nav.collapsed .nav-item-dropdown > .nav-dropdown-menu { transition: none; }
+}
+
+/* ============================================================
+   Responsive sidebar
+   ------------------------------------------------------------
+   - ≥1024px (lg+): full 240px sidebar, expanded by default.
+   - 768px–1023.98px (md): icon-only collapsed by default. The
+     user can still expand via the in-sidebar toggle.
+   - <768px (sm/xs): the sidebar becomes a fixed off-canvas
+     drawer. .sidebar-backdrop covers the rest of the viewport
+     when the drawer is open. .mobile-open is the JS-toggled
+     class that opens the drawer.
+   The mobile sidebar toggle button in the top navbar is
+   `#sidebarToggleMobile`; it shares the same .sidebar-nav
+   open/close logic as the in-sidebar button via site.js.
+   ============================================================ */
+
+/* ----- Medium viewports: default to icon-only ----- */
+@media (max-width: 1023.98px) and (min-width: 768px) {
+  .sidebar-nav:not(.mobile-open) {
+    width: 70px;
+    flex: 0 0 70px;
+  }
+  /* Reposition badges to the left edge in icon-only mode to prevent
+     horizontal overflow past the 70px sidebar width. */
+  .sidebar-nav:not(.mobile-open) .nav-link .badge {
+    position: absolute;
+    left: 2px;
+    top: 2px;
+    right: auto;
+    font-size: 0.6rem;
+    padding: 0.15rem 0.35rem;
+    line-height: 1;
+    box-shadow: 0 0 0 2px #ffffff;
+  }
+  .sidebar-nav:not(.mobile-open) .link-text {
+    display: none !important;
+  }
+  .sidebar-nav:not(.mobile-open) .nav-link,
+  .sidebar-nav:not(.mobile-open) .nav-group-toggle {
+    justify-content: center;
+    padding: 0.5rem 0;
+    gap: 0;
+  }
+  .sidebar-nav:not(.mobile-open) .nav-group-chevron {
+    display: none;
+  }
+  .sidebar-nav:not(.mobile-open) .nav-dropdown-menu {
+    display: none;
+  }
+
+  /* In medium-viewport icon-only mode, dropdown groups open as a
+     floating flyout (same as .collapsed desktop mode) so submenus
+     like Operations are visible despite the 70px sidebar width. */
+  .sidebar-nav:not(.mobile-open) .nav-item-dropdown {
+    position: relative;
+  }
+
+  .sidebar-nav:not(.mobile-open) .nav-item-dropdown > .nav-dropdown-menu {
+    display: none;
+    position: absolute !important;
+    left: calc(100% + 8px) !important;
+    top: 0;
+    min-width: 260px;
+    max-width: 400px;
+    width: max-content;
+    padding: 6px;
+    box-sizing: border-box;
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    z-index: 1050 !important;
+    list-style: none;
+    float: none !important;
+    inset: auto !important;
+  }
+
+  .sidebar-nav:not(.mobile-open) .nav-item-dropdown.show > .nav-dropdown-menu {
+    display: flex !important;
+    flex-direction: column;
+  }
+
+  .sidebar-nav:not(.mobile-open) .nav-dropdown-menu .link-text {
+    display: inline-block !important;
+    color: #334155 !important;
+    font-weight: 500;
+    white-space: nowrap !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+  }
+
+  .sidebar-nav:not(.mobile-open) .nav-dropdown-menu .nav-link {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 12px !important;
+    padding: 10px 14px !important;
+    width: max-content !important;
+    min-width: 100% !important;
+    border-radius: 8px !important;
+    text-align: left !important;
+    color: #334155 !important;
+    font-size: 0.9rem;
+    white-space: nowrap;
+  }
+
+  .sidebar-nav:not(.mobile-open) .nav-item-dropdown > .nav-dropdown-menu .nav-link .badge {
+    position: static;
+    font-size: 0.75em;
+    padding: 0.25em 0.5em;
+    line-height: 1;
+    box-shadow: none;
+    overflow: visible;
+    white-space: nowrap;
+  }
+
+  /* Lock icon column in flyout for consistent alignment */
+  .sidebar-nav:not(.mobile-open) .nav-dropdown-menu .nav-link i,
+  .sidebar-nav:not(.mobile-open) .nav-dropdown-menu .nav-link svg {
+    width: 20px !important;
+    min-width: 20px;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.1rem !important;
+    flex-shrink: 0 !important;
+    color: inherit;
+  }
+
+  .sidebar-nav:not(.mobile-open) .nav-dropdown-menu .nav-link:hover {
+    background-color: #f1f5f9;
+    color: #2563eb !important;
+  }
+
+  .sidebar-nav:not(.mobile-open) .nav-dropdown-menu .nav-link.active {
+    background-color: #2563eb;
+    color: #ffffff !important;
+    font-weight: 600;
+  }
+}
+
+/* ----- Mobile drawer ----- */
+@media (max-width: 767.98px) {
+  .app-shell-sidebar {
+    width: 0 !important;
+    flex: 0 0 0 !important;
+    margin: 0 !important;
+    overflow: hidden;
+  }
+  .sidebar-nav {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 280px;
+    flex: 0 0 280px;
+    margin: 0;
+    border-radius: 0;
+    border-right: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 0 24px rgba(0, 0, 0, 0.12);
+    z-index: 1040;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  .sidebar-nav.mobile-open {
+    transform: translateX(0);
+  }
+  /* When the drawer is open on mobile the in-sidebar collapse/expand
+     behavior is meaningless; force the expanded layout. */
+  .sidebar-nav.mobile-open .link-text {
+    display: revert !important;
+  }
+  .sidebar-nav.mobile-open .nav-link,
+  .sidebar-nav.mobile-open .nav-group-toggle {
+    justify-content: flex-start;
+    padding: 0.5rem 0.75rem;
+    gap: 0.65rem;
+  }
+  .sidebar-nav.mobile-open .nav-link .badge {
+    position: static;
+    font-size: 0.75em;
+    padding: 0.25em 0.5em;
+    line-height: 1;
+    box-shadow: none;
+  }
+  /* Hide the floating collapse button on mobile — the top-navbar
+     hamburger is the entry point. */
+  .sidebar-collapse-btn { display: none; }
+  /* On mobile, submenus behave like normal accordions (Bootstrap
+     handles open/close via data-bs-toggle); no pop-out. */
+  .sidebar-nav .nav-item-dropdown > .nav-dropdown-menu {
+    position: static;
+    box-shadow: none;
+    border: 0;
+    transform: none;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+}
+
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.45);
+  z-index: 1035;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.sidebar-backdrop.mobile-open {
+  display: block;
+  opacity: 1;
+}
+
+@media (max-width: 767.98px) {
+  body.sidebar-drawer-open {
+    overflow: hidden;
+  }
+}
+
+/* The mobile drawer button in the top navbar is hidden on lg+ screens. */
+.sidebar-mobile-toggle {
+  display: none;
+  background: transparent;
+  border: 0;
+  color: #ffffff;
+  font-size: 1.25rem;
+  padding: 0.25rem 0.5rem;
+  margin-right: 0.5rem;
+  cursor: pointer;
+}
+
+@media (max-width: 767.98px) {
+  .sidebar-mobile-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
 }

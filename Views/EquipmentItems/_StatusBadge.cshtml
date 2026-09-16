@@ -1,15 +1,9 @@
 @model string
 @{
-    // Centralizes the status -> Bootstrap badge class mapping so the
-    // Index and Details views don't repeat the same switch.
-    var cls = Model switch
-    {
-        "Available"     => "bg-success",
-        "Reserved"      => "bg-warning text-dark",
-        "CheckedOut"    => "bg-warning text-dark",
-        "InMaintenance" => "bg-danger",
-        "Retired"       => "bg-secondary",
-        _               => "bg-secondary"
-    };
+    // Centralizes the status -> text color mapping so the Index and Details
+    // views don't repeat the same switch. "Available" renders as green text;
+    // everything else (Reserved, CheckedOut, InMaintenance, Retired, etc.)
+    // renders as red text. No badge/border/background — plain inline text.
+    var cls = Model == "Available" ? "text-success" : "text-danger";
 }
-<span class="badge @cls">@Model</span>
+<span class="@cls">@Model</span>

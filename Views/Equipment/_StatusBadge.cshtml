@@ -1,12 +1,28 @@
 @model string
 @{
     // Centralizes the equipment status -> Bootstrap badge class mapping.
+    // ponytail: Out of Stock and Low Stock are derived from StockQuantity
+    // in Index.cshtml; the view passes the display string here so the
+    // catalog card/table can show the right color without forcing staff
+    // to hand-edit a Status field.
+    // "Available" renders as plain inline text (no badge/border) — its green
+    // text color is enough signal and matches the unstyled stock cells.
+    var plain = Model == "Available";
     var cls = Model switch
     {
-        "Available"   => "bg-success",
+        "Available"   => "text-success",
+        "Low Stock"   => "bg-warning text-dark",
+        "Out of Stock"=> "bg-danger",
         "Unavailable" => "bg-secondary",
         "Retired"     => "bg-danger",
         _             => "bg-secondary"
     };
 }
-<span class="badge @cls">@Model</span>
+@if (plain)
+{
+    <span class="@cls">@Model</span>
+}
+else
+{
+    <span class="badge @cls">@Model</span>
+}

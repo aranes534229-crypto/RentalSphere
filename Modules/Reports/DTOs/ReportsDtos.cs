@@ -77,4 +77,10 @@ public class ReportsBundleDto
     public decimal TotalOutstanding { get; set; }
     public int LateReturnCount { get; set; }
     public decimal TotalDamageAmount { get; set; }
+
+    /// <summary>Sum of MaintenanceRecord.Cost for closed records in the window.</summary>
+    public decimal TotalMaintenanceExpenses { get; set; }
+
+    /// <summary>TotalRevenue - TotalMaintenanceExpenses. Can be negative.</summary>
+    public decimal NetRevenue { get; set; }
 }

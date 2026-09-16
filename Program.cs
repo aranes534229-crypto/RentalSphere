@@ -5,8 +5,13 @@ using RentalSphere.Common.Services;
 using RentalSphere.Data;
 using RentalSphere.Data.Seed;
 using RentalSphere.Identity;
+using QuestPDF.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// QuestPDF requires an explicit license setting before GeneratePdf() is called;
+// otherwise it throws at runtime. Community license covers AGPL-3.0 course projects.
+QuestPDF.Settings.License = LicenseType.Community;
 
 // --- EF Core + Identity ---
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")

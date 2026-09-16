@@ -35,7 +35,7 @@
                 @foreach (var r in Model.Roles)
                 {
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="badge bg-secondary">@r</span>
+                        <span class="text-@(Model.IsActive ? "success" : "danger")">@r</span>
                         <form asp-action="RemoveRole" method="post">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="userId" value="@Model.Id" />

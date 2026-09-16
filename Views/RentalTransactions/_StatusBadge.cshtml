@@ -1,13 +1,20 @@
-@model string
+@model dynamic
 @{
-    // Rental transaction status -> Bootstrap badge class mapping.
-    var cls = Model switch
+    // Both RentalTransactionListItemDto and RentalTransactionDetailsDto expose
+    // Status + ExpectedReturnDate. The partial renders the persisted status, or
+    // "Overdue" (red) when Status=="Active" and the expected return is in the past.
+    // No badge — plain inline text with color for at-a-glance status.
+    var status = (string)Model.Status;
+    var expected = (DateTime)Model.ExpectedReturnDate;
+    var display = status == "Active" && expected < DateTime.UtcNow ? "Overdue" : status;
+
+    var cls = display switch
     {
-        "Active"    => "bg-warning text-dark",
-        "Returned"  => "bg-success",
-        "Cancelled" => "bg-secondary",
-        "Overdue"   => "bg-danger",
-        _           => "bg-secondary"
+        "Active"    => "text-warning",
+        "Returned"  => "text-success",
+        "Cancelled" => "text-muted",
+        "Overdue"   => "text-danger",
+        _           => "text-muted"
     };
 }
-<span class="badge @cls">@Model</span>
+<span class="@cls">@display</span>

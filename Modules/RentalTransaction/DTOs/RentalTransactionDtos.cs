@@ -55,6 +55,37 @@ public class RentalTransactionReturnDto
     [Display(Name = "Condition notes")]
     public string? ConditionNotes { get; set; }
 
-    [Display(Name = "Mark as damaged for follow-up")]
-    public bool FlaggedForDamage { get; set; }
+    /// <summary>
+    /// True when the equipment needs to be quarantined for maintenance /
+    /// inspection (damaged, dirty, or in need of repair). Triggers a unit
+    /// status flip to <c>InMaintenance</c> and an open maintenance ticket
+    /// per pinned unit. May be combined with <see cref="FlagForLatePenalty"/>.
+    /// </summary>
+    [Display(Name = "Flag for maintenance / inspection")]
+    public bool FlagForMaintenance { get; set; }
+
+    /// <summary>
+    /// True when the rental is being returned past its expected return
+    /// date (late fee applies). Triggers a single transaction-level
+    /// <c>LateFee</c> DamagePenalty row; equipment units return to
+    /// <c>Available</c>. May be combined with <see cref="FlagForMaintenance"/>.
+    /// </summary>
+    [Display(Name = "Assess late return penalty")]
+    public bool FlagForLatePenalty { get; set; }
+
+    /// <summary>
+    /// Per-line unit assignments to quarantine when the maintenance flag is
+    /// on. Only consulted for lines whose <c>EquipmentItemID</c> is null
+    /// (unpinned). Entries for already-pinned lines are ignored.
+    /// </summary>
+    public List<DamageItemAssignmentDto> DamageAssignments { get; set; } = new();
+}
+
+public class DamageItemAssignmentDto
+{
+    [Required]
+    public int RentalTransactionItemID { get; set; }
+
+    [Required]
+    public int EquipmentItemID { get; set; }
 }

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - RentalSphere</title>
+    <link rel="icon" type="image/png" href="/images/logo.png" />
+    <link rel="stylesheet" href="/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="/css/site.css?v=qJ38p1vThYj_IqUv_sj24To5JHipwterKtafI1jjIaQ" />
+    <script>
+        (function () {
+            try {
+                var t = window.localStorage.getItem('rentalsphere.theme');
+                document.documentElement.setAttribute('data-bs-theme', t === 'dark' ? 'dark' : 'light');
+            } catch (_) {
+                document.documentElement.setAttribute('data-bs-theme', 'light');
+            }
+        })();
+    </script>
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <div b-zlfbvuyr1l class="app-shell d-flex flex-grow-1">
+
+        <div b-zlfbvuyr1l class="app-shell-main flex-grow-1 d-flex flex-column min-w-0">
+            <main b-zlfbvuyr1l class="flex-grow-1 p-4">
+                
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h2 class="card-title mb-3"><i class="bi bi-box-arrow-in-right"></i> Sign in</h2>
+                <p class="text-muted">Welcome back to RentalSphere.</p>
+                <form method="post" action="/Account/Login?returnUrl=%2FReports">
+                    
+                    
+                    <div class="mb-3">
+                        <label class="form-label" for="Email">Email</label>
+                        <input class="form-control" autocomplete="username" type="email" data-val="true" data-val-email="The Email field is not a valid e-mail address." data-val-required="The Email field is required." id="Email" name="Email" value="" />
+                        <span class="text-danger field-validation-valid" data-valmsg-for="Email" data-valmsg-replace="true"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="Password">Password</label>
+                        <input class="form-control" autocomplete="current-password" type="password" data-val="true" data-val-required="The Password field is required." id="Password" name="Password" />
+                        <span class="text-danger field-validation-valid" data-valmsg-for="Password" data-valmsg-replace="true"></span>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" data-val="true" data-val-required="The Remember me field is required." id="RememberMe" name="RememberMe" value="true" />
+                        <label class="form-check-label" for="RememberMe">Remember me</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Sign in</button>
+                <input name="__RequestVerificationToken" type="hidden" value="CfDJ8Hha3twHuvNIhtgDrenrk_nZGlw1PgwzyZbOwGr2XQ8SG754_WcW7oflmrAAGBbhF2obSJsbV3HBybqNmHO5peZPCnUDd9dxXYz4juy-BDBDqfc-ScbsV8wGdW7urIemlKLLHPZ2SHLaY2H7_bSZDvY" /><input name="RememberMe" type="hidden" value="false" /></form>
+                <hr />
+                <p class="text-center mb-0">
+                    No account? <a href="/Account/Register">Register</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+            </main>
+        </div>
+    </div>
+
+    <footer b-zlfbvuyr1l class="border-top footer text-muted py-3 mt-auto">
+        <div b-zlfbvuyr1l class="container-fluid">
+            &copy; 2026 - RentalSphere - <a href="/Home/Privacy">Privacy</a>
+        </div>
+    </footer>
+
+    <!--
+        Logout confirmation modal. Triggered by the sidebar's Sign Out
+        button (data-bs-toggle="modal" data-bs-target="#logoutModal").
+        Confirming submits the sidebar's logout form via site.js, which
+        carries the antiforgery token to the POST /Account/Logout
+        action.
+    -->
+    <div b-zlfbvuyr1l class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+        <div b-zlfbvuyr1l class="modal-dialog modal-dialog-centered">
+            <div b-zlfbvuyr1l class="modal-content">
+                <div b-zlfbvuyr1l class="modal-header">
+                    <h5 b-zlfbvuyr1l class="modal-title" id="logoutModalLabel">
+                        <i b-zlfbvuyr1l class="bi bi-exclamation-circle text-warning me-2"></i>Confirm Sign Out
+                    </h5>
+                    <button b-zlfbvuyr1l type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div b-zlfbvuyr1l class="modal-body">
+                    Are you sure you want to sign out of RentalSphere? Any unsaved changes will be lost.
+                </div>
+                <div b-zlfbvuyr1l class="modal-footer">
+                    <button b-zlfbvuyr1l type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button b-zlfbvuyr1l type="button" class="btn btn-danger" id="confirmLogoutBtn">
+                        <i b-zlfbvuyr1l class="bi bi-box-arrow-right"></i> Sign Out
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/lib/jquery/dist/jquery.min.js"></script>
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/site.js?v=huishJ2IVuprO9pwPVy1jEvNcjq35_43VPVuU6pUac4"></script>
+    
+    <script src="/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+<script src="/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
+
+
+</body>
+</html>

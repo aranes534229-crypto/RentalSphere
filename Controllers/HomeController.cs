@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using RentalSphere.Common.Constants;
 using RentalSphere.Models;
 using RentalSphere.Modules.Dashboard;
+using RentalSphere.Modules.Dashboard.Models;
 
 namespace RentalSphere.Controllers;
 
@@ -21,7 +22,8 @@ public class HomeController : Controller
         // KPI tiles only render for Admin/Staff; Customer gets their existing cards.
         if (User.IsInRole(RoleNames.Admin) || User.IsInRole(RoleNames.Staff))
         {
-            ViewBag.Kpi = await _kpi.GetAsync();
+            var vm = await _kpi.GetHomeDashboardVmAsync();
+            return View(vm);
         }
         return View();
     }

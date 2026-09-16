@@ -24,42 +24,102 @@
         </select>
     </div>
     <input type="hidden" name="tab" value="@activeTab" />
-    <div class="col-auto">
+    <div class="col-auto d-flex align-items-end gap-2">
         <button type="submit" class="btn btn-primary btn-sm">
             <i class="bi bi-arrow-clockwise"></i> Refresh
         </button>
+        <a asp-action="ExportPdf"
+           asp-route-start="@ViewBag.Start"
+           asp-route-end="@ViewBag.End"
+           asp-route-granularity="@ViewBag.Granularity"
+           asp-route-tab="@activeTab"
+           class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-download"></i> Export PDF
+        </a>
     </div>
 </form>
 
-<div class="row g-3 mb-3">
-    <div class="col-md-3">
-        <div class="card text-bg-success">
-            <div class="card-body">
-                <small class="text-uppercase">Revenue realized</small>
+<!-- Row 1: Revenue -->
+<div class="row g-3 mb-3" id="revenue-cards">
+    <div class="col-12">
+        <h6 class="text-uppercase text-muted small mb-2">Revenue</h6>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center p-3">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-2"
+                     style="width: 2rem; height: 2rem; background-color: var(--bs-success-bg-subtle);">
+                    <i class="bi bi-cash-stack fs-5 text-success"></i>
+                </div>
+                <small class="text-uppercase text-muted d-block mb-1">Revenue realized</small>
                 <h3 class="mb-0">₱@Model.TotalRevenue.ToString("N2")</h3>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-bg-warning">
-            <div class="card-body">
-                <small class="text-uppercase">Outstanding</small>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center p-3">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-2"
+                     style="width: 2rem; height: 2rem; background-color: var(--bs-secondary-bg-subtle);">
+                    <i class="bi bi-tools fs-5 text-secondary"></i>
+                </div>
+                <small class="text-uppercase text-muted d-block mb-1">Maintenance expenses</small>
+                <h3 class="mb-0">₱@Model.TotalMaintenanceExpenses.ToString("N2")</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center p-3">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-2"
+                     style="width: 2rem; height: 2rem; background-color: var(--bs-primary-bg-subtle);">
+                    <i class="bi bi-calculator fs-5 text-primary"></i>
+                </div>
+                <small class="text-uppercase text-muted d-block mb-1">Net revenue</small>
+                <h3 class="mb-0">₱@Model.NetRevenue.ToString("N2")</h3>
+                <small class="d-block mt-1 opacity-75">Revenue − Maintenance</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Row 2: Risk and follow-up -->
+<div class="row g-3 mb-3" id="risk-cards">
+    <div class="col-12">
+        <h6 class="text-uppercase text-muted small mb-2">Risk and follow-up</h6>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center p-3">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-2"
+                     style="width: 2rem; height: 2rem; background-color: var(--bs-warning-bg-subtle);">
+                    <i class="bi bi-exclamation-triangle fs-5 text-warning"></i>
+                </div>
+                <small class="text-uppercase text-muted d-block mb-1">Outstanding</small>
                 <h3 class="mb-0">₱@Model.TotalOutstanding.ToString("N2")</h3>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-bg-danger">
-            <div class="card-body">
-                <small class="text-uppercase">Late returns</small>
-                <h3 class="mb-0">@Model.LateReturnCount</h3>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center p-3">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-2"
+                     style="width: 2rem; height: 2rem; background-color: var(--bs-danger-bg-subtle);">
+                    <i class="bi bi-clock-history fs-5 text-danger"></i>
+                </div>
+                <small class="text-uppercase text-muted d-block mb-1">Late returns</small>
+                <h3 class="mb-0">@Model.LateReturnCount rentals</h3>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-bg-dark">
-            <div class="card-body">
-                <small class="text-uppercase">Damage amount</small>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center p-3">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-2"
+                     style="width: 2rem; height: 2rem; background-color: var(--bs-dark-bg-subtle);">
+                    <i class="bi bi-emoji-frown fs-5 text-dark"></i>
+                </div>
+                <small class="text-uppercase text-muted d-block mb-1">Damage amount</small>
                 <h3 class="mb-0">₱@Model.TotalDamageAmount.ToString("N2")</h3>
             </div>
         </div>

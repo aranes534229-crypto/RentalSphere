@@ -6,6 +6,7 @@ using RentalSphere.Common.Constants;
 using RentalSphere.Data;
 using RentalSphere.Identity;
 using RentalSphere.Identity.Models;
+using RentalSphere.Identity.Models.ViewModels;
 
 namespace RentalSphere.Identity.Controllers;
 
@@ -24,9 +25,12 @@ public class AuditLogController : Controller
         _users = users;
     }
 
-    public async Task<IActionResult> Index(string? search, int page = 1)
+    public async Task<IActionResult> Index(string? search, int page = 1, int pageSize = 20)
     {
-        const int pageSize = 50;
+        page = page < 1 ? 1 : page;
+        pageSize = pageSize < 1 ? 20 : Math.Min(pageSize, 200);
+        var skip = (page - 1) * pageSize;
+
         var query = _db.AuditLogs.AsNoTracking().AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(search))
@@ -42,7 +46,7 @@ public class AuditLogController : Controller
         var total = await query.CountAsync();
         var entries = await query
             .OrderByDescending(a => a.Timestamp)
-            .Skip((page - 1) * pageSize)
+            .Skip(skip)
             .Take(pageSize)
             .ToListAsync();
 
@@ -55,12 +59,15 @@ public class AuditLogController : Controller
             actorLookup[uid] = u?.Email ?? uid;
         }
 
-        ViewData["Search"] = search;
-        ViewData["Page"] = page;
-        ViewData["TotalPages"] = (int)Math.Ceiling(total / (double)pageSize);
-        ViewData["Total"] = total;
-        ViewData["ActorLookup"] = actorLookup;
-
-        return View(entries);
+        var vm = new AuditLogIndexViewModel
+        {
+            Items = entries,
+            Search = search,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = total,
+            ActorLookup = actorLookup,
+        };
+        return View(vm);
     }
 }
